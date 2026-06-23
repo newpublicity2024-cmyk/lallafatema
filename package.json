@@ -1,8 +1,9 @@
 {
-  "name": "lalla-fatema",
-  "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
-  "license": "MIT",
+  "name": "lallafatema",
+  "version": "0.1.0",
+  "description": "Lalla Fatema — Arabic RTL lifestyle & celebrity magazine (Next.js + Payload CMS).",
+  "license": "UNLICENSED",
+  "private": true,
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
@@ -32,7 +33,11 @@
     "@payloadcms/db-postgres": "3.85.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
     "@playwright/test": "1.58.2",
+    "@tailwindcss/postcss": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "postcss": "^8.4.49",
     "@testing-library/react": "16.3.0",
     "@types/node": "22.19.9",
     "@types/react": "19.2.14",
@@ -47,6 +52,7 @@
     "vite-tsconfig-paths": "6.0.5",
     "vitest": "4.0.18"
   },
+  "packageManager": "pnpm@10.18.0",
   "engines": {
     "node": "^18.20.2 || >=20.9.0",
     "pnpm": "^9 || ^10"
