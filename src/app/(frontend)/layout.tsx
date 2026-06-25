@@ -2,6 +2,9 @@ import React from 'react'
 import { Tajawal } from 'next/font/google'
 import './styles.css'
 
+import { Header } from '@/components/Header'
+import { Footer } from '@/components/Footer'
+
 // Subsetted, self-hosted Arabic webfont. next/font handles subsetting,
 // `font-display: swap`, and preloading automatically.
 const arabic = Tajawal({
@@ -24,7 +27,11 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
   return (
     <html lang="ar" dir="rtl" className={arabic.variable}>
-      <body>{children}</body>
+      <body className="flex min-h-screen flex-col bg-white text-zinc-900">
+        <Header />
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </body>
     </html>
   )
 }

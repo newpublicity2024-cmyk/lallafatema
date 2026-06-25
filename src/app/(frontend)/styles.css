@@ -51,3 +51,46 @@
     }
   }
 }
+
+/* Rendered article body (Lexical → HTML). RTL, readable measure. */
+.prose-ar {
+  line-height: 2;
+  color: #27272a;
+  font-size: 1.125rem;
+}
+.prose-ar > * + * {
+  margin-block-start: 1.25rem;
+}
+.prose-ar h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-block-start: 2rem;
+}
+.prose-ar h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-block-start: 1.5rem;
+}
+.prose-ar a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+}
+.prose-ar ul,
+.prose-ar ol {
+  padding-inline-start: 1.5rem;
+}
+.prose-ar ul {
+  list-style: disc;
+}
+.prose-ar ol {
+  list-style: decimal;
+}
+.prose-ar blockquote {
+  border-inline-start: 4px solid var(--color-brand-500);
+  padding-inline-start: 1rem;
+  color: #52525b;
+  font-style: italic;
+}
+.prose-ar img {
+  border-radius: 0.75rem;
+}
