@@ -43,6 +43,7 @@ The build is split in two: a fast, SEO-strong, image-heavy **public magazine** a
 Each phase ends with a working, deployed-to-preview increment and a check-in.
 
 - **Phase 0 — Scaffold & infra baseline.** Repo, Next.js + Tailwind + Payload bootstrap, Payload↔Neon, Vercel project + env, RTL + Arabic font baseline, CI. *(Domains: infra/ops, RTL baseline)*
+  - **Status:** done except the Vercel deploy. The Vercel MCP is currently authenticated to the wrong account ("mfm sport's projects"); **Vercel project creation + env vars + first deploy are DEFERRED** until the correct Vercel account is connected. Until then we develop and verify locally against the Neon DB.
 - **Phase 1 — Data model + media pipeline.** Payload collections (Posts, Categories[hierarchical], Tags, Users/Authors, Media, MagazineIssues, Videos, Pages) + globals (Homepage layout, Menus, Ads); roles/access control; R2 storage adapter; custom image loader (verify Vercel optimizer bypassed). *(Domains: content model, media pipeline)*
 - **Phase 2 — Core public site.** Homepage (static structure), category pages, article page, author pages — RTL, ISR, LCP/CLS/INP discipline, a11y, design language from references. *(Domains: rendering/perf, RTL, a11y, partial SEO)*
 - **Phase 3 — Editorial / curation layer.** Homepage builder (pin posts into slider/panels), menu/mega-menu management, live preview, drafts/versions, scheduling, autosave, on-publish revalidation. *(Domains: globals, CMS UX)*
