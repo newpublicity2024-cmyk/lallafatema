@@ -1,0 +1,14 @@
+/*
+ * RTL fix — Lexical "draggable block menu".
+ *
+ * While hidden, Lexical parks its drag handle at `left: -10000px`. In a
+ * `dir="rtl"` document this inflates the page to ~10000px wide and produces a
+ * spurious horizontal scrollbar across the whole admin on any screen with a
+ * rich-text field. The handle's *active* position is within the editor's
+ * gutter (on-screen), so clipping horizontal overflow only hides the parked
+ * state. `clip` (not `hidden`) avoids creating a scroll container.
+ */
+.field-type.rich-text-lexical,
+.editor {
+  overflow-x: clip;
+}

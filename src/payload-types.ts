@@ -67,8 +67,14 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    posts: Post;
+    categories: Category;
+    tags: Tag;
+    videos: Video;
+    'magazine-issues': MagazineIssue;
+    pages: Page;
     media: Media;
+    users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,8 +82,14 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
+    videos: VideosSelect<false> | VideosSelect<true>;
+    'magazine-issues': MagazineIssuesSelect<false> | MagazineIssuesSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -119,10 +131,153 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * ملخص قصير يظهر في البطاقات ونتائج البحث.
+   */
+  excerpt?: string | null;
+  featuredImage?: (number | null) | Media;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  isRecipe?: boolean | null;
+  recipe?: {
+    /**
+     * مثال: 20 دقيقة
+     */
+    prepTime?: string | null;
+    cookTime?: string | null;
+    servings?: string | null;
+    /**
+     * مثال: مغربي
+     */
+    cuisine?: string | null;
+    ingredients?:
+      | {
+          item: string;
+          id?: string | null;
+        }[]
+      | null;
+    instructions?:
+      | {
+          step: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  category: number | Category;
+  tags?: (number | Tag)[] | null;
+  authors?: (number | User)[] | null;
+  publishedAt?: string | null;
+  /**
+   * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
+   */
+  slug?: string | null;
+  /**
+   * اتركها فارغة لاستخدام العنوان والمقتطف والصورة البارزة افتراضيًا.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    canonicalURL?: string | null;
+    noIndex?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * وصف موجز للصورة لأغراض الوصول وتحسين محركات البحث (إلزامي).
+   */
+  alt: string;
+  caption?: string | null;
+  /**
+   * مصدر الصورة أو صاحب الحقوق (مهم لصور المشاهير).
+   */
+  credit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  parent?: (number | null) | Category;
+  description?: string | null;
+  /**
+   * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
+   */
+  slug?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  /**
+   * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
+   */
+  slug?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  name: string;
+  role: 'admin' | 'editor' | 'journalist';
+  bio?: string | null;
+  avatar?: (number | null) | Media;
+  title?: string | null;
+  social?: {
+    facebook?: string | null;
+    x?: string | null;
+    instagram?: string | null;
+    youtube?: string | null;
+    tiktok?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -144,22 +299,104 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
+ * via the `definition` "videos".
  */
-export interface Media {
+export interface Video {
   id: number;
-  alt: string;
+  title: string;
+  /**
+   * يُحمَّل الإطار فقط عند النقر (نمط الواجهة المؤجلة) لأداء أفضل.
+   */
+  videoUrl: string;
+  thumbnail?: (number | null) | Media;
+  description?: string | null;
+  /**
+   * مثال: 04:32 (تُستخدم في بيانات VideoObject).
+   */
+  duration?: string | null;
+  category?: (number | null) | Category;
+  publishedAt?: string | null;
+  /**
+   * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
+   */
+  slug?: string | null;
+  /**
+   * اتركها فارغة لاستخدام العنوان والمقتطف والصورة البارزة افتراضيًا.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    canonicalURL?: string | null;
+    noIndex?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * الأعداد الرقمية المرقّمة من مجلة لالة فاطمة (غلاف + PDF).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "magazine-issues".
+ */
+export interface MagazineIssue {
+  id: number;
+  issueNumber: number;
+  /**
+   * مثال: العدد 167
+   */
+  title?: string | null;
+  publishDate?: string | null;
+  cover: number | Media;
+  /**
+   * يُعرض داخل الصفحة مع زر للتحميل (يُخزَّن في R2).
+   */
+  pdf: number | Media;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
+   */
+  slug?: string | null;
+  /**
+   * اتركها فارغة لاستخدام العنوان والمقتطف والصورة البارزة افتراضيًا.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    canonicalURL?: string | null;
+    noIndex?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -186,12 +423,36 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
+      } | null)
+    | ({
+        relationTo: 'videos';
+        value: number | Video;
+      } | null)
+    | ({
+        relationTo: 'magazine-issues';
+        value: number | MagazineIssue;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
       } | null)
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -237,9 +498,175 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  excerpt?: T;
+  featuredImage?: T;
+  content?: T;
+  isRecipe?: T;
+  recipe?:
+    | T
+    | {
+        prepTime?: T;
+        cookTime?: T;
+        servings?: T;
+        cuisine?: T;
+        ingredients?:
+          | T
+          | {
+              item?: T;
+              id?: T;
+            };
+        instructions?:
+          | T
+          | {
+              step?: T;
+              id?: T;
+            };
+      };
+  category?: T;
+  tags?: T;
+  authors?: T;
+  publishedAt?: T;
+  slug?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        canonicalURL?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  parent?: T;
+  description?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos_select".
+ */
+export interface VideosSelect<T extends boolean = true> {
+  title?: T;
+  videoUrl?: T;
+  thumbnail?: T;
+  description?: T;
+  duration?: T;
+  category?: T;
+  publishedAt?: T;
+  slug?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        canonicalURL?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "magazine-issues_select".
+ */
+export interface MagazineIssuesSelect<T extends boolean = true> {
+  issueNumber?: T;
+  title?: T;
+  publishDate?: T;
+  cover?: T;
+  pdf?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  content?: T;
+  slug?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        canonicalURL?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  caption?: T;
+  credit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  bio?: T;
+  avatar?: T;
+  title?: T;
+  social?:
+    | T
+    | {
+        facebook?: T;
+        x?: T;
+        instagram?: T;
+        youtube?: T;
+        tiktok?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -256,24 +683,6 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
