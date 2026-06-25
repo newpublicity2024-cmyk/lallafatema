@@ -8,11 +8,10 @@ const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
   images: {
-    localPatterns: [
-      {
-        pathname: '/api/media/file/**',
-      },
-    ],
+    // #1 RULE: bypass Vercel's image optimizer entirely. All resizing happens
+    // at Cloudflare's edge via the custom loader (see lib/image-loader.ts).
+    loader: 'custom',
+    loaderFile: './lib/image-loader.ts',
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
