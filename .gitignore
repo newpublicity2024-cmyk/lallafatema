@@ -54,5 +54,8 @@ node_modules/
 
 # Local verification screenshots / scratch
 /lf-*.png
+/lf-*.jpeg
+/ref-*.jpeg
+/ref-*.png
 /_*.ts
 /*.png
