@@ -21,6 +21,14 @@ import { MainMenu } from './globals/MainMenu'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+// Neon requires SSL. `pg-connection-string` now warns that sslmode=require|prefer|
+// verify-ca are aliased to `verify-full` and will change semantics in pg v9. We
+// already connect with verified TLS, so make it explicit — same behavior today,
+// no deprecation warning, future-proof. Only the sslmode value is rewritten so
+// credentials in the URI are left untouched.
+const explicitSslMode = (uri: string): string =>
+  uri.replace(/([?&]sslmode=)(?:require|prefer|verify-ca)(?=&|$)/i, '$1verify-full')
+
 // Media → Cloudflare R2 (S3-compatible). Enabled only when credentials are present;
 // without them, local dev stores uploads on disk. The DB only ever holds references.
 const r2Enabled = Boolean(
@@ -86,7 +94,7 @@ export default buildConfig({
     // Schema changes go through `payload migrate:create` + `payload migrate`.
     push: false,
     pool: {
-      connectionString: process.env.DATABASE_URL || '',
+      connectionString: explicitSslMode(process.env.DATABASE_URL || ''),
     },
   }),
   sharp,
