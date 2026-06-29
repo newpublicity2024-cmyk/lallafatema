@@ -11,7 +11,7 @@ export async function Footer() {
 
   return (
     <footer className="mt-12 border-t border-zinc-200 bg-zinc-50">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="lf-container grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <h3 className="text-xl font-extrabold text-brand-600">{SITE.name}</h3>
           <p className="mt-3 text-sm leading-relaxed text-zinc-600">{SITE.tagline}</p>

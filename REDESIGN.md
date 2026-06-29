@@ -1,4 +1,4 @@
-# Public-site redesign — foochia/layalina inspired (IN PROGRESS)
+# Public-site redesign — foochia/layalina inspired (DONE)
 
 Goal: make the public magazine feel like **foochia.com** (dense, wide, varied block
 sizes, highlighted video band) with **layalina.com** editorial polish. Inspiration,
@@ -30,14 +30,14 @@ Light/white base, magenta (`brand-600`/tints) accents, strong Arabic type hierar
 - `.lf-container` utility in `src/app/(frontend)/styles.css` (`max-width:1480px`, tight gutters) — **not yet applied** to layouts.
 - `SectionHeading` restyled: magenta underline + "عرض الكل" pill + `light` prop (for dark bands).
 
-## TODO (resume here)
-1. **Apply `.lf-container`** in place of `max-w-7xl px-4` across: `Header`, `Footer`, homepage, `[category]`, `[category]/[slug]` (article keeps a narrower reading column), `author`.
-2. **PostCard**: polish; add **حصري badge** when `category.slug === 'exclusive'`; tighten image radius/typography; add a `lead` variant (large w/ caption).
-3. **HeroFeature** rework: big lead (overlay) + **2×2 secondary grid** beside it (denser, wider) — closer to layalina's flanked hero / foochia's hero.
-4. **LeadListBlock** (new): asymmetric lead + stacked compact list, for a featured section (e.g. مشاهير).
-5. **SectionBlock**: support an optional band background; render 4-up rows.
-6. **Videos section** (new `VideoSection` + `VideoCard`): highlighted **dark magenta/purple band** (`bg-brand-950`/gradient), lead video + list, **play-button overlays**, `light` headings. Add `getLatestVideos` query. **Seed a few videos** (extend `src/seed/index.ts`: youtube URLs, category `video`, publishedAt; thumbnails optional → placeholder).
-7. **Homepage** restructure: hero → alternating bands (white / `zinc-50`) → one featured `LeadListBlock` → standard `SectionBlock`s → **highlighted VideoSection**. Keep reading from the Homepage global (curation) with fallbacks; alternate band bg by index.
-8. **Verify**: Playwright at 1440px + mobile (RTL, video band, no `/_next/image`); `tsc` + `eslint` + `pnpm build`; commit.
+## DONE
+1. ✅ **`.lf-container`** applied in place of `max-w-7xl px-4` across `Header`, `Footer`, homepage, `[category]`, `author`. Article keeps its narrow `max-w-3xl` reading column. Homepage blocks now own their own container so band backgrounds are full-bleed.
+2. ✅ **PostCard**: حصري badge when `category.slug === 'exclusive'`; tighter radii/typography; new `lead` variant (large image + caption block).
+3. ✅ **HeroFeature**: big lead overlay (7 cols) + **2×2 secondary grid** (5 cols) on a 12-col grid.
+4. ✅ **LeadListBlock** (new): asymmetric lead + stacked compact list; optional `band`.
+5. ✅ **SectionBlock**: optional full-bleed `band` background; 4-up rows.
+6. ✅ **VideoSection + VideoCard**: dark magenta/purple band (`from-brand-950`), lead video + list, magenta circular play overlays, `light` heading, deferred YouTube iframe (loads on click — zero third-party JS until opt-in). `getLatestVideos` query added; 5 sample videos seeded (`src/seed/index.ts`, category فيديو, placeholder thumbnails).
+7. ✅ **Homepage** restructure: hero → featured `LeadListBlock` (band) → standard `SectionBlock`s alternating white/`zinc-50` → **VideoSection**. Still reads the Homepage global (curation) with fallbacks; `video` category excluded from fallback sections.
+8. ✅ **Verify**: `tsc` clean, `eslint` clean, `pnpm build` succeeds (static homepage). HTTP check at runtime: RTL, video band present, **0 `/_next/image`** (custom loader), iframes not preloaded, category page 200. (Playwright screenshots skipped — MCP browser profile was locked by another instance.)
 
 Keep performance discipline (priority LCP hero, zero-CLS aspect ratios, minimal client JS) and the custom image loader (never Vercel's optimizer).

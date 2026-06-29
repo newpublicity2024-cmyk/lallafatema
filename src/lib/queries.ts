@@ -1,6 +1,6 @@
 import type { Where } from 'payload'
 
-import type { Category, Post, User } from '@/payload-types'
+import type { Category, Post, User, Video } from '@/payload-types'
 import { getPayloadClient } from './payload'
 
 const PUBLISHED: Where = { _status: { equals: 'published' } }
@@ -87,6 +87,18 @@ export async function getRelatedPosts(post: Post, limit = 4): Promise<Post[]> {
     post.category && typeof post.category === 'object' ? post.category.id : post.category
   if (!categoryId) return getLatestPosts(limit, [post.id])
   const { docs } = await getPosts({ categoryId, limit, excludeIds: [post.id] })
+  return docs
+}
+
+export async function getLatestVideos(limit = 5): Promise<Video[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'videos',
+    where: PUBLISHED,
+    sort: ['-publishedAt', '-createdAt'],
+    limit,
+    depth: 1,
+  })
   return docs
 }
 

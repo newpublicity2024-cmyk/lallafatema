@@ -156,6 +156,46 @@ const SAMPLE_POSTS: SamplePost[] = [
   },
 ]
 
+type SampleVideo = {
+  title: string
+  videoUrl: string
+  description: string
+  duration: string
+}
+
+const SAMPLE_VIDEOS: SampleVideo[] = [
+  {
+    title: 'مقابلة حصرية مع نجمة الموسم حول كواليس أحدث أعمالها',
+    videoUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+    description: 'حديث خاص عن التحضيرات والطموحات الفنية المقبلة.',
+    duration: '08:24',
+  },
+  {
+    title: 'جولة في أسبوع الموضة: أبرز الإطلالات على المنصّة',
+    videoUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
+    description: 'تغطية مصوّرة لأهم صيحات العروض هذا الموسم.',
+    duration: '05:11',
+  },
+  {
+    title: 'وصفة الكسكس المغربي خطوة بخطوة',
+    videoUrl: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+    description: 'طريقة تحضير الطبق التقليدي على طريقة لالة فاطمة.',
+    duration: '12:47',
+  },
+  {
+    title: 'روتين العناية بالبشرة في خمس دقائق',
+    videoUrl: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+    description: 'خطوات بسيطة لبشرة نضرة بمكوّنات في متناول الجميع.',
+    duration: '04:32',
+  },
+  {
+    title: 'تسريحات زفاف أنيقة لإطلالة لا تُنسى',
+    videoUrl: 'https://www.youtube.com/watch?v=L_jWHffIx5E',
+    description: 'أفكار تسريحات للعروس بين الكلاسيكي والعصري.',
+    duration: '06:58',
+  },
+]
+
 async function run() {
   const payload = await getPayload({ config: await config })
 
@@ -224,6 +264,35 @@ async function run() {
       },
     })
     payload.logger.info(`Created post: ${sample.title}`)
+  }
+
+  // 4) Sample videos (idempotent by title; category = فيديو, no thumbnail → placeholder).
+  const videoCategoryId = idBySlug.get('video')
+  let videoOrder = 0
+  for (const sample of SAMPLE_VIDEOS) {
+    const exists = await payload.find({
+      collection: 'videos',
+      where: { title: { equals: sample.title } },
+      limit: 1,
+    })
+    if (exists.docs[0]) continue
+
+    const publishedAt = new Date(Date.now() - videoOrder * 6 * 60 * 60 * 1000).toISOString()
+    videoOrder += 1
+
+    await payload.create({
+      collection: 'videos',
+      data: {
+        title: sample.title,
+        videoUrl: sample.videoUrl,
+        description: sample.description,
+        duration: sample.duration,
+        ...(videoCategoryId ? { category: videoCategoryId } : {}),
+        publishedAt,
+        _status: 'published',
+      },
+    })
+    payload.logger.info(`Created video: ${sample.title}`)
   }
 
   payload.logger.info('Seed complete.')

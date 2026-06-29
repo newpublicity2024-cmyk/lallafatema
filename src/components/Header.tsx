@@ -31,7 +31,7 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
+      <div className="lf-container flex items-center justify-between gap-4 py-3">
         <Link href="/" className="text-2xl font-extrabold tracking-tight text-brand-600">
           {SITE.name}
         </Link>
@@ -44,7 +44,7 @@ export async function Header() {
       </div>
 
       <nav aria-label="الأقسام" className="border-t border-zinc-100 bg-white">
-        <ul className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-2 py-1 text-sm font-bold whitespace-nowrap">
+        <ul className="lf-container flex items-center gap-1 overflow-x-auto py-1 text-sm font-bold whitespace-nowrap">
           {items.map((item) => (
             <li key={item.label} className="group relative">
               <Link

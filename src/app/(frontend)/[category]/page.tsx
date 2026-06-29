@@ -37,7 +37,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const { docs, totalPages } = await getPosts({ categoryId: category.id, limit: 16, page })
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
+    <main className="lf-container py-8">
       <SectionHeading title={category.name} />
 
       {docs.length === 0 ? (

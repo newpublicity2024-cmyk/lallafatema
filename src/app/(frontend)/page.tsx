@@ -1,7 +1,15 @@
 import { HeroFeature } from '@/components/HeroFeature'
+import { LeadListBlock } from '@/components/LeadListBlock'
 import { SectionBlock } from '@/components/SectionBlock'
+import { VideoSection } from '@/components/VideoSection'
 import type { Category, Post } from '@/payload-types'
-import { getCategories, getHomepage, getLatestPosts, getPostsByCategory } from '@/lib/queries'
+import {
+  getCategories,
+  getHomepage,
+  getLatestPosts,
+  getLatestVideos,
+  getPostsByCategory,
+} from '@/lib/queries'
 
 // ISR: statically generated; refreshed on publish via the afterChange hook,
 // with a long fallback interval as a safety net.
@@ -32,7 +40,7 @@ export default async function HomePage() {
       }),
     )
   } else {
-    const topLevel = (await getCategories()).filter((c) => !c.parent)
+    const topLevel = (await getCategories()).filter((c) => !c.parent && c.slug !== 'video')
     sections = await Promise.all(
       topLevel.map(async (category) => ({
         category,
@@ -41,12 +49,36 @@ export default async function HomePage() {
     )
   }
 
+  const videos = await getLatestVideos(5)
+
+  // First section is rendered as the asymmetric featured block; the rest are
+  // standard 4-up rows on alternating white / zinc-50 bands.
+  const [featured, ...standard] = sections
+
   return (
-    <main className="mx-auto max-w-7xl px-4">
+    <main>
       <HeroFeature posts={heroPosts} />
-      {sections.map(({ category, posts, title }) => (
-        <SectionBlock key={category.id} category={category} posts={posts} title={title} />
+
+      {featured && featured.posts.length > 0 && (
+        <LeadListBlock
+          category={featured.category}
+          posts={featured.posts}
+          title={featured.title}
+          band
+        />
+      )}
+
+      {standard.map(({ category, posts, title }, i) => (
+        <SectionBlock
+          key={category.id}
+          category={category}
+          posts={posts}
+          title={title}
+          band={i % 2 === 1}
+        />
       ))}
+
+      <VideoSection videos={videos} />
     </main>
   )
 }

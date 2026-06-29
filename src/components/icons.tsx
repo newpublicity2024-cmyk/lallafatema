@@ -48,6 +48,12 @@ export const YoutubeIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+export const PlayIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg {...base(props)}>
+    <path d="M8 5v14l11-7L8 5Z" />
+  </svg>
+)
+
 export const TiktokIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg {...base(props)}>
     <path d="M16.5 3c.3 2.3 1.6 3.7 3.8 3.9v2.6c-1.3.1-2.5-.3-3.8-1v6.1c0 3.6-2.6 5.8-5.7 5.4-3.4-.4-4.9-3.8-3.5-6.5.9-1.7 2.8-2.6 4.9-2.3v2.7c-.4-.1-.8-.2-1.2-.1-1.2.1-2 1-1.9 2.2.1 1.2 1.1 1.9 2.3 1.7 1-.2 1.6-1 1.6-2.1V3h3.5Z" />

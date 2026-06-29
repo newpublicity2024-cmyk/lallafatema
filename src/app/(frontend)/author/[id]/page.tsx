@@ -35,7 +35,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
   const { docs, totalPages } = await getPostsByAuthor(authorId, 12, page)
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
+    <main className="lf-container py-8">
       <header className="mb-8 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-start">
         <div className="relative h-24 w-24 flex-none overflow-hidden rounded-full bg-brand-100">
           <PostImage image={author.avatar} alt={author.name} sizes="96px" />
