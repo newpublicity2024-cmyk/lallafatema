@@ -266,6 +266,46 @@ async function run() {
     payload.logger.info(`Created post: ${sample.title}`)
   }
 
+  // 3b) Top up each top-level category to 4 published posts so the foochia-style
+  //     4-up grid fills out for the demo (idempotent by title).
+  const topUpExcerpt = 'محتوى تجريبي لعرض تصميم الصفحة الرئيسية بأسلوب المجلة العصري.'
+  for (const cat of SEED_CATEGORIES) {
+    if (cat.slug === 'video') continue
+    const categoryId = idBySlug.get(cat.slug)
+    if (!categoryId) continue
+
+    const { totalDocs } = await payload.find({
+      collection: 'posts',
+      where: { category: { equals: categoryId } },
+      limit: 1,
+    })
+
+    let have = totalDocs
+    let n = 1
+    while (have < 4) {
+      const title = `${cat.name}: موضوع تجريبي ${n}`
+      n += 1
+      const dup = await payload.find({ collection: 'posts', where: { title: { equals: title } }, limit: 1 })
+      if (dup.docs[0]) continue
+
+      const publishedAt = new Date(Date.now() - (order + have) * 4 * 60 * 60 * 1000).toISOString()
+      order += 1
+      await payload.create({
+        collection: 'posts',
+        data: {
+          title,
+          excerpt: topUpExcerpt,
+          category: categoryId,
+          ...(authorId ? { authors: [authorId] } : {}),
+          content: lexical([topUpExcerpt, topUpExcerpt]),
+          publishedAt,
+          _status: 'published',
+        },
+      })
+      have += 1
+    }
+  }
+
   // 4) Sample videos (idempotent by title; category = فيديو, no thumbnail → placeholder).
   const videoCategoryId = idBySlug.get('video')
   let videoOrder = 0

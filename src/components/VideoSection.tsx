@@ -13,8 +13,8 @@ export function VideoSection({ videos, title = 'فيديو' }: { videos: Video[]
   const list = rest.slice(0, 4)
 
   return (
-    <section className="bg-gradient-to-br from-brand-950 to-brand-900 text-white">
-      <div className="lf-container py-10">
+    <section className="lf-band-dark text-white">
+      <div className="lf-container py-12">
         <SectionHeading title={title} href={categoryUrl('video')} light />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <VideoCard video={lead} variant="lead" />

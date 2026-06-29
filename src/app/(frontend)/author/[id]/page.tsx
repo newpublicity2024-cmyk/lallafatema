@@ -51,7 +51,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
       {docs.length === 0 ? (
         <p className="py-16 text-center text-zinc-500">لا توجد مقالات منشورة بعد.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {docs.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}

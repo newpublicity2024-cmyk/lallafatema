@@ -22,10 +22,10 @@ export function SectionBlock({
   if (!posts.length) return null
 
   return (
-    <section className={band ? 'bg-zinc-50' : ''}>
-      <div className="lf-container py-8">
+    <section className={band ? 'lf-band' : ''}>
+      <div className="lf-container py-12">
         <SectionHeading title={title || category.name} href={categoryUrl(category.slug ?? '')} />
-        <div className="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}

@@ -46,13 +46,13 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
   if (variant === 'compact') {
     return (
       <article className="group flex items-start gap-3">
-        <Link href={href} className="relative aspect-square w-20 flex-none overflow-hidden rounded-lg">
+        <Link href={href} className="relative aspect-[4/3] w-28 flex-none overflow-hidden rounded-lg">
           {exclusive && <ExclusiveBadge small />}
-          <PostImage image={post.featuredImage} alt={post.title} sizes="80px" />
+          <PostImage image={post.featuredImage} alt={post.title} sizes="112px" />
         </Link>
         <div className="min-w-0">
           <Kicker category={category} />
-          <h3 className="mt-1 line-clamp-3 text-sm font-bold leading-snug text-zinc-800 group-hover:text-brand-700">
+          <h3 className="mt-1 line-clamp-3 text-[15px] font-medium leading-snug text-zinc-900 group-hover:text-brand-700">
             <Link href={href}>{post.title}</Link>
           </h3>
           <RelativeTime date={post.publishedAt} className="mt-1 block text-xs text-zinc-400" />
@@ -61,10 +61,10 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
     )
   }
 
-  // Overlay: text sits over the image (used for hero feature).
+  // Overlay: text sits over the image (used for hero feature). foochia hero = 16:9.
   if (variant === 'overlay') {
     return (
-      <article className="group relative aspect-[4/3] overflow-hidden rounded-2xl">
+      <article className="group relative aspect-video overflow-hidden rounded-xl">
         {exclusive && <ExclusiveBadge />}
         <PostImage
           image={post.featuredImage}
@@ -76,7 +76,7 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
           <Kicker category={category} light />
-          <h2 className="mt-2 text-xl font-extrabold leading-tight text-white drop-shadow sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-bold leading-tight text-white drop-shadow sm:text-3xl">
             <Link href={href} className="after:absolute after:inset-0">
               {post.title}
             </Link>
@@ -87,11 +87,11 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
     )
   }
 
-  // Lead: large image-top card with a white caption block (layalina editorial style).
+  // Lead: large 16:9 image card with caption block (foochia lead style).
   if (variant === 'lead') {
     return (
-      <article className="group flex flex-col">
-        <Link href={href} className="relative aspect-[16/10] overflow-hidden rounded-xl">
+      <article className="lf-card group">
+        <Link href={href} className="relative aspect-video overflow-hidden">
           {exclusive && <ExclusiveBadge />}
           <PostImage
             image={post.featuredImage}
@@ -101,9 +101,9 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
             className="transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
-        <div className="mt-3">
+        <div className="p-4">
           <Kicker category={category} />
-          <h3 className="mt-1 text-2xl font-extrabold leading-tight text-zinc-900 group-hover:text-brand-700 sm:text-3xl">
+          <h3 className="mt-1 text-2xl font-medium leading-tight text-zinc-900 group-hover:text-brand-700">
             <Link href={href}>{post.title}</Link>
           </h3>
           {post.excerpt && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-600">{post.excerpt}</p>}
@@ -115,13 +115,10 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
 
   const isHero = variant === 'hero'
 
-  // Default / hero: image on top, kicker, title, excerpt, time.
+  // Default / hero: foochia shadow-card — 4:3 image, padded caption, 20px/500 title.
   return (
-    <article className="group flex flex-col">
-      <Link
-        href={href}
-        className={`relative ${isHero ? 'aspect-[16/10] rounded-xl' : 'aspect-[4/3] rounded-lg'} overflow-hidden`}
-      >
+    <article className="lf-card group">
+      <Link href={href} className={`relative ${isHero ? 'aspect-video' : 'aspect-[4/3]'} overflow-hidden`}>
         {exclusive && <ExclusiveBadge />}
         <PostImage
           image={post.featuredImage}
@@ -131,11 +128,11 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
           className="transition-transform duration-500 group-hover:scale-105"
         />
       </Link>
-      <div className="mt-2.5">
+      <div className="p-4">
         <Kicker category={category} />
         <h3
-          className={`mt-1 font-extrabold leading-snug text-zinc-900 group-hover:text-brand-700 ${
-            isHero ? 'text-2xl leading-tight' : 'text-[15px]'
+          className={`mt-1 font-medium leading-snug text-zinc-900 group-hover:text-brand-700 ${
+            isHero ? 'text-2xl leading-tight' : 'text-xl'
           }`}
         >
           <Link href={href}>{post.title}</Link>
@@ -143,7 +140,7 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
         {isHero && post.excerpt && (
           <p className="mt-2 line-clamp-2 text-sm text-zinc-600">{post.excerpt}</p>
         )}
-        <RelativeTime date={post.publishedAt} className="mt-1.5 block text-xs text-zinc-400" />
+        <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-400" />
       </div>
     </article>
   )

@@ -41,3 +41,14 @@ Light/white base, magenta (`brand-600`/tints) accents, strong Arabic type hierar
 8. ✅ **Verify**: `tsc` clean, `eslint` clean, `pnpm build` succeeds (static homepage). HTTP check at runtime: RTL, video band present, **0 `/_next/image`** (custom loader), iframes not preloaded, category page 200. (Playwright screenshots skipped — MCP browser profile was locked by another instance.)
 
 Keep performance discipline (priority LCP hero, zero-CLS aspect ratios, minimal client JS) and the custom image loader (never Vercel's optimizer).
+
+## foochia spec (measured live at 1440px, applied verbatim)
+Tokens pulled from foochia.com's computed styles and applied across the layouts/cards:
+- **Container**: `max-width: 1296px`, centered, padding-inline 1rem→1.5rem (`.lf-container`).
+- **Grid gap**: `24px` both axes (`gap-6`) everywhere.
+- **Section vertical padding**: `48px` (`py-12`).
+- **Card** (`.lf-card`): white, radius `12px`, soft shadow (foochia `shadow-post`), no border; image **4:3** rounded top only, padded caption (`p-4`), title **20px / weight 500**.
+- **Hero/lead image**: **16:9** (`aspect-video`).
+- **Section heading**: `28px / 700`, leading-none, near-black, short magenta underline; "المزيد" = gray pill (`bg-zinc-200`, radius 6px, h-9).
+- **Bands**: light `#f0f0f0` (`.lf-band`), dark video band `#23112c` (`.lf-band-dark`).
+- Seed tops up each top-level category to 4 published posts so the 4-up grid fills.

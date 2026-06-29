@@ -23,17 +23,35 @@
 }
 
 @layer components {
-  /* Wide magazine container — foochia-style: use the viewport, tight gutters. */
+  /* Magazine container — foochia spec: 1296px content, centered, tight gutters. */
   .lf-container {
     margin-inline: auto;
     width: 100%;
-    max-width: 1480px;
-    padding-inline: 0.75rem;
+    max-width: 1296px;
+    padding-inline: 1rem;
   }
   @media (min-width: 640px) {
     .lf-container {
-      padding-inline: 1.25rem;
+      padding-inline: 1.5rem;
     }
+  }
+
+  /* Alternating section bands (foochia: light gray #f0f0f0 / dark purple #23112c). */
+  .lf-band {
+    background-color: #f0f0f0;
+  }
+  .lf-band-dark {
+    background-color: #23112c;
+  }
+
+  /* Post card — foochia "shadow-post": white, 12px radius, soft shadow, no border. */
+  .lf-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 12px rgba(0, 0, 0, 0.07);
   }
 }
 

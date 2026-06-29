@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 /**
- * Section heading: bold title with a short magenta underline (foochia/layalina),
- * plus an optional "عرض الكل" pill on the opposite side. `light` for dark bands.
+ * Section heading (foochia): bold 28px title with a short magenta underline, plus
+ * an optional gray "المزيد" pill on the opposite side. `light` for dark bands.
  */
 export function SectionHeading({
   title,
@@ -14,9 +14,9 @@ export function SectionHeading({
   light?: boolean
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    <div className="mb-6 flex items-center justify-between gap-4">
       <h2
-        className={`relative pb-2 text-2xl font-extrabold tracking-tight after:absolute after:bottom-0 after:start-0 after:h-1 after:w-12 after:rounded-full after:bg-brand-600 sm:text-3xl ${
+        className={`relative pb-2 text-[28px] leading-none font-bold tracking-tight after:absolute after:bottom-0 after:start-0 after:h-1 after:w-10 after:rounded-full after:bg-brand-600 ${
           light ? 'text-white' : 'text-zinc-900'
         }`}
       >
@@ -25,13 +25,13 @@ export function SectionHeading({
       {href && (
         <Link
           href={href}
-          className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold transition-colors ${
+          className={`grid h-9 shrink-0 place-items-center rounded-md px-3 text-base font-normal transition-colors ${
             light
-              ? 'text-brand-200 hover:bg-white/10'
-              : 'text-brand-600 hover:bg-brand-50'
+              ? 'bg-white/10 text-white hover:bg-white/20'
+              : 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300'
           }`}
         >
-          عرض الكل ←
+          المزيد ←
         </Link>
       )}
     </div>

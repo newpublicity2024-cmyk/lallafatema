@@ -24,8 +24,8 @@ export function LeadListBlock({
   const list = rest.slice(0, 4)
 
   return (
-    <section className={band ? 'bg-zinc-50' : ''}>
-      <div className="lf-container py-8">
+    <section className={band ? 'lf-band' : ''}>
+      <div className="lf-container py-12">
         <SectionHeading title={title || category.name} href={categoryUrl(category.slug ?? '')} />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <PostCard post={lead} variant="lead" />
