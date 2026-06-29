@@ -15,6 +15,8 @@ import { Posts } from './collections/Posts'
 import { Videos } from './collections/Videos'
 import { MagazineIssues } from './collections/MagazineIssues'
 import { Pages } from './collections/Pages'
+import { Homepage } from './globals/Homepage'
+import { MainMenu } from './globals/MainMenu'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -52,8 +54,23 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    // Live preview against the real frontend (draft-aware via /preview).
+    livePreview: {
+      collections: ['posts', 'pages'],
+      breakpoints: [
+        { label: 'هاتف', name: 'mobile', width: 375, height: 667 },
+        { label: 'لوحي', name: 'tablet', width: 768, height: 1024 },
+        { label: 'سطح المكتب', name: 'desktop', width: 1440, height: 900 },
+      ],
+      url: ({ data, collectionConfig }) => {
+        const base = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+        const secret = process.env.REVALIDATE_SECRET || ''
+        return `${base}/preview?secret=${secret}&collection=${collectionConfig?.slug}&id=${data?.id}`
+      },
+    },
   },
   collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Media, Users],
+  globals: [Homepage, MainMenu],
   editor: lexicalEditor(),
   // Arabic-first, RTL admin for the editorial team.
   i18n: {

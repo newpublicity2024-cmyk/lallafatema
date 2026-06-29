@@ -51,4 +51,8 @@ node_modules/
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Local verification screenshots / scratch
+/lf-*.png
+/_*.ts
 /*.png

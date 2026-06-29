@@ -9,6 +9,7 @@ import {
 } from '../access'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
@@ -25,7 +26,9 @@ export const Posts: CollectionConfig = {
     delete: canModifyOwnPosts,
   },
   versions: {
-    drafts: true,
+    drafts: {
+      autosave: { interval: 375 }, // powers live preview + autosave
+    },
     maxPerDoc: 25,
   },
   hooks: {
@@ -51,6 +54,8 @@ export const Posts: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [revalidateAfterChange],
+    afterDelete: [revalidateAfterDelete],
   },
   fields: [
     {

@@ -5,6 +5,16 @@ import { getPayloadClient } from './payload'
 
 const PUBLISHED: Where = { _status: { equals: 'published' } }
 
+export async function getHomepage() {
+  const payload = await getPayloadClient()
+  return payload.findGlobal({ slug: 'homepage', depth: 2 })
+}
+
+export async function getMainMenu() {
+  const payload = await getPayloadClient()
+  return payload.findGlobal({ slug: 'main-menu', depth: 1 })
+}
+
 export async function getCategories(): Promise<Category[]> {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
@@ -60,11 +70,12 @@ export async function getPostsByCategory(categoryId: number, limit = 6): Promise
   return docs
 }
 
-export async function getPostById(id: number): Promise<Post | null> {
+export async function getPostById(id: number, draft = false): Promise<Post | null> {
   const payload = await getPayloadClient()
   try {
-    const post = await payload.findByID({ collection: 'posts', id, depth: 2 })
-    if (post._status !== 'published') return null
+    const post = await payload.findByID({ collection: 'posts', id, depth: 2, draft })
+    // Public reads only see published; preview (draft=true) sees the latest draft.
+    if (!draft && post._status !== 'published') return null
     return post
   } catch {
     return null

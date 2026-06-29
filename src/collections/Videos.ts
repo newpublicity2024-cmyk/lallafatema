@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { canReadPublished, isAdminOrEditor, isAuthenticated } from '../access'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 export const Videos: CollectionConfig = {
   slug: 'videos',
@@ -19,6 +20,10 @@ export const Videos: CollectionConfig = {
     delete: isAdminOrEditor,
   },
   versions: { drafts: true, maxPerDoc: 10 },
+  hooks: {
+    afterChange: [revalidateAfterChange],
+    afterDelete: [revalidateAfterDelete],
+  },
   fields: [
     {
       name: 'title',

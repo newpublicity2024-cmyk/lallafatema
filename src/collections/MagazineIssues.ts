@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { canReadPublished, isAdminOrEditor } from '../access'
+import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 export const MagazineIssues: CollectionConfig = {
   slug: 'magazine-issues',
@@ -18,6 +19,10 @@ export const MagazineIssues: CollectionConfig = {
     delete: isAdminOrEditor,
   },
   versions: { drafts: true, maxPerDoc: 5 },
+  hooks: {
+    afterChange: [revalidateAfterChange],
+    afterDelete: [revalidateAfterDelete],
+  },
   defaultSort: '-issueNumber',
   fields: [
     {

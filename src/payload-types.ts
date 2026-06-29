@@ -99,8 +99,14 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    homepage: Homepage;
+    'main-menu': MainMenu;
+  };
+  globalsSelect: {
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'main-menu': MainMenuSelect<false> | MainMenuSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -723,6 +729,112 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  /**
+   * المقالات المثبّتة في أعلى الصفحة. اتركها فارغة لعرض أحدث المقالات تلقائيًا.
+   */
+  heroPosts?: (number | Post)[] | null;
+  /**
+   * رتّب الأقسام التي تظهر في الصفحة الرئيسية. اتركها فارغة لعرض كل الأقسام.
+   */
+  sections?:
+    | {
+        category: number | Category;
+        titleOverride?: string | null;
+        limit?: number | null;
+        /**
+         * اتركها فارغة لعرض أحدث المقالات في هذا القسم.
+         */
+        pinnedPosts?: (number | Post)[] | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "main-menu".
+ */
+export interface MainMenu {
+  id: number;
+  /**
+   * اتركها فارغة لعرض كل الأقسام تلقائيًا.
+   */
+  items?:
+    | {
+        label: string;
+        /**
+         * اربط العنصر بقسم، أو استخدم رابطًا مخصّصًا أدناه.
+         */
+        category?: (number | null) | Category;
+        url?: string | null;
+        children?:
+          | {
+              label: string;
+              /**
+               * اربط العنصر بقسم، أو استخدم رابطًا مخصّصًا أدناه.
+               */
+              category?: (number | null) | Category;
+              url?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  heroPosts?: T;
+  sections?:
+    | T
+    | {
+        category?: T;
+        titleOverride?: T;
+        limit?: T;
+        pinnedPosts?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "main-menu_select".
+ */
+export interface MainMenuSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        label?: T;
+        category?: T;
+        url?: T;
+        children?:
+          | T
+          | {
+              label?: T;
+              category?: T;
+              url?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
