@@ -15,7 +15,7 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
   const shareUrl = `${process.env.NEXT_PUBLIC_SERVER_URL ?? ''}${postUrl(post)}`
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <main className="mx-auto max-w-[1000px] px-4 py-8">
       <article>
         <nav className="mb-3 text-sm text-zinc-500">
           <Link href="/" className="hover:text-brand-600">الرئيسية</Link>
@@ -54,7 +54,7 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
         </div>
 
         <div className="relative mt-6 aspect-[16/9] overflow-hidden rounded-2xl">
-          <PostImage image={post.featuredImage} alt={post.title} priority sizes="(max-width: 768px) 100vw, 768px" />
+          <PostImage image={post.featuredImage} alt={post.title} priority sizes="(max-width: 1000px) 100vw, 1000px" />
         </div>
 
         {post.excerpt && <p className="mt-6 text-lg font-medium text-zinc-600">{post.excerpt}</p>}
