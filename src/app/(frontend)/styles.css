@@ -44,10 +44,10 @@
     background-color: #23112c;
   }
 
-  /* Post card — foochia "shadow-post": white, 12px radius, soft shadow, no border. */
+  /* Post card — foochia "shadow-post": white, 12px radius, soft shadow, no border.
+   * Cosmetic only; layout (flex column) is set via utilities on the element so the
+   * image anchor is blockified and its aspect-ratio reserves height correctly. */
   .lf-card {
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
     border-radius: 12px;
     background-color: #ffffff;

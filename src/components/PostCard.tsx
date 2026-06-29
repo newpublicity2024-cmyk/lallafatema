@@ -37,7 +37,16 @@ function Kicker({ category, light = false }: { category: Category | null; light?
   )
 }
 
-export function PostCard({ post, variant = 'default' }: { post: Post; variant?: Variant }) {
+export function PostCard({
+  post,
+  variant = 'default',
+  fill = false,
+}: {
+  post: Post
+  variant?: Variant
+  /** Overlay only: stretch to the parent's height instead of a fixed 16:9 ratio. */
+  fill?: boolean
+}) {
   const category = categoryOf(post)
   const exclusive = isExclusive(category)
   const href = postUrl(post)
@@ -46,7 +55,7 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
   if (variant === 'compact') {
     return (
       <article className="group flex items-start gap-3">
-        <Link href={href} className="relative aspect-[4/3] w-28 flex-none overflow-hidden rounded-lg">
+        <Link href={href} className="relative block aspect-[4/3] w-28 flex-none overflow-hidden rounded-lg">
           {exclusive && <ExclusiveBadge small />}
           <PostImage image={post.featuredImage} alt={post.title} sizes="112px" />
         </Link>
@@ -64,7 +73,11 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
   // Overlay: text sits over the image (used for hero feature). foochia hero = 16:9.
   if (variant === 'overlay') {
     return (
-      <article className="group relative aspect-video overflow-hidden rounded-xl">
+      <article
+        className={`group relative overflow-hidden rounded-xl ${
+          fill ? 'aspect-video lg:aspect-auto lg:h-full' : 'aspect-video'
+        }`}
+      >
         {exclusive && <ExclusiveBadge />}
         <PostImage
           image={post.featuredImage}
@@ -90,8 +103,8 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
   // Lead: large 16:9 image card with caption block (foochia lead style).
   if (variant === 'lead') {
     return (
-      <article className="lf-card group">
-        <Link href={href} className="relative aspect-video overflow-hidden">
+      <article className="lf-card group flex flex-col">
+        <Link href={href} className="relative block aspect-video overflow-hidden">
           {exclusive && <ExclusiveBadge />}
           <PostImage
             image={post.featuredImage}
@@ -117,8 +130,11 @@ export function PostCard({ post, variant = 'default' }: { post: Post; variant?: 
 
   // Default / hero: foochia shadow-card — 4:3 image, padded caption, 20px/500 title.
   return (
-    <article className="lf-card group">
-      <Link href={href} className={`relative ${isHero ? 'aspect-video' : 'aspect-[4/3]'} overflow-hidden`}>
+    <article className="lf-card group flex flex-col">
+      <Link
+        href={href}
+        className={`relative block ${isHero ? 'aspect-video' : 'aspect-[4/3]'} overflow-hidden`}
+      >
         {exclusive && <ExclusiveBadge />}
         <PostImage
           image={post.featuredImage}

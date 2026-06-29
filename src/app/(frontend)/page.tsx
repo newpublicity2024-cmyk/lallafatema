@@ -68,6 +68,9 @@ export default async function HomePage() {
         />
       )}
 
+      {/* Video band placed directly after the مشاهير (celebrities) feature. */}
+      <VideoSection videos={videos} />
+
       {standard.map(({ category, posts, title }, i) => (
         <SectionBlock
           key={category.id}
@@ -77,8 +80,6 @@ export default async function HomePage() {
           band={i % 2 === 1}
         />
       ))}
-
-      <VideoSection videos={videos} />
     </main>
   )
 }

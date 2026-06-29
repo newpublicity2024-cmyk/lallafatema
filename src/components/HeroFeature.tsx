@@ -12,9 +12,9 @@ export function HeroFeature({ posts }: { posts: Post[] }) {
 
   return (
     <section>
-      <div className="lf-container grid grid-cols-1 gap-6 py-8 lg:grid-cols-12">
+      <div className="lf-container grid grid-cols-1 items-stretch gap-6 py-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <PostCard post={lead} variant="overlay" />
+          <PostCard post={lead} variant="overlay" fill />
         </div>
         {secondary.length > 0 && (
           <div className="grid grid-cols-2 gap-6 lg:col-span-5">
