@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { anyone, isAdminOrEditor } from '../access'
+import { seoField } from '../fields/seo'
 import { slugField } from '../fields/slug'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
@@ -43,5 +44,6 @@ export const Categories: CollectionConfig = {
       label: 'الوصف',
     },
     slugField('name'),
+    seoField,
   ],
 }

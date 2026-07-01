@@ -16,6 +16,7 @@ import { Videos } from './collections/Videos'
 import { MagazineIssues } from './collections/MagazineIssues'
 import { Pages } from './collections/Pages'
 import { Ads } from './collections/Ads'
+import { Redirects } from './collections/Redirects'
 import { Homepage } from './globals/Homepage'
 import { MainMenu } from './globals/MainMenu'
 import { SiteSettings } from './globals/SiteSettings'
@@ -88,7 +89,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Ads, Media, Users],
+  collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Ads, Redirects, Media, Users],
   globals: [Homepage, MainMenu, SiteSettings],
   editor: lexicalEditor(),
   // Arabic-first, RTL admin for the editorial team.

@@ -1,5 +1,8 @@
+import type { Metadata } from 'next'
+
 import { AdSlot } from '@/components/AdSlot'
 import { HeroFeature } from '@/components/HeroFeature'
+import { JsonLd } from '@/components/JsonLd'
 import { LeadListBlock } from '@/components/LeadListBlock'
 import { SectionBlock } from '@/components/SectionBlock'
 import { VideoSection } from '@/components/VideoSection'
@@ -10,11 +13,24 @@ import {
   getLatestPosts,
   getLatestVideos,
   getPostsByCategory,
+  getSiteConfig,
 } from '@/lib/queries'
+import { buildMetadata, ogImageUrl, videoObjectJsonLd } from '@/lib/seo'
 
 // ISR: statically generated; refreshed on publish via the afterChange hook,
 // with a long fallback interval as a safety net.
 export const revalidate = 3600
+
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg = await getSiteConfig()
+  return buildMetadata({
+    title: cfg.name,
+    description: cfg.tagline,
+    path: '/',
+    image: ogImageUrl(cfg.defaultOgImage),
+    type: 'website',
+  })
+}
 
 const onlyPublished = (items: (number | Post)[] | null | undefined): Post[] =>
   (items ?? []).filter((p): p is Post => typeof p === 'object' && p._status === 'published')
@@ -78,6 +94,12 @@ export default async function HomePage() {
 
   return (
     <main>
+      {/* VideoObject requires a thumbnailUrl — only emit for videos that have one. */}
+      {videos
+        .filter((v) => v.thumbnail && typeof v.thumbnail === 'object' && v.thumbnail.url)
+        .map((v) => (
+          <JsonLd key={v.id} data={videoObjectJsonLd(v)} />
+        ))}
       <HeroFeature posts={heroPosts} />
 
       {featured && featured.posts.length > 0 && (

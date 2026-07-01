@@ -30,3 +30,23 @@ export const revalidateGlobalAfterChange: GlobalAfterChangeHook = ({ doc }) => {
   revalidateSite()
   return doc
 }
+
+export const revalidateRedirects: CollectionAfterChangeHook = ({ doc }) => {
+  try {
+    revalidatePath('/redirects-map.json')
+  } catch {
+    /* outside request scope — ignore */
+  }
+  revalidateSite()
+  return doc
+}
+
+export const revalidateRedirectsAfterDelete: CollectionAfterDeleteHook = ({ doc }) => {
+  try {
+    revalidatePath('/redirects-map.json')
+  } catch {
+    /* ignore */
+  }
+  revalidateSite()
+  return doc
+}

@@ -74,6 +74,7 @@ export interface Config {
     'magazine-issues': MagazineIssue;
     pages: Page;
     ads: Ad;
+    redirects: Redirect;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -90,6 +91,7 @@ export interface Config {
     'magazine-issues': MagazineIssuesSelect<false> | MagazineIssuesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     ads: AdsSelect<false> | AdsSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -253,6 +255,16 @@ export interface Category {
    * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
    */
   slug?: string | null;
+  /**
+   * اتركها فارغة لاستخدام العنوان والمقتطف والصورة البارزة افتراضيًا.
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+    canonicalURL?: string | null;
+    noIndex?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -463,6 +475,25 @@ export interface Ad {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  /**
+   * المسار فقط، يبدأ بشرطة مائلة. مثال: /old-article-123
+   */
+  from: string;
+  /**
+   * مسار داخلي (/new) أو رابط كامل.
+   */
+  to: string;
+  type?: ('301' | '302') | null;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -512,6 +543,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ads';
         value: number | Ad;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null)
     | ({
         relationTo: 'media';
@@ -620,6 +655,15 @@ export interface CategoriesSelect<T extends boolean = true> {
   parent?: T;
   description?: T;
   slug?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        canonicalURL?: T;
+        noIndex?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -714,6 +758,18 @@ export interface AdsSelect<T extends boolean = true> {
   startDate?: T;
   endDate?: T;
   categories?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?: T;
+  type?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
 }

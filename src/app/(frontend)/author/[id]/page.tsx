@@ -5,7 +5,8 @@ import { Pagination } from '@/components/Pagination'
 import { PostCard } from '@/components/PostCard'
 import { PostImage } from '@/components/PostImage'
 import { SectionHeading } from '@/components/SectionHeading'
-import { getAuthorById, getPostsByAuthor } from '@/lib/queries'
+import { buildMetadata, ogImageUrl } from '@/lib/seo'
+import { getAuthorById, getPostsByAuthor, getSiteConfig } from '@/lib/queries'
 import { authorUrl } from '@/lib/routes'
 
 export const revalidate = 300
@@ -19,7 +20,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const author = await getAuthorById(Number(id))
   if (!author) return {}
-  return { title: author.name, description: author.bio || undefined }
+  const cfg = await getSiteConfig()
+  const title = author.title ? `${author.name} — ${author.title}` : author.name
+  return buildMetadata({
+    title,
+    description: author.bio,
+    path: authorUrl(author.id),
+    image: ogImageUrl(author.avatar, cfg.defaultOgImage),
+    type: 'profile',
+  })
 }
 
 export default async function AuthorPage({ params, searchParams }: Props) {

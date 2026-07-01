@@ -100,7 +100,8 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     collection: 'categories',
     where: { slug: { equals: slug } },
     limit: 1,
-    depth: 0,
+    // depth 1 resolves seo.ogImage (upload) so category OG metadata can use it.
+    depth: 1,
   })
   return docs[0] ?? null
 }
