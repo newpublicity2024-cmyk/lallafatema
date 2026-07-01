@@ -8,8 +8,10 @@ type RedirectMap = Record<string, { to: string; type: number }>
  * via the cached `/redirects-map.json` route. Kept deliberately small (groundwork);
  * wildcard/regex matching and the bulk WordPress map land in Phase 7. Any failure to
  * load the map falls through to `next()` so a redirect glitch never takes the site down.
+ *
+ * Uses Next 16's `proxy` file convention (the renamed `middleware`).
  */
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   try {
     const res = await fetch(new URL('/redirects-map.json', req.url), {
