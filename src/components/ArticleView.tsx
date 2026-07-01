@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Category, Post, User } from '@/payload-types'
 import { formatDate } from '@/lib/format'
 import { authorUrl, categoryUrl, postUrl } from '@/lib/routes'
+import { AdSlot } from './AdSlot'
 import { PostCard } from './PostCard'
 import { PostImage } from './PostImage'
 import { SectionHeading } from './SectionHeading'
@@ -66,6 +67,9 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
         )}
 
         {post.isRecipe && post.recipe && <RecipeBlock recipe={post.recipe} />}
+
+        {/* In-article ad, targeted to this post's category — renders nothing when unscheduled. */}
+        <AdSlot placement="in-article" categoryId={category?.id} className="my-8" />
 
         <hr className="my-8 border-zinc-200" />
         <ShareButtons url={shareUrl} title={post.title} />

@@ -15,8 +15,10 @@ import { Posts } from './collections/Posts'
 import { Videos } from './collections/Videos'
 import { MagazineIssues } from './collections/MagazineIssues'
 import { Pages } from './collections/Pages'
+import { Ads } from './collections/Ads'
 import { Homepage } from './globals/Homepage'
 import { MainMenu } from './globals/MainMenu'
+import { SiteSettings } from './globals/SiteSettings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -62,6 +64,15 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    // Editorial control-center landing panel (quick actions + my drafts), RTL.
+    components: {
+      beforeDashboard: ['/components/admin/BeforeDashboard#default'],
+      // Brand the admin login wordmark + nav icon (matches the public favicon).
+      graphics: {
+        Logo: '/components/admin/Logo#default',
+        Icon: '/components/admin/Icon#default',
+      },
+    },
     // Live preview against the real frontend (draft-aware via /preview).
     livePreview: {
       collections: ['posts', 'pages'],
@@ -77,8 +88,8 @@ export default buildConfig({
       },
     },
   },
-  collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Media, Users],
-  globals: [Homepage, MainMenu],
+  collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Ads, Media, Users],
+  globals: [Homepage, MainMenu, SiteSettings],
   editor: lexicalEditor(),
   // Arabic-first, RTL admin for the editorial team.
   i18n: {

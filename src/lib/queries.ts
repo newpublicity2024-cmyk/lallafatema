@@ -1,6 +1,14 @@
 import type { Where } from 'payload'
 
-import type { Category, Post, User, Video } from '@/payload-types'
+import type { Ad, Category, Media, Post, User, Video } from '@/payload-types'
+import {
+  FOOTER_PAGES,
+  NEWPUB_LINKS,
+  SITE,
+  SOCIAL_LABELS,
+  SOCIAL_LINKS,
+  type SocialKey,
+} from './site'
 import { getPayloadClient } from './payload'
 
 const PUBLISHED: Where = { _status: { equals: 'published' } }
@@ -13,6 +21,66 @@ export async function getHomepage() {
 export async function getMainMenu() {
   const payload = await getPayloadClient()
   return payload.findGlobal({ slug: 'main-menu', depth: 1 })
+}
+
+export async function getSiteSettings() {
+  const payload = await getPayloadClient()
+  return payload.findGlobal({ slug: 'site-settings', depth: 1 })
+}
+
+export type SiteConfig = {
+  name: string
+  tagline: string
+  logo: Media | null
+  defaultOgImage: Media | null
+  social: { key: SocialKey; label: string; href: string }[]
+  footerPages: { label: string; href: string }[]
+  newpubLinks: { label: string; href: string }[]
+  headScripts: string
+  bodyScripts: string
+  analyticsId: string
+  adsEnabled: boolean
+}
+
+/**
+ * Resolved site config: DB-managed Site Settings merged over the original
+ * `src/lib/site.ts` constants as fallbacks, so the site is fully editable yet
+ * never blank if the global hasn't been filled in. Components consume this single
+ * normalized shape instead of reading the raw global.
+ */
+export async function getSiteConfig(): Promise<SiteConfig> {
+  const s = await getSiteSettings()
+  const asMedia = (v: unknown): Media | null => (v && typeof v === 'object' ? (v as Media) : null)
+
+  const social = (s.social ?? [])
+    .filter((row) => row.url)
+    .map((row) => ({
+      key: row.platform as SocialKey,
+      label: SOCIAL_LABELS[row.platform as SocialKey] ?? row.platform,
+      href: row.url,
+    }))
+
+  const footerPages = (s.footerPages ?? [])
+    .filter((p) => p.label && p.href)
+    .map((p) => ({ label: p.label, href: p.href }))
+
+  const newpubLinks = (s.newpubLinks ?? [])
+    .filter((p) => p.label && p.href)
+    .map((p) => ({ label: p.label, href: p.href }))
+
+  return {
+    name: s.name || SITE.name,
+    tagline: s.tagline || SITE.tagline,
+    logo: asMedia(s.logo),
+    defaultOgImage: asMedia(s.defaultOgImage),
+    social: social.length ? social : SOCIAL_LINKS,
+    footerPages: footerPages.length ? footerPages : FOOTER_PAGES,
+    newpubLinks: newpubLinks.length ? newpubLinks : NEWPUB_LINKS,
+    headScripts: s.headScripts ?? '',
+    bodyScripts: s.bodyScripts ?? '',
+    analyticsId: s.analyticsId ?? '',
+    adsEnabled: s.adsEnabled ?? true,
+  }
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -100,6 +168,56 @@ export async function getLatestVideos(limit = 5): Promise<Video[]> {
     depth: 1,
   })
   return docs
+}
+
+type AdPlacement = Ad['placement']
+
+/**
+ * Active ads for a placement, highest `priority` first.
+ *
+ * The schedule window (active + start/end) is enforced here in the query, not just
+ * in the collection's `read` access — the Local API runs with `overrideAccess` by
+ * default, so a paused/expired creative would otherwise leak to visitors.
+ *
+ * Category targeting is applied in JS: an ad with no `categories` shows everywhere;
+ * an ad with categories shows only when `categoryId` matches one of them. (Expressing
+ * "no targeting OR matches" on a hasMany relationship in a single `Where` is awkward,
+ * and ad volume is tiny, so a post-filter is both simpler and correct.)
+ */
+export async function getActiveAds(placement: AdPlacement, categoryId?: number): Promise<Ad[]> {
+  // Master switch — lets an admin pause all ads site-wide without deleting them.
+  const { adsEnabled } = await getSiteConfig()
+  if (!adsEnabled) return []
+
+  const payload = await getPayloadClient()
+  const now = new Date().toISOString()
+  const { docs } = await payload.find({
+    collection: 'ads',
+    where: {
+      and: [
+        { placement: { equals: placement } },
+        { active: { equals: true } },
+        { or: [{ startDate: { exists: false } }, { startDate: { less_than_equal: now } }] },
+        { or: [{ endDate: { exists: false } }, { endDate: { greater_than_equal: now } }] },
+      ],
+    },
+    sort: ['-priority', '-createdAt'],
+    limit: 20,
+    depth: 1,
+  })
+
+  return docs.filter((ad) => {
+    const targets = ad.categories
+    if (!targets || targets.length === 0) return true
+    if (!categoryId) return false
+    return targets.some((c) => (typeof c === 'object' ? c.id : c) === categoryId)
+  })
+}
+
+/** First active ad for a placement (most slots show a single creative). */
+export async function getActiveAd(placement: AdPlacement, categoryId?: number): Promise<Ad | null> {
+  const ads = await getActiveAds(placement, categoryId)
+  return ads[0] ?? null
 }
 
 export async function getAuthorById(id: number): Promise<User | null> {

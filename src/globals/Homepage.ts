@@ -27,6 +27,51 @@ export const Homepage: GlobalConfig = {
       },
     },
     {
+      name: 'featuredCategory',
+      type: 'relationship',
+      relationTo: 'categories',
+      label: 'القسم المميّز (يُعرض ككتلة بارزة)',
+      admin: {
+        description:
+          'القسم الذي يُعرض بتصميم القائمة البارزة (LeadListBlock) أسفل الواجهة. ' +
+          'اتركه فارغًا لاستخدام القسم الأول تلقائيًا.',
+      },
+    },
+    {
+      name: 'videoBand',
+      type: 'group',
+      label: 'شريط الفيديو',
+      fields: [
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          label: 'إظهار شريط الفيديو',
+          defaultValue: true,
+        },
+        {
+          name: 'pinnedVideos',
+          type: 'relationship',
+          relationTo: 'videos',
+          hasMany: true,
+          label: 'فيديوهات مثبّتة (اختياري)',
+          admin: { description: 'اتركها فارغة لعرض أحدث الفيديوهات تلقائيًا.' },
+        },
+      ],
+    },
+    {
+      name: 'ads',
+      type: 'group',
+      label: 'إعلانات الصفحة الرئيسية',
+      fields: [
+        {
+          name: 'betweenSections',
+          type: 'checkbox',
+          label: 'إظهار إعلان بين الأقسام',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       name: 'sections',
       type: 'array',
       label: 'أقسام الصفحة',

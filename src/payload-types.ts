@@ -73,6 +73,7 @@ export interface Config {
     videos: Video;
     'magazine-issues': MagazineIssue;
     pages: Page;
+    ads: Ad;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -88,6 +89,7 @@ export interface Config {
     videos: VideosSelect<false> | VideosSelect<true>;
     'magazine-issues': MagazineIssuesSelect<false> | MagazineIssuesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    ads: AdsSelect<false> | AdsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -102,10 +104,12 @@ export interface Config {
   globals: {
     homepage: Homepage;
     'main-menu': MainMenu;
+    'site-settings': SiteSetting;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     'main-menu': MainMenuSelect<false> | MainMenuSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -406,6 +410,59 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads".
+ */
+export interface Ad {
+  id: number;
+  /**
+   * اسم تعريفي للإدارة فقط، لا يظهر للزوّار.
+   */
+  title: string;
+  /**
+   * مكان عرض الإعلان على الموقع.
+   */
+  placement: 'header' | 'sidebar' | 'in-article' | 'between-sections' | 'footer' | 'popup';
+  format: 'image' | 'script';
+  image?: (number | null) | Media;
+  /**
+   * الرابط الذي يُفتح عند النقر على الإعلان.
+   */
+  targetUrl?: string | null;
+  /**
+   * يصف الإعلان لقارئات الشاشة ومحركات البحث.
+   */
+  alt?: string | null;
+  newTab?: boolean | null;
+  /**
+   * الكود الذي يُحقن في مكان الإعلان نفسه، مثل <ins class="adsbygoogle">…</ins>. محمّل الشبكة الرئيسي (مثل adsbygoogle.js) يُضاف مرة واحدة في إعدادات الموقع.
+   */
+  bodyScript?: string | null;
+  /**
+   * كود JS إضافي لرأس الصفحة إذا تطلّبت هذه الوحدة ذلك. اتركه فارغًا في الغالب.
+   */
+  headScript?: string | null;
+  active?: boolean | null;
+  /**
+   * الأعلى رقمًا يظهر أولًا عند التناوب بين عدّة إعلانات في نفس الموضع.
+   */
+  priority?: number | null;
+  /**
+   * اتركه فارغًا للبدء فورًا.
+   */
+  startDate?: string | null;
+  /**
+   * اتركه فارغًا بلا تاريخ انتهاء.
+   */
+  endDate?: string | null;
+  /**
+   * اعرض الإعلان فقط في صفحات هذه الأقسام. اتركه فارغًا للعرض في كل مكان.
+   */
+  categories?: (number | Category)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -451,6 +508,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'ads';
+        value: number | Ad;
       } | null)
     | ({
         relationTo: 'media';
@@ -636,6 +697,28 @@ export interface PagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads_select".
+ */
+export interface AdsSelect<T extends boolean = true> {
+  title?: T;
+  placement?: T;
+  format?: T;
+  image?: T;
+  targetUrl?: T;
+  alt?: T;
+  newTab?: T;
+  bodyScript?: T;
+  headScript?: T;
+  active?: T;
+  priority?: T;
+  startDate?: T;
+  endDate?: T;
+  categories?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -741,6 +824,20 @@ export interface Homepage {
    */
   heroPosts?: (number | Post)[] | null;
   /**
+   * القسم الذي يُعرض بتصميم القائمة البارزة (LeadListBlock) أسفل الواجهة. اتركه فارغًا لاستخدام القسم الأول تلقائيًا.
+   */
+  featuredCategory?: (number | null) | Category;
+  videoBand?: {
+    enabled?: boolean | null;
+    /**
+     * اتركها فارغة لعرض أحدث الفيديوهات تلقائيًا.
+     */
+    pinnedVideos?: (number | Video)[] | null;
+  };
+  ads?: {
+    betweenSections?: boolean | null;
+  };
+  /**
    * رتّب الأقسام التي تظهر في الصفحة الرئيسية. اتركها فارغة لعرض كل الأقسام.
    */
   sections?:
@@ -794,10 +891,75 @@ export interface MainMenu {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  name?: string | null;
+  tagline?: string | null;
+  logo?: (number | null) | Media;
+  /**
+   * تُستخدم عند مشاركة الصفحات التي لا تملك صورة OG خاصة.
+   */
+  defaultOgImage?: (number | null) | Media;
+  social?:
+    | {
+        platform: 'facebook' | 'instagram' | 'x' | 'youtube' | 'tiktok';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  footerPages?:
+    | {
+        label: string;
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  newpubLinks?:
+    | {
+        label: string;
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * يُحقن مرة واحدة داخل <head> في كل الصفحات. مثال: محمّل AdSense، وسم التحقق، GTM (الجزء العلوي).
+   */
+  headScripts?: string | null;
+  /**
+   * يُحقن في بداية <body> في كل الصفحات. مثال: وسم GTM (noscript).
+   */
+  bodyScripts?: string | null;
+  /**
+   * مثال: G-XXXXXXX لـ Google Analytics 4.
+   */
+  analyticsId?: string | null;
+  /**
+   * مفتاح رئيسي لإيقاف كل الإعلانات مؤقتًا دون حذفها.
+   */
+  adsEnabled?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "homepage_select".
  */
 export interface HomepageSelect<T extends boolean = true> {
   heroPosts?: T;
+  featuredCategory?: T;
+  videoBand?:
+    | T
+    | {
+        enabled?: T;
+        pinnedVideos?: T;
+      };
+  ads?:
+    | T
+    | {
+        betweenSections?: T;
+      };
   sections?:
     | T
     | {
@@ -832,6 +994,44 @@ export interface MainMenuSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  name?: T;
+  tagline?: T;
+  logo?: T;
+  defaultOgImage?: T;
+  social?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  footerPages?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  newpubLinks?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  headScripts?: T;
+  bodyScripts?: T;
+  analyticsId?: T;
+  adsEnabled?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

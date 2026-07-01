@@ -9,10 +9,16 @@ const ICONS: Record<SocialKey, typeof FacebookIcon> = {
   tiktok: TiktokIcon,
 }
 
-export function SocialLinks({ className = '' }: { className?: string }) {
+export function SocialLinks({
+  className = '',
+  links = SOCIAL_LINKS,
+}: {
+  className?: string
+  links?: { key: SocialKey; label: string; href: string }[]
+}) {
   return (
     <ul className={`flex items-center gap-3 ${className}`}>
-      {SOCIAL_LINKS.map(({ key, label, href }) => {
+      {links.map(({ key, label, href }) => {
         const Icon = ICONS[key]
         return (
           <li key={key}>

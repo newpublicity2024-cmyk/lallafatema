@@ -6,6 +6,15 @@ export const SITE = {
 
 export type SocialKey = 'facebook' | 'x' | 'instagram' | 'youtube' | 'tiktok'
 
+/** Arabic display labels per platform (shared by the static list and DB settings). */
+export const SOCIAL_LABELS: Record<SocialKey, string> = {
+  facebook: 'فيسبوك',
+  instagram: 'إنستغرام',
+  x: 'إكس',
+  youtube: 'يوتيوب',
+  tiktok: 'تيك توك',
+}
+
 export const SOCIAL_LINKS: { key: SocialKey; label: string; href: string }[] = [
   { key: 'facebook', label: 'فيسبوك', href: 'https://www.facebook.com/lallafatema.ma' },
   { key: 'instagram', label: 'إنستغرام', href: 'https://www.instagram.com/lallafatema.ma' },

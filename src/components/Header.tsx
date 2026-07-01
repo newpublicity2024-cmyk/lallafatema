@@ -1,9 +1,8 @@
 import Link from 'next/link'
 
 import type { Category } from '@/payload-types'
-import { getCategories, getMainMenu } from '@/lib/queries'
+import { getCategories, getMainMenu, getSiteConfig } from '@/lib/queries'
 import { categoryUrl } from '@/lib/routes'
-import { SITE } from '@/lib/site'
 import { SearchIcon } from './icons'
 import { SocialLinks } from './SocialLinks'
 
@@ -15,7 +14,11 @@ const hrefOf = (item: LinkLike): string => {
 }
 
 export async function Header() {
-  const [menu, categories] = await Promise.all([getMainMenu(), getCategories()])
+  const [menu, categories, site] = await Promise.all([
+    getMainMenu(),
+    getCategories(),
+    getSiteConfig(),
+  ])
 
   // Use the admin-defined menu if present; otherwise fall back to top-level categories.
   const items: { label: string; href: string; children: { label: string; href: string }[] }[] =
@@ -33,10 +36,10 @@ export async function Header() {
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="lf-container flex items-center justify-between gap-4 py-3">
         <Link href="/" className="text-2xl font-extrabold tracking-tight text-brand-600">
-          {SITE.name}
+          {site.name}
         </Link>
         <div className="flex items-center gap-4">
-          <SocialLinks className="hidden text-zinc-500 sm:flex" />
+          <SocialLinks className="hidden text-zinc-500 sm:flex" links={site.social} />
           <Link href="/search" aria-label="بحث" className="text-zinc-600 transition-colors hover:text-brand-600">
             <SearchIcon width={22} height={22} />
           </Link>
