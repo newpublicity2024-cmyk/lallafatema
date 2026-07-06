@@ -7,15 +7,30 @@ import { getPayload } from 'payload'
 
 import config from '../payload.config'
 
-// A minimal valid single-page PDF (blank A4) — enough for the archive to serve
-// and the browser to render inside the facade iframe.
-const MINIMAL_PDF = `%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj
-trailer<</Root 1 0 R>>
-%%EOF
-`
+// A minimal but structurally valid single-page PDF (blank A4). Built with a real
+// xref table so Payload's validatePDF — which requires both `xref` and `%%EOF` in
+// the trailer — accepts it, and the byte offsets are computed so browsers render it
+// in the facade iframe. Latin1 so the offsets are byte-accurate.
+function minimalPdf(): Buffer {
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] >>',
+  ]
+  let body = '%PDF-1.4\n'
+  const offsets: number[] = []
+  objects.forEach((obj, i) => {
+    offsets.push(Buffer.byteLength(body, 'latin1'))
+    body += `${i + 1} 0 obj\n${obj}\nendobj\n`
+  })
+  const startxref = Buffer.byteLength(body, 'latin1')
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
+  offsets.forEach((off) => {
+    body += `${String(off).padStart(10, '0')} 00000 n \n`
+  })
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${startxref}\n%%EOF\n`
+  return Buffer.from(body, 'latin1')
+}
 
 const ISSUE_NUMBER = 999
 
@@ -39,7 +54,7 @@ async function main() {
   })
 
   const pdfPath = join(tmpdir(), 'lf-sample-issue.pdf')
-  writeFileSync(pdfPath, MINIMAL_PDF)
+  writeFileSync(pdfPath, minimalPdf())
   const pdf = await payload.create({
     collection: 'media',
     data: { alt: 'ملف عدد تجريبي (PDF)' },
