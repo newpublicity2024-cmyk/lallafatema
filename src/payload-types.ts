@@ -995,6 +995,14 @@ export interface SiteSetting {
    * مفتاح رئيسي لإيقاف كل الإعلانات مؤقتًا دون حذفها.
    */
   adsEnabled?: boolean | null;
+  /**
+   * يعرض شريط الموافقة ويُفعّل وضع الموافقة من Google. أوقفه لإخفاء الشريط.
+   */
+  consentEnabled?: boolean | null;
+  /**
+   * الرابط الذي يفتحه زر «اعرف المزيد». صفحة السياسة نفسها تُنجز في مرحلة لاحقة.
+   */
+  privacyPolicyUrl?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1088,6 +1096,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   bodyScripts?: T;
   analyticsId?: T;
   adsEnabled?: T;
+  consentEnabled?: T;
+  privacyPolicyUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

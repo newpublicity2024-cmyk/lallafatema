@@ -40,6 +40,8 @@ export type SiteConfig = {
   bodyScripts: string
   analyticsId: string
   adsEnabled: boolean
+  consentEnabled: boolean
+  privacyPolicyUrl: string
 }
 
 /**
@@ -80,6 +82,8 @@ export async function getSiteConfig(): Promise<SiteConfig> {
     bodyScripts: s.bodyScripts ?? '',
     analyticsId: s.analyticsId ?? '',
     adsEnabled: s.adsEnabled ?? true,
+    consentEnabled: s.consentEnabled ?? true,
+    privacyPolicyUrl: s.privacyPolicyUrl || '/privacy',
   }
 }
 

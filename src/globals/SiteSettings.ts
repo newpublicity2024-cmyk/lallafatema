@@ -148,6 +148,33 @@ export const SiteSettings: GlobalConfig = {
             },
           ],
         },
+        {
+          label: 'الخصوصية والموافقة',
+          description:
+            'شريط الموافقة على ملفات تعريف الارتباط ووضع الموافقة من Google (Consent Mode v2). ' +
+            'يظهر لكل الزوّار ويتحكّم في تحميل ملفات تعريف الارتباط الخاصة بالإعلانات والتحليلات.',
+          fields: [
+            {
+              name: 'consentEnabled',
+              type: 'checkbox',
+              label: 'تفعيل شريط الموافقة',
+              defaultValue: true,
+              admin: {
+                description: 'يعرض شريط الموافقة ويُفعّل وضع الموافقة من Google. أوقفه لإخفاء الشريط.',
+              },
+            },
+            {
+              name: 'privacyPolicyUrl',
+              type: 'text',
+              label: 'رابط سياسة الخصوصية',
+              defaultValue: '/privacy',
+              admin: {
+                description:
+                  'الرابط الذي يفتحه زر «اعرف المزيد». صفحة السياسة نفسها تُنجز في مرحلة لاحقة.',
+              },
+            },
+          ],
+        },
       ],
     },
   ],

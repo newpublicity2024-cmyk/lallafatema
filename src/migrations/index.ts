@@ -5,6 +5,7 @@ import * as migration_20260630_103006_add_site_settings from './20260630_103006_
 import * as migration_20260630_103756_add_homepage_curation from './20260630_103756_add_homepage_curation';
 import * as migration_20260701_113624_add_category_seo from './20260701_113624_add_category_seo';
 import * as migration_20260701_120518_add_redirects from './20260701_120518_add_redirects';
+import * as migration_20260706_115449_add_consent_settings from './20260706_115449_add_consent_settings';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20260701_120518_add_redirects.up,
     down: migration_20260701_120518_add_redirects.down,
-    name: '20260701_120518_add_redirects'
+    name: '20260701_120518_add_redirects',
+  },
+  {
+    up: migration_20260706_115449_add_consent_settings.up,
+    down: migration_20260706_115449_add_consent_settings.down,
+    name: '20260706_115449_add_consent_settings'
   },
 ];
