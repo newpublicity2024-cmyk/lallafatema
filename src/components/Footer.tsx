@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getCategories, getSiteConfig } from '@/lib/queries'
 import { categoryUrl } from '@/lib/routes'
 import { AdSlot } from './AdSlot'
+import { CookieSettingsButton } from './CookieSettingsButton'
 import { SocialLinks } from './SocialLinks'
 
 export async function Footer() {
@@ -60,8 +61,9 @@ export async function Footer() {
         </nav>
       </div>
 
-      <div className="border-t border-zinc-200 py-4 text-center text-xs text-zinc-500">
-        © {new Date().getFullYear()} {site.name}. جميع الحقوق محفوظة.
+      <div className="flex flex-col items-center gap-2 border-t border-zinc-200 py-4 text-center text-xs text-zinc-500">
+        <span>© {new Date().getFullYear()} {site.name}. جميع الحقوق محفوظة.</span>
+        <CookieSettingsButton className="text-brand-600 underline hover:text-brand-700" />
       </div>
     </footer>
   )

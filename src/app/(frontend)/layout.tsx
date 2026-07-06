@@ -4,6 +4,8 @@ import { Tajawal } from 'next/font/google'
 import './styles.css'
 
 import { AdSlot } from '@/components/AdSlot'
+import { ConsentBanner } from '@/components/ConsentBanner'
+import { ConsentMode } from '@/components/ConsentMode'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { JsonLd } from '@/components/JsonLd'
@@ -52,6 +54,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={arabic.variable}>
       <body className="flex min-h-screen flex-col bg-white text-zinc-900">
+        {cfg.consentEnabled && <ConsentMode />}
         <JsonLd data={organizationJsonLd(cfg)} />
         <JsonLd data={webSiteJsonLd(cfg)} />
         {/* Admin-managed site-wide loaders (ad networks, GTM, verification). */}
@@ -61,6 +64,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <AdSlot placement="header" className="mt-4 px-4" />
         <div className="flex-1">{children}</div>
         <Footer />
+        {cfg.consentEnabled && <ConsentBanner policyUrl={cfg.privacyPolicyUrl} />}
       </body>
     </html>
   )
