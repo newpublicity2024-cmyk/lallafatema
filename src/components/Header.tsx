@@ -21,7 +21,7 @@ export async function Header() {
   ])
 
   // Use the admin-defined menu if present; otherwise fall back to top-level categories.
-  const items: { label: string; href: string; children: { label: string; href: string }[] }[] =
+  const baseItems: { label: string; href: string; children: { label: string; href: string }[] }[] =
     menu.items && menu.items.length > 0
       ? menu.items.map((item) => ({
           label: item.label,
@@ -31,6 +31,10 @@ export async function Header() {
       : categories
           .filter((c) => !c.parent)
           .map((c) => ({ label: c.name, href: categoryUrl(c.slug ?? ''), children: [] }))
+
+  // Always expose the magazine archive (a guaranteed floor, independent of the
+  // admin menu / category fallback). Admins can also add their own entry.
+  const items = [...baseItems, { label: 'المجلة', href: '/magazine', children: [] }]
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
