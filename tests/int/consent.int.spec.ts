@@ -62,8 +62,11 @@ describe('consentModeStubScript', () => {
   it('defines gtag and sets a denied default with wait_for_update', () => {
     expect(s).toContain('function gtag()')
     expect(s).toContain("gtag('consent','default'")
-    expect(s).toContain('wait_for_update')
     expect(s).toContain('ads_data_redaction')
+  })
+  it('gates wait_for_update on the no-choice branch (not emitted unconditionally)', () => {
+    // Returning consenters must not be re-armed with the 500ms cookieless delay.
+    expect(s).toContain('if(!chosen)def.wait_for_update=')
   })
   it('reads the lf-consent cookie itself (no server data)', () => {
     expect(s).toContain(CONSENT_COOKIE)

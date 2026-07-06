@@ -119,8 +119,12 @@ hydration mismatch, then opens on mount when no valid cookie exists).
   `window.gtag('consent','update', toConsentModeSignals(state))` and
   `gtag('set','ads_data_redaction', !state.ads)`, then hide.
 - Listens for a `lf:open-consent` window event to reopen with the current selections editable.
-- Keyboard-accessible (focus trap in the panel, Esc closes the panel), `dir="rtl"`,
-  `aria-label`ed, respects `prefers-reduced-motion`.
+- Accessibility: `dir="rtl"`, `role="dialog"` + `aria-label`, native focusable buttons and
+  `aria-label`led category toggles. **Note (as-built):** this is a *non-modal* bottom bar, not a
+  blocking modal — so `aria-modal` and a focus trap are intentionally omitted (they'd be incorrect
+  for a non-modal region that leaves the page interactive). There are no entrance animations, so
+  `prefers-reduced-motion` is not applicable. Esc-to-collapse the Customize panel is deferred as a
+  minor polish follow-up (does not block consent capture).
 
 ### 4. Reopen trigger — `src/components/CookieSettingsButton.tsx`
 
