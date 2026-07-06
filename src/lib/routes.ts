@@ -50,5 +50,5 @@ export function magazineIssueUrl(issue: Pick<MagazineIssue, 'issueNumber'>): str
 
 /** Parse a `/magazine/[issueNumber]` route param → positive integer, else null. */
 export function issueNumberFromParam(param: string): number | null {
-  return /^\d+$/.test(param) ? Number(param) : null
+  return /^[1-9]\d*$/.test(param) ? Number(param) : null
 }

@@ -26,5 +26,7 @@ describe('magazine routes', () => {
     expect(issueNumberFromParam('')).toBeNull()
     expect(issueNumberFromParam('-5')).toBeNull()
     expect(issueNumberFromParam('1.5')).toBeNull()
+    expect(issueNumberFromParam('0')).toBeNull()
+    expect(issueNumberFromParam('007')).toBeNull()
   })
 })
