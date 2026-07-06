@@ -35,13 +35,16 @@ function persist(sel: Selections) {
 export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
   const [open, setOpen] = useState(false)
   const [customizing, setCustomizing] = useState(false)
-  const [sel, setSel] = useState<Selections>({ analytics: false, ads: false })
+  const [sel, setSel] = useState<Selections>(() => {
+    const stored = readConsentCookie()
+    return stored ? { analytics: stored.analytics, ads: stored.ads } : { analytics: false, ads: false }
+  })
 
   useEffect(() => {
-    const stored = readConsentCookie()
+    // setOpen(true) is intentional here: open must start false for SSR (no hydration mismatch),
+    // then flip to true client-side if no consent cookie exists.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored) setSel({ analytics: stored.analytics, ads: stored.ads })
-    else setOpen(true)
+    if (!readConsentCookie()) setOpen(true)
 
     const reopen = () => {
       const cur = readConsentCookie()
