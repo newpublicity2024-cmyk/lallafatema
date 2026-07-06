@@ -19,13 +19,17 @@ test.describe('Consent / CMP', () => {
     await expect(banner).toBeHidden()
     expect(await getConsentCookie(context)).toBe('1:a=1,ads=1')
 
-    // A consent update was pushed to the dataLayer.
-    const updates = await page.evaluate(() =>
-      (window as unknown as { dataLayer?: unknown[] }).dataLayer?.filter(
-        (e) => Array.isArray(e) && e[0] === 'consent' && e[1] === 'update',
-      ),
+    // A consent update was pushed to the dataLayer. gtag pushes an `arguments`
+    // object (array-like, NOT a real Array), so match by indexed access rather
+    // than Array.isArray.
+    const updates = await page.evaluate(
+      () =>
+        ((window as unknown as { dataLayer?: unknown[] }).dataLayer ?? []).filter((e) => {
+          const a = e as Record<number, unknown>
+          return a[0] === 'consent' && a[1] === 'update'
+        }).length,
     )
-    expect(updates && updates.length).toBeGreaterThan(0)
+    expect(updates).toBeGreaterThan(0)
 
     await page.reload()
     await expect(banner).toBeHidden()
