@@ -1,6 +1,6 @@
 import type { Where } from 'payload'
 
-import type { Ad, Category, Media, Post, User, Video } from '@/payload-types'
+import type { Ad, Category, MagazineIssue, Media, Post, User, Video } from '@/payload-types'
 import {
   FOOTER_PAGES,
   NEWPUB_LINKS,
@@ -244,4 +244,31 @@ export async function getPostsByAuthor(authorId: number, limit = 12, page = 1) {
     page,
     depth: 1,
   })
+}
+
+/** All published magazine issues, newest first. `depth:1` populates covers. */
+export async function getMagazineIssues(): Promise<MagazineIssue[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'magazine-issues',
+    where: { _status: { equals: 'published' } },
+    sort: '-issueNumber',
+    depth: 1,
+    limit: 200,
+  })
+  return docs
+}
+
+/** One published issue by its number, or null. `depth:1` populates cover + pdf. */
+export async function getMagazineIssueByNumber(issueNumber: number): Promise<MagazineIssue | null> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'magazine-issues',
+    where: {
+      and: [{ issueNumber: { equals: issueNumber } }, { _status: { equals: 'published' } }],
+    },
+    depth: 1,
+    limit: 1,
+  })
+  return docs[0] ?? null
 }
