@@ -40,6 +40,7 @@ test.describe('Consent / CMP', () => {
     await page.goto(BASE)
     const banner = page.getByRole('dialog', { name: 'إعدادات ملفات تعريف الارتباط' })
     await banner.getByRole('button', { name: 'رفض الكل' }).click()
+    await expect(banner).toBeHidden()
     expect(await getConsentCookie(context)).toBe('1:a=0,ads=0')
   })
 
@@ -50,6 +51,7 @@ test.describe('Consent / CMP', () => {
     await banner.getByRole('button', { name: 'تخصيص' }).click()
     await banner.getByLabel('إحصاءات').check()
     await banner.getByRole('button', { name: 'حفظ التفضيلات' }).click()
+    await expect(banner).toBeHidden()
     expect(await getConsentCookie(context)).toBe('1:a=1,ads=0')
   })
 

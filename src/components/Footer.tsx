@@ -63,7 +63,9 @@ export async function Footer() {
 
       <div className="flex flex-col items-center gap-2 border-t border-zinc-200 py-4 text-center text-xs text-zinc-500">
         <span>© {new Date().getFullYear()} {site.name}. جميع الحقوق محفوظة.</span>
-        <CookieSettingsButton className="text-brand-600 underline hover:text-brand-700" />
+        {site.consentEnabled && (
+          <CookieSettingsButton className="text-brand-600 underline hover:text-brand-700" />
+        )}
       </div>
     </footer>
   )
