@@ -84,25 +84,31 @@ The single source of truth for consent shape, storage, and signal mapping (one t
 
 ### 2. Consent Mode stub — `src/components/ConsentMode.tsx`
 
-Server-rendered, emits a raw inline `<script dangerouslySetInnerHTML>` placed in the document
-`<head>` in `layout.tsx` (a static server-rendered inline script — **not** `next/script`, so it is
-in the initial HTML and executes before hydration and before `SiteScripts` injects the Google
-loader). Given the stored state (read server-side, may be `null`):
+A **static** raw inline `<script dangerouslySetInnerHTML>` (no props, identical on every page) mounted
+as the **first child of `<body>`** in `layout.tsx`. It is in the initial HTML and executes at parse
+time — before hydration, and therefore before `SiteScripts` injects the Google loader (that happens
+in a post-hydration `useEffect`). The script itself **reads `document.cookie` inline** (client-side)
+so the layout never calls `cookies()` and the site stays statically rendered / ISR (a core
+non-negotiable — a `cookies()` call in the root layout would force every route dynamic).
+
+The inline script:
 
 1. `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);}`
-2. `gtag('consent','default', <denied-or-stored signals>)` — seeds from the cookie synchronously so
-   there's no denied→granted flicker; when no cookie, all gated signals `denied` with
-   `wait_for_update: 500`.
-3. `gtag('set','ads_data_redaction', true)` while ad consent is denied.
+2. Reads the `lf-consent` cookie; if present+valid, derives granted/denied signals from it, else all
+   gated signals `denied` with `wait_for_update: 500`.
+3. `gtag('consent','default', <signals>)` — set synchronously so there's no denied→granted flicker
+   for returning visitors.
+4. `gtag('set','ads_data_redaction', <true while ad consent denied>)`.
 
-Mounted in `layout.tsx` `<head>` **before** `<SiteScripts>` so the default is set before the admin
-Google loader runs.
+Because the stub is static (no server data), it does not opt the page out of static rendering.
 
 ### 3. Consent banner + preferences — `src/components/ConsentBanner.tsx`
 
-`'use client'`. Props: initial `ConsentState | null` (from the server cookie read) + `policyUrl`.
+`'use client'`. Prop: `policyUrl` (from `getSiteConfig()` — static/ISR, not cookie-derived). Reads
+the `lf-consent` cookie itself, **client-side in an effect** (renders `null` on the server to avoid a
+hydration mismatch, then opens on mount when no valid cookie exists).
 
-- Renders **only when initial state is `null`** (no prior choice) — or when reopened via event.
+- Opens **only when no prior valid choice** exists in the cookie — or when reopened via event.
 - Bottom `position: fixed` RTL bar (overlay ⇒ **zero CLS**), brand-styled (magenta `#bc0168`),
   Tajawal font inherited. Buttons: `قبول الكل` / `رفض الكل` / `تخصيص`. "Reject" is visually equal
   to "Accept" (compliance).
@@ -138,24 +144,23 @@ New **الخصوصية والموافقة** (Privacy & Consent) tab (or group ap
 
 ### 6. Wiring — `layout.tsx`
 
-- Read the `lf-consent` cookie server-side (`next/headers` `cookies()`), `decodeConsent` it.
-- When `cfg.consentEnabled`: render `<ConsentMode initial={state} />` in `<head>` **before**
-  `<SiteScripts>`, and `<ConsentBanner initial={state} policyUrl={cfg.privacyPolicyUrl} />` at the
-  end of `<body>`.
+- **No `cookies()` call** — the cookie is read client-side (see §2/§3) so the layout stays static.
+- When `cfg.consentEnabled`: render `<ConsentMode />` as the **first child of `<body>`** (before
+  `<JsonLd>`/`<SiteScripts>`), and `<ConsentBanner policyUrl={cfg.privacyPolicyUrl} />` at the end of
+  `<body>`.
 - Header ad slot unchanged (already above hero).
 
 ## Data flow
 
 ```
-Server (layout)                     Client (first paint)                 On choice
-──────────────                      ────────────────────                 ─────────
-cookies() → decodeConsent  ──┐
-                             ├─► <ConsentMode> beforeInteractive:        user clicks Accept/Reject/Save
-                             │     gtag('consent','default', signals)      → write lf-consent cookie
-                             │     (denied if null, else stored)           → gtag('consent','update', signals)
-                             │                                             → ads_data_redaction = !ads
-                             └─► <ConsentBanner initial=null?>             → hide banner
-                                   shows only when no cookie
+Initial HTML (static/ISR)            On hydration                         On choice
+─────────────────────────            ────────────                         ─────────
+<ConsentMode> inline script:         <ConsentBanner> effect:              user clicks Accept/Reject/Save
+  reads document.cookie                reads lf-consent cookie             → write lf-consent cookie
+  gtag('consent','default',signals)    opens only when no valid cookie     → gtag('consent','update', signals)
+  (denied+wait_for_update if none)                                         → ads_data_redaction = !ads
+  ads_data_redaction while ad denied                                       → hide banner
+
    SiteScripts (post-hydration) injects adsbygoogle.js — already governed by the consent default
    Footer CookieSettingsButton → dispatch 'lf:open-consent' → banner reopens with current selections
 ```
@@ -164,8 +169,9 @@ cookies() → decodeConsent  ──┐
 
 | File | Change |
 |---|---|
-| `src/lib/consent.ts` | **New.** Cookie constants, `ConsentState`, encode/decode, `toConsentModeSignals` |
-| `src/lib/consent.test.ts` | **New.** Vitest unit tests for encode/decode/version/signal mapping |
+| `src/lib/consent.ts` | **New.** Cookie constants, `ConsentState`, encode/decode, `toConsentModeSignals`, `consentModeStubScript`, `readConsentCookie` |
+| `tests/int/consent.int.spec.ts` | **New.** Vitest unit tests (matches the repo's `tests/int/**/*.int.spec.ts` include) |
+| `tests/e2e/consent.e2e.spec.ts` | **New.** Playwright flow tests |
 | `src/components/ConsentMode.tsx` | **New.** `beforeInteractive` default+hydrate stub |
 | `src/components/ConsentBanner.tsx` | **New.** Client banner + Customize panel |
 | `src/components/CookieSettingsButton.tsx` | **New.** Footer reopen trigger |
