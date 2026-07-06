@@ -1,4 +1,4 @@
-import type { Category, Post } from '@/payload-types'
+import type { Category, MagazineIssue, Post } from '@/payload-types'
 
 /**
  * URL scheme (RTL Arabic magazine):
@@ -36,4 +36,19 @@ export function idFromSlugParam(param: string): number | null {
     return /^\d+$/.test(param) ? Number(param) : null
   }
   return Number(match[1])
+}
+
+/** Magazine archive listing. */
+export function magazineArchiveUrl(): string {
+  return '/magazine'
+}
+
+/** Permalink for one digital issue — keyed on the unique, required issueNumber. */
+export function magazineIssueUrl(issue: Pick<MagazineIssue, 'issueNumber'>): string {
+  return `/magazine/${issue.issueNumber}`
+}
+
+/** Parse a `/magazine/[issueNumber]` route param → positive integer, else null. */
+export function issueNumberFromParam(param: string): number | null {
+  return /^\d+$/.test(param) ? Number(param) : null
 }
