@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import type { SiteConfig } from '@/lib/queries'
-import type { Media, Post, Video } from '@/payload-types'
+import type { Media, MagazineIssue, Post, Video } from '@/payload-types'
 import { SITE } from '@/lib/site'
 import { authorUrl, postUrl } from '@/lib/routes'
 
@@ -217,5 +217,23 @@ export function breadcrumbJsonLd(items: { name: string; url: string }[]) {
       name: it.name,
       item: absoluteUrl(it.url),
     })),
+  }
+}
+
+export function publicationIssueJsonLd(issue: MagazineIssue) {
+  const cover = asMedia(issue.cover)
+  const pdf = asMedia(issue.pdf)
+  return {
+    '@context': CONTEXT,
+    '@type': 'PublicationIssue',
+    name: issue.title || `العدد ${issue.issueNumber}`,
+    issueNumber: issue.issueNumber,
+    datePublished: issue.publishDate ?? undefined,
+    image: cover?.url ? absoluteUrl(cover.url) : undefined,
+    inLanguage: 'ar',
+    isPartOf: { '@type': 'Periodical', name: 'لالة فاطمة' },
+    associatedMedia: pdf?.url
+      ? { '@type': 'MediaObject', contentUrl: absoluteUrl(pdf.url), encodingFormat: 'application/pdf' }
+      : undefined,
   }
 }
