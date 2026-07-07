@@ -6,6 +6,7 @@ import './styles.css'
 import { AdSlot } from '@/components/AdSlot'
 import { ConsentBanner } from '@/components/ConsentBanner'
 import { ConsentMode } from '@/components/ConsentMode'
+import { OneSignalInit } from '@/components/OneSignalInit'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { JsonLd } from '@/components/JsonLd'
@@ -55,6 +56,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
     <html lang="ar" dir="rtl" className={arabic.variable}>
       <body className="flex min-h-screen flex-col bg-white text-zinc-900">
         {cfg.consentEnabled && <ConsentMode />}
+        <OneSignalInit />
         <JsonLd data={organizationJsonLd(cfg)} />
         <JsonLd data={webSiteJsonLd(cfg)} />
         {/* Admin-managed site-wide loaders (ad networks, GTM, verification). */}
