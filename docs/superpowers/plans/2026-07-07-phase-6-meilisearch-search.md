@@ -651,7 +651,20 @@ git commit -m "feat(search): backfill script, env docs, and /search e2e"
 
 ## Activation (later — out of this plan's automated run)
 
-When the user provides Meilisearch credentials: set `MEILISEARCH_HOST` + `MEILISEARCH_API_KEY`, run `npx pnpm@10.18.0 exec tsx src/seed/reindex.ts` to backfill, and search activates — new/edited publishes auto-index via the hook, `/search?q=` returns `PostCard` results. No code change.
+When the user provides Meilisearch credentials: set `MEILISEARCH_HOST` + `MEILISEARCH_API_KEY`, run `npx pnpm@10.18.0 exec tsx src/seed/reindex.ts` to backfill, and search activates — new/edited publishes auto-index via the hook, `/search?q=` returns `PostCard` results.
+
+### ⚠ Activation blocker (fix BEFORE setting credentials) — autosave evicts published posts
+
+The final whole-branch review (opus, traced against Payload 3.85's `update.js`) confirmed a **dormant enabled-path bug**: Posts have `versions.drafts.autosave: { interval: 375 }`. When an editor edits an **already-published** post, each ~375ms autosave calls the update op with `draft: true`, and Payload forces `data._status = 'draft'` on the autosaved doc (`isSavingDraft = draftArg && draftsEnabled && data._status !== 'published'`). The `afterChange` hook therefore receives `doc._status === 'draft'`, so `indexPost` takes the delete branch and **removes the still-live post from the Meilisearch index** mid-edit. The article stays live on the site (published version untouched) but silently vanishes from `/search` until the next explicit **Publish** (re-adds it) or the next backfill.
+
+**Dormant while inert:** with no credentials, `getIndex()` returns `null` and `indexPost` returns before reading `_status`, so this cannot fire today. It only matters once `MEILISEARCH_*` are set.
+
+**Fix at activation (cheapest first):**
+- In `searchIndexAfterChange`, use the hook's `previousDoc`/`operation`/autosave context to skip eviction during autosave; **or**
+- In `indexPost` (widen its signature to take the transition), only `deleteDocument` on a genuine unpublish (`previousDoc._status === 'published' && doc._status !== 'published'` and not an autosave) — treat "draft that was never published" as a no-op; **or**
+- Before deleting, check whether a published version of the doc still exists and skip the delete if so.
+
+**Add a regression test** (runs only with a live Meilisearch instance): "autosaving an already-published post leaves it in the index." The `afterDelete` path (real deletes) is correct and unaffected.
 
 ---
 *Plan for: docs/superpowers/specs/2026-07-07-phase-6-meilisearch-search-design.md*
