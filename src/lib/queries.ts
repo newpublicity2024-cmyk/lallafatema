@@ -246,6 +246,24 @@ export async function getPostsByAuthor(authorId: number, limit = 12, page = 1) {
   })
 }
 
+/**
+ * Published posts for the given ids, returned in the SAME order as `ids`.
+ * Postgres `IN` doesn't preserve order, but Meilisearch relevance ranking must
+ * survive the fetch — so we re-sort by the input order. Empty input → [] (no query).
+ */
+export async function getPostsByIds(ids: number[]): Promise<Post[]> {
+  if (!ids.length) return []
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'posts',
+    where: { and: [PUBLISHED, { id: { in: ids } }] },
+    depth: 1,
+    limit: ids.length,
+  })
+  const order = new Map(ids.map((id, i) => [id, i]))
+  return [...docs].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+}
+
 /** One published video by id, or null. `depth:1` populates thumbnail + category. */
 export async function getVideoById(id: number): Promise<Video | null> {
   const payload = await getPayloadClient()

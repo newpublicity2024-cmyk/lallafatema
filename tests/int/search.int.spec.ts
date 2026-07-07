@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { indexPost, reindexAllPosts, removePost, searchEnabled, searchPostIds } from '@/lib/search'
 import { searchIndexAfterChange, searchIndexAfterDelete } from '@/hooks/searchIndex'
+import { getPostsByIds } from '@/lib/queries'
 import type { Post } from '@/payload-types'
 
 // This suite runs WITHOUT Meilisearch credentials, verifying the inert contract:
@@ -51,5 +52,11 @@ describe('search index hooks (inert without credentials)', () => {
     const doc = { id: 1, title: 'عنوان' }
     const result = await searchIndexAfterDelete({ doc } as never)
     expect(result).toBe(doc)
+  })
+})
+
+describe('getPostsByIds', () => {
+  it('returns [] for empty input without touching the DB', async () => {
+    await expect(getPostsByIds([])).resolves.toEqual([])
   })
 })
