@@ -311,6 +311,13 @@ Set `NEXT_PUBLIC_ONESIGNAL_APP_ID` (+ `NEXT_PUBLIC_ONESIGNAL_SAFARI_WEB_ID`) and
 build time). The SDK then loads on idle and OneSignal's prompt lets visitors subscribe. Sending campaigns is done
 from the OneSignal dashboard.
 
+**Follow-up to bundle with activation (from the final review — enabled-path only, harmless while inert):**
+`OneSignalInit`'s `requestIdleCallback` branch returns no cleanup, so a queued idle callback could fire after
+unmount. The root-layout component effectively never unmounts, so it's inert-safe today; when activating, capture
+the handle and `return () => cancelIdleCallback(handle)` for symmetry with the `setTimeout` branch. Consider also
+adding an *enabled* e2e (env set → exactly one `onesignal.com` page-SDK request + SW registers) to lock the
+enabled contract, which the inert-only e2e can't cover.
+
 ---
 *Plan for: docs/superpowers/specs/2026-07-07-phase-6-onesignal-push-design.md*
 *Phase: 06-onesignal-push*
