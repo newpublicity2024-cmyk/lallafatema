@@ -25,6 +25,8 @@ export function searchEnabled(): boolean {
 let client: Meilisearch | null = null
 
 function getIndex(): Index | null {
+  // Re-check searchEnabled() on every call (not just relying on `client` being
+  // null) so env changes — e.g. in tests — are always respected.
   if (!searchEnabled()) return null
   if (!client) {
     client = new Meilisearch({
@@ -102,6 +104,7 @@ export async function removePost(id: number): Promise<void> {
 /**
  * Backfill: (re)configure index settings and index every published post.
  * Returns { indexed: 0 } when disabled. Used by src/seed/reindex.ts.
+ * Unlike indexPost/removePost, this propagates Meilisearch/DB errors to the caller — the backfill script surfaces failures rather than silently indexing nothing.
  */
 export async function reindexAllPosts(): Promise<{ indexed: number }> {
   const index = getIndex()

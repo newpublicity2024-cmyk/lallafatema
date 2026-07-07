@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { indexPost, removePost, searchEnabled, searchPostIds } from '@/lib/search'
+import { indexPost, reindexAllPosts, removePost, searchEnabled, searchPostIds } from '@/lib/search'
 import type { Post } from '@/payload-types'
 
 // This suite runs WITHOUT Meilisearch credentials, verifying the inert contract:
@@ -31,5 +31,9 @@ describe('search provider (inert without credentials)', () => {
 
   it('removePost is a no-op that never throws when disabled', async () => {
     await expect(removePost(1)).resolves.toBeUndefined()
+  })
+
+  it('reindexAllPosts returns { indexed: 0 } when disabled', async () => {
+    await expect(reindexAllPosts()).resolves.toEqual({ indexed: 0 })
   })
 })
