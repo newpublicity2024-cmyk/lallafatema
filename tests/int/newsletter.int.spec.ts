@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
+import { subscribeAction } from '@/lib/newsletter-action'
 import { isValidEmail, newsletterEnabled, subscribe } from '@/lib/newsletter'
 
 // Every suite in this file runs WITHOUT Brevo credentials → verifies the inert
@@ -25,5 +26,20 @@ describe('newsletter provider (inert without credentials)', () => {
     expect(isValidEmail('nope')).toBe(false)
     expect(isValidEmail('')).toBe(false)
     expect(isValidEmail('a@b')).toBe(false)
+  })
+})
+
+describe('subscribeAction (inert without credentials)', () => {
+  it('honeypot: a filled "company" field returns ok without subscribing', async () => {
+    const fd = new FormData()
+    fd.set('company', 'bot corp')
+    fd.set('email', 'bot@example.com')
+    await expect(subscribeAction({ status: 'idle' }, fd)).resolves.toEqual({ status: 'ok' })
+  })
+
+  it('a valid email while disabled returns disabled', async () => {
+    const fd = new FormData()
+    fd.set('email', 'reader@example.com')
+    await expect(subscribeAction({ status: 'idle' }, fd)).resolves.toEqual({ status: 'disabled' })
   })
 })
