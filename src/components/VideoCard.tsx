@@ -1,9 +1,7 @@
-'use client'
-
-import { useState } from 'react'
+import Link from 'next/link'
 
 import type { Video } from '@/payload-types'
-import { embedUrl } from '@/lib/video'
+import { videoWatchUrl } from '@/lib/routes'
 import { PlayIcon } from './icons'
 import { PostImage } from './PostImage'
 
@@ -13,7 +11,7 @@ function PlayButton({ large = false }: { large?: boolean }) {
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute inset-0 grid place-items-center transition-transform duration-300 group-hover:scale-105`}
+      className="pointer-events-none absolute inset-0 grid place-items-center transition-transform duration-300 group-hover:scale-105"
     >
       <span
         className={`grid place-items-center rounded-full bg-brand-600 text-white shadow-lg ring-4 ring-white/20 ${
@@ -36,65 +34,38 @@ function Duration({ value }: { value?: string | null }) {
 }
 
 /**
- * Video thumbnail with a magenta play overlay; the iframe is loaded only on click
- * (deferred facade → no third-party JS or LCP cost until the user opts in).
+ * Video thumbnail that LINKS to the watch page (/videos/<slug>-<id>). The embed
+ * itself lives on the watch page (VideoPlayer), so cards are navigational only —
+ * a plain server component. Always rendered inside the dark VideoSection band.
  */
 export function VideoCard({ video, variant = 'list' }: { video: Video; variant?: Variant }) {
-  const [playing, setPlaying] = useState(false)
-  const src = embedUrl(video.videoUrl)
   const isLead = variant === 'lead'
   const sizes = isLead ? '(max-width: 768px) 100vw, 50vw' : '160px'
+  const href = videoWatchUrl(video)
 
   const frame = (
-    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-brand-900">
-      {playing && src ? (
-        <iframe
-          className="absolute inset-0 h-full w-full"
-          src={`${src}?autoplay=1`}
-          title={video.title}
-          loading="lazy"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
-        />
-      ) : (
-        <>
-          <PostImage
-            image={video.thumbnail}
-            alt={video.title}
-            sizes={sizes}
-            className="transition-transform duration-500 group-hover:scale-105"
-          />
-          {src ? (
-            <button
-              type="button"
-              onClick={() => setPlaying(true)}
-              aria-label={`تشغيل: ${video.title}`}
-              className="absolute inset-0 cursor-pointer"
-            >
-              <PlayButton large={isLead} />
-            </button>
-          ) : (
-            <a
-              href={video.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`مشاهدة: ${video.title}`}
-              className="absolute inset-0"
-            >
-              <PlayButton large={isLead} />
-            </a>
-          )}
-          <Duration value={video.duration} />
-        </>
-      )}
-    </div>
+    <Link
+      href={href}
+      className="relative block aspect-video w-full overflow-hidden rounded-xl bg-brand-900"
+    >
+      <PostImage
+        image={video.thumbnail}
+        alt={video.title}
+        sizes={sizes}
+        className="transition-transform duration-500 group-hover:scale-105"
+      />
+      <PlayButton large={isLead} />
+      <Duration value={video.duration} />
+    </Link>
   )
 
   if (isLead) {
     return (
       <article className="group">
         {frame}
-        <h3 className="mt-3 text-xl font-extrabold leading-tight text-white sm:text-2xl">{video.title}</h3>
+        <h3 className="mt-3 text-xl font-extrabold leading-tight text-white sm:text-2xl">
+          <Link href={href}>{video.title}</Link>
+        </h3>
         {video.description && (
           <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/70">{video.description}</p>
         )}
@@ -107,9 +78,11 @@ export function VideoCard({ video, variant = 'list' }: { video: Video; variant?:
       <div className="w-40 flex-none">{frame}</div>
       <div className="min-w-0 pt-1">
         <h3 className="line-clamp-3 text-sm font-bold leading-snug text-white/90 group-hover:text-brand-200">
-          {video.title}
+          <Link href={href}>{video.title}</Link>
         </h3>
-        {video.duration && <span className="mt-1 block text-xs text-white/50 tabular-nums">{video.duration}</span>}
+        {video.duration && (
+          <span className="mt-1 block text-xs text-white/50 tabular-nums">{video.duration}</span>
+        )}
       </div>
     </article>
   )
