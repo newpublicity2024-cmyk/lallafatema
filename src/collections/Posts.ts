@@ -10,6 +10,7 @@ import {
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
+import { searchIndexAfterChange, searchIndexAfterDelete } from '../hooks/searchIndex'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
@@ -54,8 +55,8 @@ export const Posts: CollectionConfig = {
         return data
       },
     ],
-    afterChange: [revalidateAfterChange],
-    afterDelete: [revalidateAfterDelete],
+    afterChange: [revalidateAfterChange, searchIndexAfterChange],
+    afterDelete: [revalidateAfterDelete, searchIndexAfterDelete],
   },
   fields: [
     {

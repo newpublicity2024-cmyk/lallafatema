@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { indexPost, reindexAllPosts, removePost, searchEnabled, searchPostIds } from '@/lib/search'
+import { searchIndexAfterChange, searchIndexAfterDelete } from '@/hooks/searchIndex'
 import type { Post } from '@/payload-types'
 
 // This suite runs WITHOUT Meilisearch credentials, verifying the inert contract:
@@ -35,5 +36,20 @@ describe('search provider (inert without credentials)', () => {
 
   it('reindexAllPosts returns { indexed: 0 } when disabled', async () => {
     await expect(reindexAllPosts()).resolves.toEqual({ indexed: 0 })
+  })
+})
+
+describe('search index hooks (inert without credentials)', () => {
+  it('afterChange returns the doc unchanged and never throws when disabled', async () => {
+    const doc = { id: 1, title: 'عنوان', _status: 'published' }
+    // The hook only reads `doc`; other hook args are irrelevant here.
+    const result = await searchIndexAfterChange({ doc } as never)
+    expect(result).toBe(doc)
+  })
+
+  it('afterDelete returns the doc unchanged and never throws when disabled', async () => {
+    const doc = { id: 1, title: 'عنوان' }
+    const result = await searchIndexAfterDelete({ doc } as never)
+    expect(result).toBe(doc)
   })
 })
