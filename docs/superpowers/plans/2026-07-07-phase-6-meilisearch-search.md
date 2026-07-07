@@ -653,18 +653,13 @@ git commit -m "feat(search): backfill script, env docs, and /search e2e"
 
 When the user provides Meilisearch credentials: set `MEILISEARCH_HOST` + `MEILISEARCH_API_KEY`, run `npx pnpm@10.18.0 exec tsx src/seed/reindex.ts` to backfill, and search activates — new/edited publishes auto-index via the hook, `/search?q=` returns `PostCard` results.
 
-### ⚠ Activation blocker (fix BEFORE setting credentials) — autosave evicts published posts
+### ✅ Autosave/index-eviction — FIXED during this build (commit 6b04ca8)
 
-The final whole-branch review (opus, traced against Payload 3.85's `update.js`) confirmed a **dormant enabled-path bug**: Posts have `versions.drafts.autosave: { interval: 375 }`. When an editor edits an **already-published** post, each ~375ms autosave calls the update op with `draft: true`, and Payload forces `data._status = 'draft'` on the autosaved doc (`isSavingDraft = draftArg && draftsEnabled && data._status !== 'published'`). The `afterChange` hook therefore receives `doc._status === 'draft'`, so `indexPost` takes the delete branch and **removes the still-live post from the Meilisearch index** mid-edit. The article stays live on the site (published version untouched) but silently vanishes from `/search` until the next explicit **Publish** (re-adds it) or the next backfill.
+The final whole-branch review (opus, traced against Payload 3.85's `update.js`) found a dormant enabled-path bug: Posts have `versions.drafts.autosave: { interval: 375 }`, so editing an **already-published** post autosaves with `data._status` forced to `'draft'` (`isSavingDraft = draftArg && draftsEnabled && data._status !== 'published'`); the `afterChange` hook then saw `doc._status === 'draft'` and the old `indexPost` would have **deleted the still-live post from the index** mid-edit (re-added only on the next Publish/backfill).
 
-**Dormant while inert:** with no credentials, `getIndex()` returns `null` and `indexPost` returns before reading `_status`, so this cannot fire today. It only matters once `MEILISEARCH_*` are set.
+**Fix (shipped):** `indexPost` now takes a post **id** and **reconciles from the DB** — it re-queries the current published version (`where { id, _status: 'published' }`, `depth:1`) and upserts that published content if it exists, else deletes. Correct by construction for every transition: publish/edit → upsert published content; autosave-of-published → the published version still exists → re-upsert (no eviction); unpublish / draft-only / never-published → delete. It also fixes a latent sub-bug — the old path would have indexed *draft* content on upsert. Cost: one selective indexed query per `afterChange` when enabled — a bounded correctness cost. The inert contract is unchanged (disabled ⇒ `indexPost` returns before any I/O).
 
-**Fix at activation (cheapest first):**
-- In `searchIndexAfterChange`, use the hook's `previousDoc`/`operation`/autosave context to skip eviction during autosave; **or**
-- In `indexPost` (widen its signature to take the transition), only `deleteDocument` on a genuine unpublish (`previousDoc._status === 'published' && doc._status !== 'published'` and not an autosave) — treat "draft that was never published" as a no-op; **or**
-- Before deleting, check whether a published version of the doc still exists and skip the delete if so.
-
-**Add a regression test** (runs only with a live Meilisearch instance): "autosaving an already-published post leaves it in the index." The `afterDelete` path (real deletes) is correct and unaffected.
+**Remaining at activation:** the enabled reconcile path could not be runtime-tested without a live Meilisearch instance. When you set `MEILISEARCH_*`, add a regression test asserting "autosaving an already-published post leaves it in the index," and smoke-test publish→appears-in-search and unpublish→gone. The `afterDelete` path (real deletes) is correct and unaffected.
 
 ---
 *Plan for: docs/superpowers/specs/2026-07-07-phase-6-meilisearch-search-design.md*
