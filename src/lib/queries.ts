@@ -246,6 +246,51 @@ export async function getPostsByAuthor(authorId: number, limit = 12, page = 1) {
   })
 }
 
+/** One published video by id, or null. `depth:1` populates thumbnail + category. */
+export async function getVideoById(id: number): Promise<Video | null> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'videos',
+    where: { and: [{ id: { equals: id } }, PUBLISHED] },
+    depth: 1,
+    limit: 1,
+  })
+  return docs[0] ?? null
+}
+
+/** Related videos: same category first (excluding self), topped up with latest. */
+export async function getRelatedVideos(video: Video, limit = 5): Promise<Video[]> {
+  const payload = await getPayloadClient()
+  const categoryId =
+    video.category && typeof video.category === 'object' ? video.category.id : video.category
+  const out: Video[] = []
+  const seen = new Set<number>([video.id])
+
+  if (categoryId) {
+    const { docs } = await payload.find({
+      collection: 'videos',
+      where: { and: [{ category: { equals: categoryId } }, { id: { not_equals: video.id } }, PUBLISHED] },
+      sort: ['-publishedAt', '-createdAt'],
+      depth: 1,
+      limit,
+    })
+    for (const v of docs) {
+      out.push(v)
+      seen.add(v.id)
+    }
+  }
+  if (out.length < limit) {
+    for (const v of await getLatestVideos(limit + 1)) {
+      if (out.length >= limit) break
+      if (!seen.has(v.id)) {
+        out.push(v)
+        seen.add(v.id)
+      }
+    }
+  }
+  return out.slice(0, limit)
+}
+
 /** All published magazine issues, newest first. `depth:1` populates covers. */
 export async function getMagazineIssues(): Promise<MagazineIssue[]> {
   const payload = await getPayloadClient()
