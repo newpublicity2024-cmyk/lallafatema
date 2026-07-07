@@ -3,7 +3,6 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { indexPost, reindexAllPosts, removePost, searchEnabled, searchPostIds } from '@/lib/search'
 import { searchIndexAfterChange, searchIndexAfterDelete } from '@/hooks/searchIndex'
 import { getPostsByIds } from '@/lib/queries'
-import type { Post } from '@/payload-types'
 
 // This suite runs WITHOUT Meilisearch credentials, verifying the inert contract:
 // the provider is a safe no-op / empty and never throws when disabled.
@@ -27,8 +26,7 @@ describe('search provider (inert without credentials)', () => {
   })
 
   it('indexPost is a no-op that never throws when disabled', async () => {
-    const post = { id: 1, title: 'عنوان', _status: 'published' } as unknown as Post
-    await expect(indexPost(post)).resolves.toBeUndefined()
+    await expect(indexPost(1)).resolves.toBeUndefined()
   })
 
   it('removePost is a no-op that never throws when disabled', async () => {

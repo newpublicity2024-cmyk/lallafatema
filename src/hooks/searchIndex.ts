@@ -9,7 +9,7 @@ import { indexPost, removePost } from '@/lib/search'
  * outage never blocks a publish. Mirrors src/hooks/revalidate.ts.
  */
 export const searchIndexAfterChange: CollectionAfterChangeHook = async ({ doc }) => {
-  await indexPost(doc as Post)
+  await indexPost((doc as Post).id)
   return doc
 }
 

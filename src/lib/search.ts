@@ -73,17 +73,34 @@ export async function searchPostIds(query: string, limit = 24): Promise<number[]
 }
 
 /**
- * Upsert (published) or remove (draft/unpublished) one post in the index.
- * No-op when disabled. Never throws — a Meilisearch outage must not block a publish.
+ * Reconcile one post's presence in the index from its CURRENT published state,
+ * keyed by id. We re-query the published version rather than trusting a caller's
+ * doc, because Payload autosave fires afterChange with the in-progress draft
+ * (_status:'draft') for an already-published post — trusting that doc would evict
+ * a live post from the index mid-edit (and index draft content on upsert). Reconciling
+ * from the DB is correct for every transition: publish/edit → upsert the PUBLISHED
+ * content; unpublish or draft-only → remove; autosave of a published post → re-upsert
+ * the published content (no eviction).
+ *
+ * Costs one published-version query per call when enabled (incl. autosave) — the price
+ * of correctness; bounded to active editing. No-op when disabled; never throws (a search
+ * outage must never block a publish).
  */
-export async function indexPost(post: Post): Promise<void> {
+export async function indexPost(id: number): Promise<void> {
   const index = getIndex()
   if (!index) return
   try {
-    if (post._status === 'published') {
-      await index.addDocuments([toDoc(post)], { primaryKey: 'id' })
+    const payload = await getPayloadClient()
+    const { docs } = await payload.find({
+      collection: 'posts',
+      where: { and: [{ id: { equals: id } }, { _status: { equals: 'published' } }] },
+      depth: 1,
+      limit: 1,
+    })
+    if (docs[0]) {
+      await index.addDocuments([toDoc(docs[0])], { primaryKey: 'id' })
     } else {
-      await index.deleteDocument(post.id)
+      await index.deleteDocument(id)
     }
   } catch {
     /* indexing must never break publishing */
