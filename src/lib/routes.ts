@@ -1,4 +1,4 @@
-import type { Category, MagazineIssue, Post } from '@/payload-types'
+import type { Category, MagazineIssue, Post, Video } from '@/payload-types'
 
 /**
  * URL scheme (RTL Arabic magazine):
@@ -51,4 +51,9 @@ export function magazineIssueUrl(issue: Pick<MagazineIssue, 'issueNumber'>): str
 /** Parse a `/magazine/[issueNumber]` route param → positive integer, else null. */
 export function issueNumberFromParam(param: string): number | null {
   return /^[1-9]\d*$/.test(param) ? Number(param) : null
+}
+
+/** Permalink for a video watch page. Plural `/videos/` avoids the `video` category route. */
+export function videoWatchUrl(video: Pick<Video, 'id' | 'slug'>): string {
+  return `/videos/${video.slug || 'video'}-${video.id}`
 }
