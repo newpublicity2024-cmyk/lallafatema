@@ -46,9 +46,9 @@ export function NewsletterSignup() {
           {pending ? '…' : 'اشترك'}
         </button>
       </form>
-      {state.status !== 'idle' && (
-        <p className="mt-2 text-sm text-zinc-600">{MESSAGES[state.status]}</p>
-      )}
+      <p role="status" aria-live="polite" className="mt-2 text-sm text-zinc-600">
+        {state.status !== 'idle' ? MESSAGES[state.status] : ''}
+      </p>
     </div>
   )
 }
