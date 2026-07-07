@@ -1,6 +1,6 @@
 import { getPayloadClient } from '@/lib/payload'
 import { SITE_URL, absoluteUrl } from '@/lib/seo'
-import { postUrl, categoryUrl, authorUrl, magazineArchiveUrl, magazineIssueUrl } from '@/lib/routes'
+import { postUrl, categoryUrl, authorUrl, magazineArchiveUrl, magazineIssueUrl, videoWatchUrl } from '@/lib/routes'
 
 export const revalidate = 3600
 
@@ -14,7 +14,7 @@ function urlTag(loc: string, lastmod?: string) {
 export async function GET() {
   const payload = await getPayloadClient()
 
-  const [posts, categories, issues] = await Promise.all([
+  const [posts, categories, issues, videos] = await Promise.all([
     payload.find({
       collection: 'posts',
       where: { _status: { equals: 'published' } },
@@ -27,6 +27,13 @@ export async function GET() {
       collection: 'magazine-issues',
       where: { _status: { equals: 'published' } },
       sort: '-issueNumber',
+      limit: 500,
+      depth: 0,
+    }),
+    payload.find({
+      collection: 'videos',
+      where: { _status: { equals: 'published' } },
+      sort: '-publishedAt',
       limit: 500,
       depth: 0,
     }),
@@ -59,6 +66,10 @@ export async function GET() {
     for (const m of issues.docs) {
       urls.push(urlTag(absoluteUrl(magazineIssueUrl(m)), m.updatedAt ?? undefined))
     }
+  }
+
+  for (const v of videos.docs) {
+    urls.push(urlTag(absoluteUrl(videoWatchUrl(v)), v.updatedAt ?? undefined))
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`
