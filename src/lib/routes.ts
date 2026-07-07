@@ -57,3 +57,15 @@ export function issueNumberFromParam(param: string): number | null {
 export function videoWatchUrl(video: Pick<Video, 'id' | 'slug'>): string {
   return `/videos/${video.slug || 'video'}-${video.id}`
 }
+
+/** Static/legal page permalink — a clean top-level URL (e.g. /privacy). */
+export function pageUrl(slug: string): string {
+  return `/${slug}`
+}
+
+/** Pages that display a "last updated" line (legal pages where recency matters). */
+const PAGES_WITH_UPDATED_DATE = new Set(['privacy', 'terms'])
+
+export function pageShowsUpdatedDate(slug: string): boolean {
+  return PAGES_WITH_UPDATED_DATE.has(slug)
+}
