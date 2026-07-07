@@ -1,6 +1,6 @@
 import type { Where } from 'payload'
 
-import type { Ad, Category, MagazineIssue, Media, Post, User, Video } from '@/payload-types'
+import type { Ad, Category, MagazineIssue, Media, Page, Post, User, Video } from '@/payload-types'
 import {
   FOOTER_PAGES,
   NEWPUB_LINKS,
@@ -334,4 +334,29 @@ export async function getMagazineIssueByNumber(issueNumber: number): Promise<Mag
     limit: 1,
   })
   return docs[0] ?? null
+}
+
+/** One published static/legal page by slug. Drafts return null. */
+export async function getPageBySlug(slug: string): Promise<Page | null> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'pages',
+    where: { slug: { equals: slug }, _status: { equals: 'published' } },
+    limit: 1,
+    // depth 1 resolves seo.ogImage (upload) for page OG metadata.
+    depth: 1,
+  })
+  return docs[0] ?? null
+}
+
+/** All published pages (slug + updatedAt) — for the sitemap and static params. */
+export async function getPublishedPages(): Promise<Pick<Page, 'slug' | 'updatedAt'>[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'pages',
+    where: { _status: { equals: 'published' } },
+    limit: 100,
+    depth: 0,
+  })
+  return docs.map((d) => ({ slug: d.slug, updatedAt: d.updatedAt }))
 }

@@ -5,6 +5,8 @@ import {
   magazineIssueUrl,
   issueNumberFromParam,
   videoWatchUrl,
+  pageUrl,
+  pageShowsUpdatedDate,
 } from '@/lib/routes'
 
 describe('magazine routes', () => {
@@ -38,5 +40,24 @@ describe('videoWatchUrl', () => {
   })
   it('falls back to "video" when slug is missing', () => {
     expect(videoWatchUrl({ id: 7, slug: null })).toBe('/videos/video-7')
+  })
+})
+
+describe('pageUrl', () => {
+  it('builds a clean top-level url', () => {
+    expect(pageUrl('about')).toBe('/about')
+    expect(pageUrl('privacy')).toBe('/privacy')
+  })
+})
+
+describe('pageShowsUpdatedDate', () => {
+  it('is true for legal pages', () => {
+    expect(pageShowsUpdatedDate('privacy')).toBe(true)
+    expect(pageShowsUpdatedDate('terms')).toBe(true)
+  })
+  it('is false for other pages', () => {
+    expect(pageShowsUpdatedDate('about')).toBe(false)
+    expect(pageShowsUpdatedDate('advertise')).toBe(false)
+    expect(pageShowsUpdatedDate('')).toBe(false)
   })
 })

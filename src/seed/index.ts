@@ -36,6 +36,77 @@ function lexical(paragraphs: string[]) {
   }
 }
 
+/** A rich-text block for static pages: a heading, a paragraph, or a bullet list. */
+type PageBlock = { h2: string } | { p: string } | { ul: string[] }
+
+const textNode = (text: string) => ({
+  type: 'text' as const,
+  version: 1,
+  text,
+  format: 0,
+  detail: 0,
+  mode: 'normal' as const,
+  style: '',
+})
+
+/** Build a Lexical editor state from ordered heading / paragraph / list blocks (RTL). */
+function richDoc(blocks: PageBlock[]) {
+  const children = blocks.map((block) => {
+    if ('h2' in block) {
+      return {
+        type: 'heading' as const,
+        tag: 'h2' as const,
+        version: 1,
+        format: '' as const,
+        indent: 0,
+        direction: 'rtl' as const,
+        children: [textNode(block.h2)],
+      }
+    }
+    if ('ul' in block) {
+      return {
+        type: 'list' as const,
+        listType: 'bullet' as const,
+        tag: 'ul' as const,
+        start: 1,
+        version: 1,
+        format: '' as const,
+        indent: 0,
+        direction: 'rtl' as const,
+        children: block.ul.map((item, i) => ({
+          type: 'listitem' as const,
+          value: i + 1,
+          version: 1,
+          format: '' as const,
+          indent: 0,
+          direction: 'rtl' as const,
+          children: [textNode(item)],
+        })),
+      }
+    }
+    return {
+      type: 'paragraph' as const,
+      version: 1,
+      format: '' as const,
+      indent: 0,
+      direction: 'rtl' as const,
+      textFormat: 0,
+      children: [textNode(block.p)],
+    }
+  })
+
+  return {
+    root: {
+      type: 'root',
+      format: '' as const,
+      indent: 0,
+      version: 1,
+      direction: 'rtl' as const,
+      children,
+    },
+  }
+}
+
 type SamplePost = {
   title: string
   categorySlug: string
@@ -196,6 +267,81 @@ const SAMPLE_VIDEOS: SampleVideo[] = [
   },
 ]
 
+type SeedPage = { slug: string; title: string; blocks: PageBlock[] }
+
+// NOTE: AI-drafted placeholder copy — privacy/terms must be human-reviewed before launch.
+const SEED_PAGES: SeedPage[] = [
+  {
+    slug: 'about',
+    title: 'من نحن',
+    blocks: [
+      { p: '«لالة فاطمة» مجلة إلكترونية مغربية موجّهة للمرأة، تواكب عالم المشاهير والموضة والجمال والصحة والمطبخ بمحتوى عربي أصيل وقريب من اهتمامات القارئة المغربية والعربية.' },
+      { p: 'نسعى إلى تقديم محتوى موثوق وملهم يجمع بين المتعة والفائدة، يعدّه فريق تحرير متخصّص يحرص على الدقة ومواكبة أحدث المستجدات.' },
+      { h2: 'رؤيتنا' },
+      { p: 'أن نكون المرجع الأول للمرأة المغربية والعربية في كل ما يهمّها من موضوعات يومية وملهمة.' },
+      { h2: 'شبكتنا' },
+      { p: '«لالة فاطمة» جزء من شبكة NewPub الإعلامية المغربية.' },
+    ],
+  },
+  {
+    slug: 'editorial-board',
+    title: 'هيئة التحرير',
+    blocks: [
+      { p: 'يتألّف فريق «لالة فاطمة» من محرّرين وكتّاب متخصّصين في مجالات المشاهير والموضة والجمال والصحة والمطبخ، يعملون على تقديم محتوى دقيق ومتجدّد.' },
+      { h2: 'التواصل مع هيئة التحرير' },
+      { p: 'لأي استفسار تحريري أو اقتراح موضوع، يمكنكم مراسلتنا عبر البريد الإلكتروني: contact@lallafatema.ma' },
+    ],
+  },
+  {
+    slug: 'advertise',
+    title: 'للإعلان على موقعنا',
+    blocks: [
+      { p: 'يوفّر موقع «لالة فاطمة» مساحات إعلانية متنوّعة تصل إلى جمهور واسع من النساء في المغرب والعالم العربي.' },
+      { h2: 'خيارات الإعلان' },
+      { ul: [
+        'إعلانات بانر في الصفحة الرئيسية وصفحات الأقسام',
+        'محتوى مموّل وتغطيات خاصة',
+        'حملات عبر النشرة البريدية ووسائل التواصل الاجتماعي',
+      ] },
+      { h2: 'للتواصل' },
+      { p: 'لطلب عرض الأسعار وتفاصيل الحملات الإعلانية، تواصلوا معنا عبر البريد الإلكتروني: ads@lallafatema.ma' },
+    ],
+  },
+  {
+    slug: 'privacy',
+    title: 'سياسة الخصوصية',
+    blocks: [
+      { p: 'نحترم في «لالة فاطمة» خصوصية زوّارنا ونلتزم بحماية بياناتهم الشخصية. توضّح هذه السياسة أنواع المعلومات التي نجمعها وكيفية استخدامها.' },
+      { h2: 'المعلومات التي نجمعها' },
+      { ul: [
+        'بيانات الاستخدام التقنية مثل نوع المتصفّح والجهاز وصفحات الزيارة',
+        'المعلومات التي تزوّدنا بها طوعًا، كعنوان البريد الإلكتروني عند الاشتراك في النشرة',
+      ] },
+      { h2: 'ملفات تعريف الارتباط (الكوكيز)' },
+      { p: 'نستخدم ملفات تعريف الارتباط لتحسين تجربة التصفّح وقياس الأداء وعرض إعلانات مناسبة. يمكنكم إدارة تفضيلاتكم في أي وقت من خلال إعدادات ملفات تعريف الارتباط في أسفل الموقع.' },
+      { h2: 'مشاركة البيانات' },
+      { p: 'لا نبيع بياناتكم الشخصية. قد نشاركها مع مزوّدي خدمات موثوقين (مثل خدمات التحليلات والإعلانات) بالقدر اللازم لتشغيل الموقع.' },
+      { h2: 'حقوقكم' },
+      { p: 'يحقّ لكم طلب الاطّلاع على بياناتكم أو تصحيحها أو حذفها. للتواصل بخصوص الخصوصية: privacy@lallafatema.ma' },
+    ],
+  },
+  {
+    slug: 'terms',
+    title: 'شروط الاستخدام',
+    blocks: [
+      { p: 'باستخدامكم موقع «لالة فاطمة» فإنكم توافقون على شروط الاستخدام التالية. يُرجى قراءتها بعناية.' },
+      { h2: 'استخدام الموقع' },
+      { p: 'يُتاح المحتوى لأغراض الاطّلاع الشخصي وغير التجاري. يُمنع إعادة نشر المحتوى أو نسخه دون إذن مسبق.' },
+      { h2: 'الملكية الفكرية' },
+      { p: 'جميع الحقوق محفوظة لموقع «لالة فاطمة». تظلّ العلامات والنصوص والصور ملكًا لأصحابها.' },
+      { h2: 'حدود المسؤولية' },
+      { p: 'نبذل جهدنا لضمان دقة المحتوى، لكنه يُقدَّم «كما هو» دون ضمانات. لا نتحمّل مسؤولية أي أضرار ناتجة عن استخدام الموقع.' },
+      { h2: 'تعديل الشروط' },
+      { p: 'قد نحدّث هذه الشروط من وقت لآخر، ويسري التحديث فور نشره على هذه الصفحة.' },
+    ],
+  },
+]
+
 async function run() {
   const payload = await getPayload({ config: await config })
 
@@ -333,6 +479,30 @@ async function run() {
       },
     })
     payload.logger.info(`Created video: ${sample.title}`)
+  }
+
+  // 5) Static/legal pages (idempotent by slug; slug passed explicitly so the
+  //    Arabic title isn't slugified into a non-ASCII slug).
+  for (const p of SEED_PAGES) {
+    const exists = await payload.find({
+      collection: 'pages',
+      where: { slug: { equals: p.slug } },
+      limit: 1,
+    })
+    if (exists.docs[0]) {
+      payload.logger.info(`Page exists, skipping: ${p.slug}`)
+      continue
+    }
+    await payload.create({
+      collection: 'pages',
+      data: {
+        title: p.title,
+        slug: p.slug,
+        content: richDoc(p.blocks),
+        _status: 'published',
+      },
+    })
+    payload.logger.info(`Created page: ${p.slug}`)
   }
 
   payload.logger.info('Seed complete.')
