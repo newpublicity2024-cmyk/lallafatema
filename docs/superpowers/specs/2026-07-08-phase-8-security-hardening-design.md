@@ -57,9 +57,12 @@ without regressing the site's static/ISR rendering or the admin live-preview.
 
 ### §1 — Security headers
 
-New `src/lib/security-headers.ts` exports the static header list plus two CSP strings
-(`publicCsp`, `adminCsp`). `next.config.ts` gains `async headers()` returning two blocks:
-a global block (`source: '/:path*'`) and an admin override (`source: '/admin/:path*'`).
+New `src/lib/security-headers.ts` exports the static header list plus a `buildCsp()`
+builder. `next.config.ts` gains `async headers()` applying **one** policy to all routes
+(`source: '/:path*'`). The CSP includes `'unsafe-eval'` **only in development** (Next.js
+HMR / React-refresh needs it); production omits it. A separate admin override block is added
+**only if** the Report-Only pass proves the Payload admin needs more than the public policy
+— not speculatively.
 
 **Applied to all routes:**
 
@@ -71,7 +74,7 @@ a global block (`source: '/:path*'`) and an admin override (`source: '/admin/:pa
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Don't leak full paths cross-origin. |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Deny sensors we never use. Deliberately **does not** restrict `browsing-topics` so AdSense/Topics is unaffected. |
 
-**Public CSP** (`publicCsp`), rolled out Report-Only first (see §6):
+**The CSP** (`buildCsp()`), rolled out Report-Only first (see §6):
 
 ```
 default-src 'self';
@@ -105,11 +108,14 @@ frame-src <youtube> <youtube-nocookie> <adsense-iframes> <onesignal>;
   `www.youtube-nocookie.com`, `s.ytimg.com`). Self-hosted fonts (next/font) need no
   external font origin. Meilisearch is server-side only (no browser origin).
 
-**Admin CSP** (`adminCsp`, `source: '/admin/:path*'`): the public policy plus whatever the
-Payload admin bundle needs — expected `'unsafe-eval'` in `script-src` and `blob:` for
-workers (`worker-src blob:` / `child-src blob:`). The exact additions are **confirmed
-empirically during the Report-Only pass** (drive `/admin` and read console violations)
-before enforce. Keeping this separate means the public site stays tighter than the admin.
+**Admin CSP (contingency).** The single policy above (with dev-only `'unsafe-eval'`) is the
+starting point for `/admin` too. During the Report-Only pass we drive `/admin` (incl. live
+preview + a media upload) and read console violations. If the **production** admin bundle
+needs more than the public policy (e.g. `blob:` workers via `worker-src`/`child-src`), we
+add an admin-only override block (`source: '/admin/:path*'`, mutually exclusive with a
+`'/((?!admin).*)'` public source so no route gets two CSP headers) — and a header test
+asserts `/admin` carries exactly one CSP. Production admin can't be exercised locally (deploy
+deferred), so any residual production-admin gap is noted as a launch follow-up.
 
 ### §2 — Login rate-limit / account lockout
 
@@ -125,13 +131,13 @@ auth: {
 }
 ```
 
-Top-level Payload config gains `rateLimit: { max, window, trustProxy: true }` (`trustProxy`
-so the per-IP key is the real client behind Vercel/Cloudflare, not the proxy).
-
-**Honest caveat (documented in code + spec):** Payload's built-in rate limiter is
-in-memory, so on Vercel serverless it is **per-lambda, not global** — a soft backstop, not
-real protection. The account-lockout (maxLoginAttempts) is the meaningful anti-brute-force
-control here; distributed rate-limiting is **Cloudflare WAF at cutover** (deferred).
+**No app-level request rate limiter.** Payload 3 dropped Express and with it the old
+top-level `rateLimit` config — verified **absent** in `payload@3.85.1`'s config types. So
+there is no in-app request rate limiter to configure. The meaningful in-app
+anti-brute-force control is the **account lockout** above (`maxLoginAttempts`/`lockTime`),
+which is DB-backed and therefore works correctly on serverless. Distributed, per-route rate
+limiting is **Cloudflare WAF at cutover** (deferred, plan-acknowledged) — the correct home
+for it in a serverless deployment, and honest about what the app layer can and can't do.
 
 ### §3 — CSRF / cookies / CORS
 
@@ -183,11 +189,11 @@ minimal tightening — **not** an access-control rewrite.
 
 ### §6 — Rollout & verification
 
-1. Ship CSP as **`Content-Security-Policy-Report-Only`** (both public + admin variants).
+1. Ship the single CSP as **`Content-Security-Policy-Report-Only`**.
 2. Drive the public site **and** `/admin` (incl. live-preview and a media upload) through
    Playwright, capturing `console` messages; collect CSP violation reports.
-3. Refine the host allowlists (esp. the admin `'unsafe-eval'`/`blob:` question) until the
-   real flows produce zero violations.
+3. Refine the host allowlist until the real flows produce zero violations; add the admin
+   override block only if `/admin` proves it needs more (see §1 Admin CSP contingency).
 4. **Flip** the header name from `...-Report-Only` to `Content-Security-Policy`.
 
 Verification loop (matches the project's standard): `tsc --noEmit` + `eslint .` +
@@ -218,8 +224,9 @@ homepage still builds `○ Static` (ISR intact) and `0 /_next/image`; manual che
 2. CSP is **enforcing** (not Report-Only) with zero violations across the real public +
    admin flows, and **ISR is intact** (homepage `○ Static`, `0 /_next/image`).
 3. Live-preview in the admin still works (framing not broken).
-4. Login lockout (`maxLoginAttempts`/`lockTime`) is explicit and demonstrably locks after
-   5 failures; `rateLimit` + `trustProxy` set; serverless caveat documented.
+4. Login lockout (`maxLoginAttempts`/`lockTime`/`tokenExpiration`) is explicit and
+   demonstrably locks after 5 failures; the "no app-level rate limiter / Cloudflare owns it"
+   caveat is documented in code + spec.
 5. `csrf`/`cors` carry a real origin allowlist (no `*`); cookies are HttpOnly + Lax +
    prod-secure with the `lf` prefix.
 6. `Media` rejects SVG and enforces a file-size cap; PDF still accepted.
