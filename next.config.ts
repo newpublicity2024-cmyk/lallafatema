@@ -3,6 +3,8 @@ import type { NextConfig } from 'next'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
+import { securityHeaders } from './src/lib/security-headers'
+
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
@@ -12,6 +14,9 @@ const nextConfig: NextConfig = {
     // at Cloudflare's edge via the custom loader (see lib/image-loader.ts).
     loader: 'custom',
     loaderFile: './lib/image-loader.ts',
+  },
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders() }]
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
