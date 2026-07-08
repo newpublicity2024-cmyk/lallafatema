@@ -43,4 +43,25 @@ test.describe('CSP enforcement', () => {
     expect(res!.headers()['content-security-policy']).toBeTruthy()
     expect(violations).toEqual([])
   })
+
+  test('serves an enforced CSP with no violations on /admin (login screen)', async ({ page }) => {
+    const violations: string[] = []
+    page.on('console', (msg) => {
+      const t = msg.text()
+      if (
+        !t.includes('[Report Only]') &&
+        (t.includes('Refused to') || t.includes('violates the following Content Security Policy'))
+      ) {
+        violations.push(t)
+      }
+    })
+
+    // Unauthenticated -> Payload serves the /admin login screen.
+    const res = await page.goto(`${BASE}/admin`)
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1500)
+
+    expect(res!.headers()['content-security-policy']).toBeTruthy()
+    expect(violations).toEqual([])
+  })
 })

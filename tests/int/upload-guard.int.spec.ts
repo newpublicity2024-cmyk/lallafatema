@@ -24,6 +24,11 @@ describe('validateUpload', () => {
     expect(validateUpload({ mimeType: 'application/pdf', size: 26 * 1024 * 1024 })).toContain('الحد الأقصى')
   })
 
+  it('accepts a file exactly AT the cap (inclusive boundary)', () => {
+    expect(validateUpload({ mimeType: 'image/png', size: 10 * 1024 * 1024 })).toBe(true)
+    expect(validateUpload({ mimeType: 'application/pdf', size: 25 * 1024 * 1024 })).toBe(true)
+  })
+
   it('exposes an allowlist without SVG but with PDF', () => {
     expect(ALLOWED_UPLOAD_MIME_TYPES).not.toContain('image/svg+xml')
     expect(ALLOWED_UPLOAD_MIME_TYPES).toContain('application/pdf')
