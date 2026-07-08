@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 
 import {
   buildCsp,
@@ -27,6 +27,25 @@ describe('buildCsp', () => {
 
   it('never uses a nonce (would break ISR)', () => {
     expect(csp).not.toContain('nonce-')
+  })
+})
+
+describe('buildCsp unsafe-eval branch (NODE_ENV-dependent)', () => {
+  // Capture once so no other suite is affected by the stubbing below.
+  const originalNodeEnv = process.env.NODE_ENV
+
+  afterEach(() => {
+    process.env.NODE_ENV = originalNodeEnv
+  })
+
+  it("omits 'unsafe-eval' in production", () => {
+    process.env.NODE_ENV = 'production'
+    expect(buildCsp()).not.toContain("'unsafe-eval'")
+  })
+
+  it("includes 'unsafe-eval' outside production (dev HMR / React-refresh)", () => {
+    process.env.NODE_ENV = 'development'
+    expect(buildCsp()).toContain("'unsafe-eval'")
   })
 })
 
