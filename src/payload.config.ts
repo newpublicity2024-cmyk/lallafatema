@@ -20,6 +20,7 @@ import { Redirects } from './collections/Redirects'
 import { Homepage } from './globals/Homepage'
 import { MainMenu } from './globals/MainMenu'
 import { SiteSettings } from './globals/SiteSettings'
+import { allowedOrigins } from './lib/origins'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -98,6 +99,12 @@ export default buildConfig({
     fallbackLanguage: 'ar',
   },
   secret: process.env.PAYLOAD_SECRET || '',
+  // CSRF: only these origins may send Payload auth cookies (empty default = no origin check).
+  csrf: allowedOrigins(),
+  // CORS: same allowlist — never '*'.
+  cors: allowedOrigins(),
+  // Namespace auth cookies.
+  cookiePrefix: 'lf',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

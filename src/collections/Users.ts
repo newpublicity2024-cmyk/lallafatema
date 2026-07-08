@@ -10,7 +10,20 @@ export const Users: CollectionConfig = {
     defaultColumns: ['name', 'email', 'role'],
     group: 'الإدارة',
   },
-  auth: true,
+  auth: {
+    // Account lockout after repeated failures (the in-app anti-brute-force control;
+    // distributed rate-limiting is Cloudflare WAF at cutover). These are Payload's
+    // defaults made explicit + a shorter session.
+    maxLoginAttempts: 5,
+    lockTime: 600 * 1000, // 10 minutes
+    tokenExpiration: 7200, // 2 hours
+    cookies: {
+      sameSite: 'Lax',
+      // Secure only in production so local http dev still sets the cookie.
+      secure: process.env.NODE_ENV === 'production',
+      // HttpOnly is always on in Payload — not configurable here, stated for the record.
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ data, operation, req }) => {
