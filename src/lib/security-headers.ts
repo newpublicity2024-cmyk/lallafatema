@@ -9,7 +9,7 @@
  */
 
 // Flip to false to ENFORCE (Content-Security-Policy-Report-Only -> Content-Security-Policy).
-export const CSP_REPORT_ONLY = true
+export const CSP_REPORT_ONLY = false
 
 // Third-party hosts allowed to load scripts / frames. Single source of truth.
 const GOOGLE = [

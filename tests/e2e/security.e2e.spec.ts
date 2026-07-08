@@ -21,3 +21,26 @@ test.describe('security headers', () => {
     expect(csp).toContain("frame-ancestors 'self'")
   })
 })
+
+test.describe('CSP enforcement', () => {
+  test('serves an enforced CSP with no violations on the homepage', async ({ page }) => {
+    const violations: string[] = []
+    page.on('console', (msg) => {
+      const t = msg.text()
+      if (
+        !t.includes('[Report Only]') &&
+        (t.includes('Refused to') || t.includes('violates the following Content Security Policy'))
+      ) {
+        violations.push(t)
+      }
+    })
+
+    const res = await page.goto(BASE)
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1500)
+
+    // Enforced header name (not report-only) once the flag is flipped.
+    expect(res!.headers()['content-security-policy']).toBeTruthy()
+    expect(violations).toEqual([])
+  })
+})
