@@ -5,12 +5,32 @@ no rewrite. One regression test added (`tests/int/rbac.int.spec.ts`).
 
 | Collection/Global | create | read | update | delete | Verdict |
 |---|---|---|---|---|---|
-| Posts / Categories / Tags / Videos / MagazineIssues / Pages | role-gated | public (published) | role-gated | role-gated | OK |
-| Ads | admin/editor | public (windowed via query) | admin/editor | admin/editor | OK |
-| Redirects | admin/editor | public map only | admin/editor | admin/editor | OK |
-| Media | authenticated | anyone | authenticated | admin/editor | OK — see note 1 |
-| Users | admin | `Boolean(user)` | admin-or-self | admin | OK — see note 2 |
-| Globals (Homepage/MainMenu/SiteSettings) | — | anyone/appropriate | admin | — | OK |
+| Posts | authenticated (any logged-in user, incl. journalist) | published to public; authors also see their own drafts (`canReadPosts`) | own only (`canModifyOwnPosts`; admin/editor: all) | own only (`canModifyOwnPosts`) | OK — see note 3 |
+| Tags | authenticated | anyone (public) | admin/editor | admin/editor | OK — see note 3 |
+| Videos | authenticated | published only (`canReadPublished`) | admin/editor | admin/editor | OK — see note 3 |
+| Categories | admin/editor | anyone (public) | admin/editor | admin/editor | OK |
+| MagazineIssues | admin/editor | published only (`canReadPublished`) | admin/editor | admin/editor | OK |
+| Pages | admin/editor | published only (`canReadPublished`) | admin/editor | admin/editor | OK |
+| Ads | admin/editor | active window only (`canReadActiveAds`) | admin/editor | admin/editor | OK |
+| Redirects | admin/editor | anyone (public map) | admin/editor | admin/editor | OK |
+| Media | authenticated | anyone (public) | authenticated | admin/editor | OK — see note 1 |
+| Users | admin | `Boolean(user)` (any logged-in user) | admin-or-self (`isAdminOrSelf`) | admin | OK — see note 2 |
+| Global: SiteSettings | — | anyone (public) | admin | — | OK |
+| Global: Homepage | — | anyone (public) | admin/editor | — | OK |
+| Global: MainMenu | — | anyone (public) | admin/editor | — | OK |
+
+"authenticated" = any logged-in user (`isAuthenticated`, includes journalists); it is NOT
+role-gated. Where a role gate applies it is named explicitly (admin / admin+editor).
+
+**Note 3 — least-privilege properties worth recording (all intended).** Journalists can
+*create* Posts, Tags, and Videos, but on Posts they can only modify their OWN documents:
+`canModifyOwnPosts` scopes update/delete to `{ authors: { in: [user.id] } }` for
+non-admin/editor users, so a journalist cannot edit or delete another author's post. The
+post `author` field's update is admin/editor-locked (`isAdminOrEditorFieldLevel`), so a
+journalist cannot reassign authorship to hijack a post or offload their own. Tags/Videos
+created by a journalist can only be *modified* by admin/editor (update/delete are role-
+gated), so journalists also cannot publish taxonomy/video changes. This is a clean
+"create-your-own vs. edit-everyone's" separation — exactly the intended posture.
 
 **Privilege escalation:** `Users.role` is field-level locked to admins
 (`isAdminFieldLevel` on create+update) — a non-admin cannot grant themselves a role. Good.
