@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 
 import {
   buildCsp,
@@ -31,20 +31,19 @@ describe('buildCsp', () => {
 })
 
 describe('buildCsp unsafe-eval branch (NODE_ENV-dependent)', () => {
-  // Capture once so no other suite is affected by the stubbing below.
-  const originalNodeEnv = process.env.NODE_ENV
-
+  // vi.stubEnv is type-safe (process.env.NODE_ENV is read-only in @types/node)
+  // and restores every stubbed var so no other suite is affected.
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv
+    vi.unstubAllEnvs()
   })
 
   it("omits 'unsafe-eval' in production", () => {
-    process.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     expect(buildCsp()).not.toContain("'unsafe-eval'")
   })
 
   it("includes 'unsafe-eval' outside production (dev HMR / React-refresh)", () => {
-    process.env.NODE_ENV = 'development'
+    vi.stubEnv('NODE_ENV', 'development')
     expect(buildCsp()).toContain("'unsafe-eval'")
   })
 })
