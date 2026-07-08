@@ -28,4 +28,11 @@ describe('allowedOrigins', () => {
     process.env.NEXT_PUBLIC_SERVER_URL = 'https://lallafatema.ma'
     expect(allowedOrigins().filter((o) => o === 'https://lallafatema.ma')).toHaveLength(1)
   })
+
+  it('never adds a wildcard even when env is literally "*"', () => {
+    process.env.NEXT_PUBLIC_SERVER_URL = '*'
+    const origins = allowedOrigins()
+    expect(origins).not.toContain('*')
+    expect(origins).toContain('https://lallafatema.ma')
+  })
 })
