@@ -64,7 +64,7 @@ export function PostCard({
           <h3 className="mt-1 line-clamp-3 text-[15px] font-medium leading-snug text-zinc-900 group-hover:text-brand-700">
             <Link href={href}>{post.title}</Link>
           </h3>
-          <RelativeTime date={post.publishedAt} className="mt-1 block text-xs text-zinc-400" />
+          <RelativeTime date={post.publishedAt} className="mt-1 block text-xs text-zinc-500" />
         </div>
       </article>
     )
@@ -120,7 +120,7 @@ export function PostCard({
             <Link href={href}>{post.title}</Link>
           </h3>
           {post.excerpt && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-600">{post.excerpt}</p>}
-          <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-400" />
+          <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-500" />
         </div>
       </article>
     )
@@ -156,7 +156,7 @@ export function PostCard({
         {isHero && post.excerpt && (
           <p className="mt-2 line-clamp-2 text-sm text-zinc-600">{post.excerpt}</p>
         )}
-        <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-400" />
+        <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-500" />
       </div>
     </article>
   )

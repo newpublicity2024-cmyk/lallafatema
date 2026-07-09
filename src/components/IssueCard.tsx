@@ -27,7 +27,7 @@ export function IssueCard({ issue }: { issue: MagazineIssue }) {
         {issue.publishDate && (
           <time
             dateTime={new Date(issue.publishDate).toISOString()}
-            className="mt-1 block text-xs text-zinc-400"
+            className="mt-1 block text-xs text-zinc-500"
           >
             {formatDate(issue.publishDate)}
           </time>

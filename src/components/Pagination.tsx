@@ -28,7 +28,7 @@ export function Pagination({
         const gap = prev && p - prev > 1
         return (
           <span key={p} className="flex items-center gap-2">
-            {gap && <span className="text-zinc-400">…</span>}
+            {gap && <span className="text-zinc-500">…</span>}
             <Link
               href={href(p)}
               aria-current={p === page ? 'page' : undefined}
