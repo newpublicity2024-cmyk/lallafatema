@@ -64,7 +64,9 @@ export function PostCard({
           <h3 className="mt-1 line-clamp-3 text-[15px] font-medium leading-snug text-zinc-900 group-hover:text-brand-700">
             <Link href={href}>{post.title}</Link>
           </h3>
-          <RelativeTime date={post.publishedAt} className="mt-1 block text-xs text-zinc-500" />
+          {/* zinc-600 (not -500): this compact variant renders on the .lf-band gray
+              (#f0f0f0), where -500 is only 4.24:1 — -600 clears AA at 6.77:1. */}
+          <RelativeTime date={post.publishedAt} className="mt-1 block text-xs text-zinc-600" />
         </div>
       </article>
     )

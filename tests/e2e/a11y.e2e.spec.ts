@@ -82,6 +82,16 @@ async function contrastRatio(locator: Locator): Promise<number> {
   })
 }
 
+/** Assert one text element clears the WCAG AA 4.5:1 floor via computed contrast. */
+async function expectAaTextContrast(locator: Locator) {
+  await expect(locator).toBeVisible()
+  const ratio = await contrastRatio(locator)
+  expect(
+    ratio,
+    `computed contrast ${ratio.toFixed(2)}:1 (AA requires >= 4.5:1)`,
+  ).toBeGreaterThanOrEqual(4.5)
+}
+
 test('homepage has no color-contrast violations', async ({ page }) => {
   const violations = await contrastViolations(page, BASE)
   const summary = violations
@@ -91,14 +101,19 @@ test('homepage has no color-contrast violations', async ({ page }) => {
 })
 
 // Guards the RelativeTime timestamp contrast fix directly, since axe skips these
-// Arabic <time> nodes. Fails (~2.6:1) if the token regresses to text-zinc-400.
+// Arabic <time> nodes. The lead/default PostCard variants sit inside `.lf-card`;
+// the first such timestamp is the hero's default-variant card (PostCard.tsx:159).
+// Fails (~2.6:1) if that token regresses to text-zinc-400.
 test('homepage timestamp meets AA contrast (computed)', async ({ page }) => {
   await page.goto(BASE, { waitUntil: 'load' })
-  const timestamp = page.locator('.lf-card time').first()
-  await expect(timestamp).toBeVisible()
-  const ratio = await contrastRatio(timestamp)
-  expect(
-    ratio,
-    `computed contrast ${ratio.toFixed(2)}:1 (AA requires >= 4.5:1)`,
-  ).toBeGreaterThanOrEqual(4.5)
+  await expectAaTextContrast(page.locator('.lf-card time').first())
+})
+
+// The compact PostCard variant (LeadListBlock sidebar list, PostCard.tsx:57/67) has
+// NO `.lf-card` wrapper, so the test above never reaches it — it's the only variant
+// whose <article> uses `items-start`. Guards PostCard.tsx:67 specifically; fails
+// (~2.6:1) if that token regresses to text-zinc-400.
+test('homepage compact-variant timestamp meets AA contrast (computed)', async ({ page }) => {
+  await page.goto(BASE, { waitUntil: 'load' })
+  await expectAaTextContrast(page.locator('article.items-start time').first())
 })
