@@ -2,7 +2,7 @@ import { getPayload, Payload } from 'payload'
 import { describe, it, beforeAll, afterAll, expect } from 'vitest'
 
 import config from '@/payload.config'
-import { getPageBySlug, getPublishedPages } from '@/lib/queries'
+import { getPageById, getPageBySlug, getPublishedPages } from '@/lib/queries'
 
 let payload: Payload
 const PUB_SLUG = 'test-page-pub-8a1'
@@ -47,5 +47,23 @@ describe('page queries', () => {
     const slugs = (await getPublishedPages()).map((p) => p.slug)
     expect(slugs).toContain(PUB_SLUG)
     expect(slugs).not.toContain(DRAFT_SLUG)
+  })
+
+  it('getPageById returns a published page by id', async () => {
+    const page = await getPageById(Number(pubId))
+    expect(page?.slug).toBe(PUB_SLUG)
+  })
+
+  it('getPageById hides an unpublished draft from public reads (draft=false)', async () => {
+    expect(await getPageById(Number(draftId))).toBeNull()
+  })
+
+  it('getPageById returns the draft in preview mode (draft=true) — the /preview fix', async () => {
+    const page = await getPageById(Number(draftId), true)
+    expect(page?.slug).toBe(DRAFT_SLUG)
+  })
+
+  it('getPageById returns null for a nonexistent id', async () => {
+    expect(await getPageById(999999999, true)).toBeNull()
   })
 })

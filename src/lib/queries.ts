@@ -349,6 +349,18 @@ export async function getPageBySlug(slug: string): Promise<Page | null> {
   return docs[0] ?? null
 }
 
+/** One page by id. Public reads see published only; preview (draft=true) sees the latest draft. */
+export async function getPageById(id: number, draft = false): Promise<Page | null> {
+  const payload = await getPayloadClient()
+  try {
+    const page = await payload.findByID({ collection: 'pages', id, depth: 1, draft })
+    if (!draft && page._status !== 'published') return null
+    return page
+  } catch {
+    return null
+  }
+}
+
 /** All published pages (slug + updatedAt) — for the sitemap and static params. */
 export async function getPublishedPages(): Promise<Pick<Page, 'slug' | 'updatedAt'>[]> {
   const payload = await getPayloadClient()
