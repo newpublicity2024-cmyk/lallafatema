@@ -82,7 +82,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     const { docs, totalPages } = await getPosts({ categoryId: category.id, limit: 16, page })
 
     return (
-      <main className="lf-container py-8">
+      <div className="lf-container py-8">
         <JsonLd data={breadcrumbJsonLd(crumbs)} />
         <SectionHeading title={category.name} />
 
@@ -97,7 +97,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         )}
 
         <Pagination basePath={categoryUrl(slug)} page={page} totalPages={totalPages} />
-      </main>
+      </div>
     )
   }
 

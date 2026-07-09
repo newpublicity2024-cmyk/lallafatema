@@ -41,7 +41,7 @@ export default async function MagazineIssuePage({ params }: Props) {
   const title = issue.title || `العدد ${issue.issueNumber}`
 
   return (
-    <main className="lf-container py-8">
+    <div className="lf-container py-8">
       <JsonLd data={publicationIssueJsonLd(issue)} />
       <JsonLd
         data={breadcrumbJsonLd([
@@ -85,6 +85,6 @@ export default async function MagazineIssuePage({ params }: Props) {
       ) : (
         <p className="py-8 text-center text-zinc-500">ملف العدد غير متوفر حاليًا.</p>
       )}
-    </main>
+    </div>
   )
 }

@@ -10,7 +10,7 @@ export function PageView({ page }: { page: Page }) {
   const showUpdated = pageShowsUpdatedDate(page.slug ?? '')
 
   return (
-    <main className="mx-auto max-w-[800px] px-4 py-8">
+    <div className="mx-auto max-w-[800px] px-4 py-8">
       <article>
         <nav className="mb-3 text-sm text-zinc-500">
           <Link href="/" className="hover:text-brand-600">الرئيسية</Link>
@@ -33,6 +33,6 @@ export function PageView({ page }: { page: Page }) {
           </div>
         )}
       </article>
-    </main>
+    </div>
   )
 }

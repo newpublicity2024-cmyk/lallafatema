@@ -117,3 +117,12 @@ test('homepage compact-variant timestamp meets AA contrast (computed)', async ({
   await page.goto(BASE, { waitUntil: 'load' })
   await expectAaTextContrast(page.locator('article.items-start time').first())
 })
+
+test('skip link is the first focusable element and moves focus to main', async ({ page }) => {
+  await page.goto(BASE, { waitUntil: 'load' })
+  await page.keyboard.press('Tab')
+  const skip = page.getByRole('link', { name: 'تخطَّ إلى المحتوى' })
+  await expect(skip).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('#main')).toBeFocused()
+})
