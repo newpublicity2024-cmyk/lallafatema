@@ -25,12 +25,17 @@ export function PostImage({
   const media = image && typeof image === 'object' ? image : null
 
   if (!media?.url) {
+    // Name the placeholder from `alt` (the post/issue/video title) so an image-only
+    // <Link> wrapping it still has an accessible name — otherwise the anchor is a
+    // focusable-no-name violation (WCAG 2.4.4/4.1.2) for any item lacking a photo.
+    // The visible wordmark stays decorative (aria-hidden) to avoid a double read.
     return (
       <div
-        aria-hidden
+        role="img"
+        aria-label={alt || 'لالة فاطمة'}
         className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-200 to-brand-500 ${className}`}
       >
-        <span className="text-3xl font-extrabold text-white/70">لالة فاطمة</span>
+        <span aria-hidden className="text-3xl font-extrabold text-white/70">لالة فاطمة</span>
       </div>
     )
   }
