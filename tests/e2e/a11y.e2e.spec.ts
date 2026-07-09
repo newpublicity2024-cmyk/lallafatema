@@ -126,3 +126,43 @@ test('skip link is the first focusable element and moves focus to main', async (
   await page.keyboard.press('Enter')
   await expect(page.locator('#main')).toBeFocused()
 })
+
+test.describe('consent dialog focus', () => {
+  // These need the banner to actually open, so clear the accept-all cookie set in beforeEach.
+  test.beforeEach(async ({ context }) => {
+    await context.clearCookies()
+  })
+
+  test('moves focus into the dialog when it opens', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    const dialog = page.getByRole('dialog', { name: 'إعدادات ملفات تعريف الارتباط' })
+    await expect(dialog).toBeVisible()
+    // focus is inside the dialog (the container itself, tabIndex=-1)
+    const focusedInDialog = await dialog.evaluate((el) => el.contains(document.activeElement))
+    expect(focusedInDialog).toBe(true)
+  })
+
+  test('Esc collapses the Customize panel but keeps the banner', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    const dialog = page.getByRole('dialog', { name: 'إعدادات ملفات تعريف الارتباط' })
+    await dialog.getByRole('button', { name: 'تخصيص' }).click()
+    await expect(dialog.getByLabel('إحصاءات')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(dialog.getByLabel('إحصاءات')).toBeHidden()
+    await expect(dialog).toBeVisible()
+  })
+
+  test('returns focus to the footer trigger after reopen + choose', async ({ page, context }) => {
+    // Establish a prior choice so the banner does not auto-open.
+    await context.addCookies([{ name: 'lf-consent', value: '1:a=1,ads=1', url: BASE }])
+    await page.goto(BASE, { waitUntil: 'load' })
+    const trigger = page.getByRole('button', { name: 'إعدادات ملفات تعريف الارتباط' })
+    await trigger.focus()
+    await trigger.click()
+    const dialog = page.getByRole('dialog', { name: 'إعدادات ملفات تعريف الارتباط' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: 'قبول الكل' }).click()
+    await expect(dialog).toBeHidden()
+    await expect(trigger).toBeFocused()
+  })
+})

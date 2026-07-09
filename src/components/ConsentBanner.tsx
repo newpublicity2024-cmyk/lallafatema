@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
   CONSENT_COOKIE,
@@ -39,6 +39,8 @@ export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
     const stored = readConsentCookie()
     return stored ? { analytics: stored.analytics, ads: stored.ads } : { analytics: false, ads: false }
   })
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     // setOpen(true) is intentional here: open must start false for SSR (no hydration mismatch),
@@ -47,6 +49,7 @@ export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
     if (!readConsentCookie()) setOpen(true)
 
     const reopen = () => {
+      triggerRef.current = (document.activeElement as HTMLElement) ?? null
       const cur = readConsentCookie()
       if (cur) setSel({ analytics: cur.analytics, ads: cur.ads })
       setCustomizing(true)
@@ -56,6 +59,12 @@ export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
     return () => window.removeEventListener('lf:open-consent', reopen)
   }, [])
 
+  useEffect(() => {
+    // Non-modal: move focus into the dialog when it appears so keyboard/SR
+    // users notice it. No focus trap — the page stays interactive.
+    if (open) dialogRef.current?.focus()
+  }, [open])
+
   if (!open) return null
 
   const resolve = (next: Selections) => {
@@ -63,10 +72,18 @@ export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
     setSel(next)
     setOpen(false)
     setCustomizing(false)
+    const t = triggerRef.current
+    triggerRef.current = null
+    if (t) requestAnimationFrame(() => t.focus())
   }
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && customizing) setCustomizing(false)
+      }}
       role="dialog"
       aria-label="إعدادات ملفات تعريف الارتباط"
       dir="rtl"
