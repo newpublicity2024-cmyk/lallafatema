@@ -166,3 +166,191 @@ test.describe('consent dialog focus', () => {
     await expect(trigger).toBeFocused()
   })
 })
+
+test.describe('axe gate — WCAG A/AA, 7 routes', () => {
+  const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+
+  async function audit(page: Page, url: string) {
+    await page.goto(url, { waitUntil: 'load' })
+    const results = await new AxeBuilder({ page }).withTags(TAGS).analyze()
+    const summary = results.violations
+      .map((v) => `${v.id} (${v.nodes.length} node(s)) — ${v.help}\n  ${v.helpUrl}`)
+      .join('\n')
+    expect(results.violations, summary || 'no violations').toEqual([])
+  }
+
+  async function hrefMatching(page: Page, re: RegExp) {
+    const hrefs = await page
+      .locator('#main a, nav a')
+      .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
+    const match = hrefs.find((h) => re.test(h))
+    expect(match, `expected a link matching ${re}`).toBeTruthy()
+    return new URL(match!, BASE).toString()
+  }
+
+  test('/', async ({ page }) => audit(page, BASE))
+  test('/search', async ({ page }) => audit(page, `${BASE}/search`))
+  test('/about (static page)', async ({ page }) => audit(page, `${BASE}/about`))
+  test('/magazine (archive)', async ({ page }) => audit(page, `${BASE}/magazine`))
+
+  test('article', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    await audit(page, await hrefMatching(page, /^\/[^/]+\/[^/]+-\d+$/))
+  })
+  test('category', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    await audit(page, await hrefMatching(page, /^\/[^/]+$/))
+  })
+  test('video watch', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    await audit(page, await hrefMatching(page, /^\/videos\//))
+  })
+  test('magazine issue', async ({ page }) => {
+    await page.goto(`${BASE}/magazine`, { waitUntil: 'load' })
+    await audit(page, await hrefMatching(page, /^\/magazine\/\d+/))
+  })
+})
+
+/**
+ * Arabic computed-contrast sweep — the guard axe cannot provide.
+ *
+ * axe-core 4.12's `color-contrast` rule marks most Arabic-script runs "inapplicable"
+ * (its icon-ligature heuristic false-positives on Arabic contextual letter-joining), so
+ * the axe gate above does NOT actually verify Arabic text contrast. This sweep reuses the
+ * deterministic `expectAaTextContrast` (canvas rasterization → WCAG ratio, colorspace- and
+ * language-agnostic) to assert AA (>= 4.5:1) on the representative Arabic text that sits on
+ * SOLID / token backgrounds, per route — especially the alternating homepage bands, where a
+ * token that clears AA on white can fail on a band (exactly how Task 1 found the compact
+ * timestamp zinc-500 → zinc-600, 4.24:1 → 6.77:1 on the #f0f0f0 band).
+ *
+ * EXCLUDED (documented limitation): text overlaid on PHOTOGRAPHS. The hero
+ * `PostCard variant="overlay"` title (text-white) and date (text-white/70) sit on the
+ * featured image, so their contrast depends on the photograph, not a token — a computed
+ * assertion would be non-deterministic/flaky. The `from-black/80` gradient scrim is the
+ * mitigation. Same for VideoCard thumbnails (play glyph / duration pill over the image).
+ */
+test.describe('Arabic contrast sweep', () => {
+  // Assert AA only when the element is actually present — for genuinely optional content
+  // (excerpts, prose paragraphs, related sections, seed-dependent bands). Guaranteed
+  // elements (h1, section headings, nav, footer, buttons) are asserted unconditionally so
+  // the gate can never silently no-op.
+  async function expectAaIfPresent(locator: Locator) {
+    if (await locator.count()) await expectAaTextContrast(locator.first())
+  }
+
+  async function firstMatchingHref(page: Page, re: RegExp) {
+    const hrefs = await page
+      .locator('#main a, nav a')
+      .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
+    const match = hrefs.find((h) => re.test(h))
+    expect(match, `expected a link matching ${re}`).toBeTruthy()
+    return new URL(match!, BASE).toString()
+  }
+
+  test('/ — header, white cards, gray band, dark video band, footer', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+
+    // Header (white): brand-600 wordmark + zinc-700 section-nav links.
+    await expectAaTextContrast(page.locator('header a.text-brand-600').first())
+    await expectAaTextContrast(page.locator('header nav[aria-label="الأقسام"] a').first())
+
+    // Default/lead cards on the white .lf-card: brand-600 kicker + zinc-900 title.
+    await expectAaTextContrast(page.locator('.lf-card a.text-brand-600').first())
+    await expectAaTextContrast(page.locator('.lf-card h3').first())
+
+    // GRAY BAND .lf-band (#f0f0f0): section heading, plus the compact card that sits
+    // DIRECTLY on the band (no white card wrapper) — kicker/title/timestamp. This is the
+    // exact surface where a white-passing token can fail (Task 1's compact-timestamp fix).
+    await expectAaTextContrast(page.locator('.lf-band h2').first())
+    await expectAaIfPresent(page.locator('.lf-band article.items-start a.text-brand-600'))
+    await expectAaIfPresent(page.locator('.lf-band article.items-start h3'))
+    await expectAaIfPresent(page.locator('.lf-band article.items-start time'))
+
+    // DARK BAND .lf-band-dark (#23112c): light section heading + white/70 lead description
+    // + white/90 list title, all on the solid dark fill.
+    await expectAaIfPresent(page.locator('.lf-band-dark h2'))
+    await expectAaIfPresent(page.locator('.lf-band-dark p'))
+    await expectAaIfPresent(page.locator('.lf-band-dark h3'))
+
+    // Footer (bg-zinc-50): brand-600 wordmark, zinc-600 tagline + nav links, and the
+    // zinc-500 copyright line — the tightest footer token (~4.6:1 on zinc-50).
+    await expectAaTextContrast(page.locator('footer h3').first())
+    await expectAaTextContrast(page.locator('footer p').first())
+    await expectAaTextContrast(page.locator('footer nav a').first())
+    await expectAaTextContrast(page.getByText(/جميع الحقوق محفوظة/))
+  })
+
+  test('/search — heading, submit button, status text', async ({ page }) => {
+    await page.goto(`${BASE}/search`, { waitUntil: 'load' })
+    await expectAaTextContrast(page.locator('#main h1'))
+    // White label on the brand-600 submit button.
+    await expectAaTextContrast(page.getByRole('button', { name: 'بحث' }))
+    // zinc-500 status line (present in every state: disabled / empty / no-results).
+    await expectAaTextContrast(page.locator('#main p.text-zinc-500').first())
+  })
+
+  test('/about — heading, breadcrumb, prose body', async ({ page }) => {
+    await page.goto(`${BASE}/about`, { waitUntil: 'load' })
+    await expectAaTextContrast(page.locator('#main h1'))
+    // Breadcrumb home link (zinc-500 on white).
+    await expectAaTextContrast(page.locator('#main nav a').first())
+    // Rendered rich-text body (.prose-ar, #27272a on white).
+    await expectAaIfPresent(page.locator('#main .prose-ar p'))
+  })
+
+  test('/magazine — section heading + issue-card title/date', async ({ page }) => {
+    await page.goto(`${BASE}/magazine`, { waitUntil: 'load' })
+    await expectAaTextContrast(page.locator('#main h2').first())
+    await expectAaIfPresent(page.locator('#main article.lf-card h3'))
+    // Issue timestamp (zinc-500 on white) — a magazine surface axe never checks.
+    await expectAaIfPresent(page.locator('#main article.lf-card time'))
+  })
+
+  test('article — h1, category kicker, byline date, excerpt, prose', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    await page.goto(await firstMatchingHref(page, /^\/[^/]+\/[^/]+-\d+$/), { waitUntil: 'load' })
+
+    await expectAaTextContrast(page.locator('#main h1'))
+    // Breadcrumb category link (bold brand-600 on white).
+    await expectAaIfPresent(page.locator('#main article a.text-brand-600'))
+    // Byline/date meta (zinc-500 on white).
+    await expectAaIfPresent(page.locator('#main article time'))
+    // Excerpt (zinc-600 on white) — optional field.
+    await expectAaIfPresent(page.locator('#main article > p'))
+    // Rendered article body (.prose-ar).
+    await expectAaIfPresent(page.locator('#main .prose-ar p'))
+  })
+
+  test('category — section heading + card title/kicker/date on white', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    await page.goto(await firstMatchingHref(page, /^\/[^/]+$/), { waitUntil: 'load' })
+
+    await expectAaTextContrast(page.locator('#main h2').first())
+    await expectAaIfPresent(page.locator('#main .lf-card h3'))
+    await expectAaIfPresent(page.locator('#main .lf-card a.text-brand-600'))
+    // Category listing timestamp (zinc-500 on white).
+    await expectAaIfPresent(page.locator('#main .lf-card time'))
+  })
+
+  test('video watch — breadcrumb, category, h1, date', async ({ page }) => {
+    await page.goto(BASE, { waitUntil: 'load' })
+    await page.goto(await firstMatchingHref(page, /^\/videos\//), { waitUntil: 'load' })
+
+    await expectAaTextContrast(page.locator('#main h1'))
+    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-500)
+    await expectAaIfPresent(page.locator('#main a.text-brand-600').first()) // category kicker
+    await expectAaIfPresent(page.locator('#main time').first()) // publish date (zinc-500)
+    // Related videos, when present, render in the dark band.
+    await expectAaIfPresent(page.locator('.lf-band-dark h2'))
+  })
+
+  test('magazine issue — breadcrumb, h1, date, description', async ({ page }) => {
+    await page.goto(`${BASE}/magazine`, { waitUntil: 'load' })
+    await page.goto(await firstMatchingHref(page, /^\/magazine\/\d+/), { waitUntil: 'load' })
+
+    await expectAaTextContrast(page.locator('#main h1'))
+    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-500)
+    await expectAaIfPresent(page.locator('#main time').first()) // issue date (zinc-500)
+    await expectAaIfPresent(page.locator('#main header p')) // description (zinc-600)
+  })
+})
