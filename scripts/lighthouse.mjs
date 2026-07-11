@@ -13,7 +13,7 @@
 //      tree alive there), SIGTERM elsewhere.
 //   3. chrome.kill() is wrapped: chrome-launcher's temp-profile cleanup can throw
 //      EPERM on Windows (Chrome hasn't released the dir yet) AFTER the run is
-//      done -- swallowing it avoids a false non-zero exit.
+//      done -- we warn and ignore it to avoid a false non-zero exit.
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import * as chromeLauncher from 'chrome-launcher'
@@ -63,11 +63,18 @@ async function waitForServer(url, timeoutMs = 90000) {
   throw new Error(`server did not come up at ${url}`)
 }
 
-async function firstMatch(re) {
+// Derive a dynamic URL from a homepage link. Resilient: if no link matches (e.g.
+// the seed lacks that content type) we DON'T hard-fail -- but we warn loudly so a
+// silently-shrunken route set can never masquerade as a clean pass.
+async function firstMatch(re, label) {
   const html = await (await fetch(BASE)).text()
   const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1])
   const hit = hrefs.find((h) => re.test(h))
-  return hit ? new URL(hit, BASE).toString() : null
+  if (!hit) {
+    console.warn(`WARN: no ${label} route found on the homepage -- skipping it (measured set will be smaller).`)
+    return null
+  }
+  return new URL(hit, BASE).toString()
 }
 
 async function run() {
@@ -75,14 +82,31 @@ async function run() {
   let failed = false
   try {
     await waitForServer(BASE)
+    const article = await firstMatch(/^\/[^/"]+\/[^/"]+-\d+$/, 'article')
+    const video = await firstMatch(/^\/videos\//, 'video')
     const routes = [
       BASE,
       `${BASE}/search`,
       `${BASE}/about`,
       `${BASE}/magazine`,
-      (await firstMatch(/^\/[^/"]+\/[^/"]+-\d+$/)) ?? null, // an article
-      (await firstMatch(/^\/videos\//)) ?? null, // a video watch page
+      article,
+      video,
     ].filter(Boolean)
+    console.log(`measuring ${routes.length} routes: ${routes.map((u) => u.replace(BASE, '') || '/').join(', ')}`)
+
+    // Warm each route once before measuring. `next start` pays one-off cold-start
+    // costs on the first hit -- most significantly a cold Neon serverless compute,
+    // which auto-suspends when idle and can take seconds to wake. The first (and
+    // query-heaviest) route would otherwise absorb that penalty and score far below
+    // steady state, making runs non-reproducible. This is a lab artifact, not
+    // production behaviour (prod keeps the DB warm behind a CDN); we measure the
+    // warm state, which is the representative one.
+    console.log('warming routes...')
+    for (const url of routes) {
+      try {
+        await fetch(url)
+      } catch {}
+    }
 
     const chrome = await chromeLauncher.launch({
       chromePath: await chromePath(),
@@ -100,12 +124,18 @@ async function run() {
         const perf = lhr.categories.performance.score
         const ok = a11y >= A11Y_MIN && perf >= PERF_MIN
         if (!ok) failed = true
-        console.log(url.replace(BASE, '').padEnd(60) || '/'.padEnd(60), a11y.toFixed(2), perf.toFixed(2), ok ? '' : '  ✗ below bar')
+        const label = url.replace(BASE, '') || '/'
+        console.log(label.padEnd(60), a11y.toFixed(2), perf.toFixed(2), ok ? '' : '  ✗ below bar')
       }
     } finally {
       try {
         await chrome.kill()
-      } catch {}
+      } catch (e) {
+        // Expected on Windows: chrome-launcher's temp-profile rmSync EPERMs because
+        // Chrome hasn't released the dir. Warn (not silent) so a genuinely different
+        // failure still surfaces; the measurement itself is already complete.
+        console.warn(`WARN: chrome.kill() cleanup failed (ignored): ${e && e.message}`)
+      }
     }
   } finally {
     stopServer(server)
