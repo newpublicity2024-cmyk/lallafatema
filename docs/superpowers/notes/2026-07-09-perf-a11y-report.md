@@ -137,10 +137,11 @@ was touched to fix it.
 
 ## Fixes shipped
 
-- **Contrast tokens** — `text-zinc-400` (≈2.6:1, fails AA) → `text-zinc-500`
-  (≈4.8:1 on white) at 5 sites: `PostCard.tsx` lead-variant timestamp (:125) and
-  default/hero-variant timestamp (:161), `IssueCard.tsx:30`, and the
-  `Pagination.tsx:31` ellipsis-gap text. Commit `762a27b`, guarded by a
+- **Contrast tokens** — `text-zinc-400` (≈2.6:1, fails AA) fixed at 5 original
+  sites: 4 → `text-zinc-500` (≈4.8:1 on white), namely `PostCard.tsx`
+  lead-variant timestamp (:125) and default/hero-variant timestamp (:161),
+  `IssueCard.tsx:30`, and the `Pagination.tsx:31` ellipsis-gap text; 1 →
+  `text-zinc-600` (the compact variant, below). Commit `762a27b`, guarded by a
   deterministic computed-contrast test (`d88b432`) that fails at 2.62:1 if the
   token regresses — proven with a real source revert (RED) / restore (GREEN).
   **Compact-variant exception**: `PostCard.tsx:69` needed `text-zinc-600`

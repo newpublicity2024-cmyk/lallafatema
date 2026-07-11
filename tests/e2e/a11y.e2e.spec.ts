@@ -17,6 +17,21 @@ async function contrastViolations(page: Page, url: string) {
 }
 
 /**
+ * Resolves the first link href (within `#main` or `nav`) matching `re` to an absolute
+ * URL. Shared by the axe gate (which audits the matched route) and the Arabic contrast
+ * sweep (which navigates to it) — both need to find a live "article"/"category"/etc.
+ * route from the current seed rather than hardcoding one.
+ */
+async function firstMatchingHref(page: Page, re: RegExp) {
+  const hrefs = await page
+    .locator('#main a, nav a')
+    .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
+  const match = hrefs.find((h) => re.test(h))
+  expect(match, `expected a link matching ${re}`).toBeTruthy()
+  return new URL(match!, BASE).toString()
+}
+
+/**
  * Deterministic, language-agnostic WCAG 2.x contrast ratio for one text element.
  *
  * axe-core's `color-contrast` rule silently skips most Arabic-script text on this
@@ -179,15 +194,6 @@ test.describe('axe gate — WCAG A/AA, 7 routes', () => {
     expect(results.violations, summary || 'no violations').toEqual([])
   }
 
-  async function hrefMatching(page: Page, re: RegExp) {
-    const hrefs = await page
-      .locator('#main a, nav a')
-      .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
-    const match = hrefs.find((h) => re.test(h))
-    expect(match, `expected a link matching ${re}`).toBeTruthy()
-    return new URL(match!, BASE).toString()
-  }
-
   test('/', async ({ page }) => audit(page, BASE))
   test('/search', async ({ page }) => audit(page, `${BASE}/search`))
   test('/about (static page)', async ({ page }) => audit(page, `${BASE}/about`))
@@ -195,19 +201,19 @@ test.describe('axe gate — WCAG A/AA, 7 routes', () => {
 
   test('article', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'load' })
-    await audit(page, await hrefMatching(page, /^\/[^/]+\/[^/]+-\d+$/))
+    await audit(page, await firstMatchingHref(page, /^\/[^/]+\/[^/]+-\d+$/))
   })
   test('category', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'load' })
-    await audit(page, await hrefMatching(page, /^\/[^/]+$/))
+    await audit(page, await firstMatchingHref(page, /^\/[^/]+$/))
   })
   test('video watch', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'load' })
-    await audit(page, await hrefMatching(page, /^\/videos\//))
+    await audit(page, await firstMatchingHref(page, /^\/videos\//))
   })
   test('magazine issue', async ({ page }) => {
     await page.goto(`${BASE}/magazine`, { waitUntil: 'load' })
-    await audit(page, await hrefMatching(page, /^\/magazine\/\d+/))
+    await audit(page, await firstMatchingHref(page, /^\/magazine\/\d+/))
   })
 })
 
@@ -236,15 +242,6 @@ test.describe('Arabic contrast sweep', () => {
   // the gate can never silently no-op.
   async function expectAaIfPresent(locator: Locator) {
     if (await locator.count()) await expectAaTextContrast(locator.first())
-  }
-
-  async function firstMatchingHref(page: Page, re: RegExp) {
-    const hrefs = await page
-      .locator('#main a, nav a')
-      .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
-    const match = hrefs.find((h) => re.test(h))
-    expect(match, `expected a link matching ${re}`).toBeTruthy()
-    return new URL(match!, BASE).toString()
   }
 
   test('/ — header, white cards, gray band, dark video band, footer', async ({ page }) => {
