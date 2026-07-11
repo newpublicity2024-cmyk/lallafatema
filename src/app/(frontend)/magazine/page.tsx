@@ -22,7 +22,7 @@ export default async function MagazinePage() {
   const issues = await getMagazineIssues()
 
   return (
-    <main className="lf-container py-8">
+    <div className="lf-container py-8">
       <SectionHeading title="أعداد المجلة" />
       {issues.length === 0 ? (
         <p className="py-16 text-center text-zinc-500">لا توجد أعداد بعد.</p>
@@ -33,6 +33,6 @@ export default async function MagazinePage() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   )
 }

@@ -55,6 +55,12 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={arabic.variable}>
       <body className="flex min-h-screen flex-col bg-white text-zinc-900">
+        <a
+          href="#main"
+          className="sr-only rounded-md bg-brand-600 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[200]"
+        >
+          تخطَّ إلى المحتوى
+        </a>
         {cfg.consentEnabled && <ConsentMode />}
         <OneSignalInit />
         <JsonLd data={organizationJsonLd(cfg)} />
@@ -64,7 +70,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <Header />
         {/* Leaderboard ad below the sticky header — renders nothing when unscheduled. */}
         <AdSlot placement="header" className="mt-4 px-4" />
-        <div className="flex-1">{children}</div>
+        <main id="main" tabIndex={-1} className="flex-1">
+          {children}
+        </main>
         <Footer />
         {cfg.consentEnabled && <ConsentBanner policyUrl={cfg.privacyPolicyUrl} />}
       </body>

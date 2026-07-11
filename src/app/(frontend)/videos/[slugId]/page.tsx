@@ -45,7 +45,7 @@ export default async function VideoWatchPage({ params }: Props) {
     video.category && typeof video.category === 'object' ? (video.category as Category) : null
 
   return (
-    <main>
+    <div>
       <JsonLd data={videoObjectJsonLd(video)} />
       <JsonLd
         data={breadcrumbJsonLd([
@@ -94,6 +94,6 @@ export default async function VideoWatchPage({ params }: Props) {
       </div>
 
       {related.length > 0 && <VideoSection videos={related} title="مقاطع ذات صلة" />}
-    </main>
+    </div>
   )
 }

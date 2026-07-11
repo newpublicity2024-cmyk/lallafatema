@@ -92,7 +92,7 @@ export default async function HomePage() {
   const showBetweenAd = homepage.ads?.betweenSections ?? true
 
   return (
-    <main>
+    <div>
       <HeroFeature posts={heroPosts} />
 
       {featured && featured.posts.length > 0 && (
@@ -119,6 +119,6 @@ export default async function HomePage() {
           band={i % 2 === 1}
         />
       ))}
-    </main>
+    </div>
   )
 }
