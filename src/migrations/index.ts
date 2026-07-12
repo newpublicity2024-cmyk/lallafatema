@@ -6,6 +6,7 @@ import * as migration_20260630_103756_add_homepage_curation from './20260630_103
 import * as migration_20260701_113624_add_category_seo from './20260701_113624_add_category_seo';
 import * as migration_20260701_120518_add_redirects from './20260701_120518_add_redirects';
 import * as migration_20260706_115449_add_consent_settings from './20260706_115449_add_consent_settings';
+import * as migration_20260712_000000_add_legacy_wp_id from './20260712_000000_add_legacy_wp_id';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20260706_115449_add_consent_settings.up,
     down: migration_20260706_115449_add_consent_settings.down,
-    name: '20260706_115449_add_consent_settings'
+    name: '20260706_115449_add_consent_settings',
+  },
+  {
+    up: migration_20260712_000000_add_legacy_wp_id.up,
+    down: migration_20260712_000000_add_legacy_wp_id.down,
+    name: '20260712_000000_add_legacy_wp_id'
   },
 ];
