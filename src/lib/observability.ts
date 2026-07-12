@@ -19,7 +19,9 @@ export function clientSentryEnabled(): boolean {
 
 /** Server/API performance trace sample rate; clamped to [0,1], default 0.1. */
 export function tracesSampleRate(): number {
-  const raw = process.env.SENTRY_TRACES_SAMPLE_RATE
+  // Trim first so a whitespace-only value falls back to the default rather than
+  // coercing to 0 via Number(" ").
+  const raw = process.env.SENTRY_TRACES_SAMPLE_RATE?.trim()
   const n = raw ? Number(raw) : NaN
   return Number.isFinite(n) && n >= 0 && n <= 1 ? n : 0.1
 }

@@ -64,6 +64,16 @@ describe('tracesSampleRate', () => {
     process.env.SENTRY_TRACES_SAMPLE_RATE = 'nope'
     expect(tracesSampleRate()).toBe(0.1)
   })
+
+  it('falls back to 0.1 for a whitespace-only value (not 0)', () => {
+    process.env.SENTRY_TRACES_SAMPLE_RATE = '   '
+    expect(tracesSampleRate()).toBe(0.1)
+  })
+
+  it('honors an explicit 0', () => {
+    process.env.SENTRY_TRACES_SAMPLE_RATE = '0'
+    expect(tracesSampleRate()).toBe(0)
+  })
 })
 
 describe('sentryEnvironment', () => {

@@ -127,6 +127,12 @@ This is stated so the security-headers module is not touched blindly.
 
 ### §5 — Health-check endpoint
 
+> **Implementation note (2026-07-12):** the endpoint shipped at **`/healthz`**
+> (`src/app/(frontend)/healthz/route.ts`), NOT `/api/health` as drafted below —
+> `/api/*` collides with Payload's `/api/[...slug]` catch-all across route groups and
+> fails the build. All `/api/health` references in this section should read `/healthz`.
+> See the plan's Global Constraints for the rationale.
+
 New `src/app/api/health/route.ts`:
 
 - `export const dynamic = 'force-dynamic'` and `noindex` (never statically cached,
