@@ -155,5 +155,14 @@ export const Posts: CollectionConfig = {
     },
     slugField('title'),
     seoField,
+    {
+      // Original WordPress post id — set only by the migration importer, so a re-run
+      // updates the same post instead of duplicating it. Hidden; not editorially useful.
+      name: 'legacyWpId',
+      type: 'number',
+      unique: true,
+      index: true,
+      admin: { hidden: true },
+    },
   ],
 }

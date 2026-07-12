@@ -1,6 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { ar } from '@payloadcms/translations/languages/ar'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -33,8 +34,12 @@ const dirname = path.dirname(filename)
 const explicitSslMode = (uri: string): string =>
   uri.replace(/([?&]sslmode=)(?:require|prefer|verify-ca)(?=&|$)/i, '$1verify-full')
 
-// Media → Cloudflare R2 (S3-compatible). Enabled only when credentials are present;
-// without them, local dev stores uploads on disk. The DB only ever holds references.
+// Media storage. The DB only ever holds references; the files live in object storage.
+// Preference order: Vercel Blob (BLOB_READ_WRITE_TOKEN) → Cloudflare R2 (R2_*) →
+// local disk (dev only, ephemeral on Vercel). Vercel image optimization is never used
+// regardless — the custom next/image loader (lib/image-loader.ts) serves stored URLs.
+const blobEnabled = Boolean(process.env.BLOB_READ_WRITE_TOKEN)
+
 const r2Enabled = Boolean(
   process.env.R2_BUCKET &&
     process.env.R2_ENDPOINT &&
@@ -42,23 +47,30 @@ const r2Enabled = Boolean(
     process.env.R2_SECRET_ACCESS_KEY,
 )
 
-const storagePlugins = r2Enabled
+const storagePlugins = blobEnabled
   ? [
-      s3Storage({
+      vercelBlobStorage({
         collections: { media: true },
-        bucket: process.env.R2_BUCKET as string,
-        config: {
-          endpoint: process.env.R2_ENDPOINT,
-          region: 'auto',
-          forcePathStyle: true,
-          credentials: {
-            accessKeyId: process.env.R2_ACCESS_KEY_ID as string,
-            secretAccessKey: process.env.R2_SECRET_ACCESS_KEY as string,
-          },
-        },
+        token: process.env.BLOB_READ_WRITE_TOKEN as string,
       }),
     ]
-  : []
+  : r2Enabled
+    ? [
+        s3Storage({
+          collections: { media: true },
+          bucket: process.env.R2_BUCKET as string,
+          config: {
+            endpoint: process.env.R2_ENDPOINT,
+            region: 'auto',
+            forcePathStyle: true,
+            credentials: {
+              accessKeyId: process.env.R2_ACCESS_KEY_ID as string,
+              secretAccessKey: process.env.R2_SECRET_ACCESS_KEY as string,
+            },
+          },
+        }),
+      ]
+    : []
 
 export default buildConfig({
   admin: {

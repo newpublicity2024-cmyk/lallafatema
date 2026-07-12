@@ -211,6 +211,7 @@ export interface Post {
     canonicalURL?: string | null;
     noIndex?: boolean | null;
   };
+  legacyWpId?: number | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -642,6 +643,7 @@ export interface PostsSelect<T extends boolean = true> {
         canonicalURL?: T;
         noIndex?: T;
       };
+  legacyWpId?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
