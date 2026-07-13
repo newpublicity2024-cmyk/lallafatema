@@ -152,7 +152,18 @@ export interface Post {
    * ملخص قصير يظهر في البطاقات ونتائج البحث.
    */
   excerpt?: string | null;
+  /**
+   * اختر صورة أو رابط فيديو ليظهر في رأس المقال.
+   */
+  featuredType?: ('image' | 'video') | null;
+  /**
+   * تُستخدم كغلاف على البطاقات، وكصورة مصغّرة للفيديو.
+   */
   featuredImage?: (number | null) | Media;
+  /**
+   * رابط YouTube/Vimeo (يُحمَّل الإطار عند النقر فقط). المصادر غير المدعومة تُعرض كرابط خارجي.
+   */
+  featuredVideoUrl?: string | null;
   content?: {
     root: {
       type: string;
@@ -606,7 +617,9 @@ export interface PayloadMigration {
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   excerpt?: T;
+  featuredType?: T;
   featuredImage?: T;
+  featuredVideoUrl?: T;
   content?: T;
   isRecipe?: T;
   recipe?:

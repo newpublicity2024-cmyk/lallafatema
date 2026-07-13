@@ -72,10 +72,50 @@ export const Posts: CollectionConfig = {
       admin: { description: 'ملخص قصير يظهر في البطاقات ونتائج البحث.' },
     },
     {
+      name: 'featuredType',
+      type: 'select',
+      label: 'نوع الوسائط البارزة',
+      defaultValue: 'image',
+      options: [
+        { label: 'صورة', value: 'image' },
+        { label: 'فيديو', value: 'video' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'اختر صورة أو رابط فيديو ليظهر في رأس المقال.',
+      },
+    },
+    {
       name: 'featuredImage',
       type: 'upload',
       relationTo: 'media',
-      label: 'الصورة البارزة',
+      label: 'الصورة البارزة (الغلاف)',
+      admin: {
+        description: 'تُستخدم كغلاف على البطاقات، وكصورة مصغّرة للفيديو.',
+      },
+    },
+    {
+      name: 'featuredVideoUrl',
+      type: 'text',
+      label: 'رابط الفيديو',
+      admin: {
+        condition: (data) => data?.featuredType === 'video',
+        description:
+          'رابط YouTube/Vimeo (يُحمَّل الإطار عند النقر فقط). المصادر غير المدعومة تُعرض كرابط خارجي.',
+      },
+      validate: (
+        value: string | null | undefined,
+        { siblingData }: { siblingData: { featuredType?: string } },
+      ) => {
+        if (siblingData?.featuredType !== 'video') return true
+        if (!value) return 'رابط الفيديو مطلوب عند اختيار نوع الفيديو.'
+        try {
+          new URL(value)
+          return true
+        } catch {
+          return 'الرجاء إدخال رابط صحيح.'
+        }
+      },
     },
     {
       name: 'content',
