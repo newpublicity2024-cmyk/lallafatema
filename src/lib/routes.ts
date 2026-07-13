@@ -58,6 +58,11 @@ export function videoWatchUrl(video: Pick<Video, 'id' | 'slug'>): string {
   return `/videos/${video.slug || 'video'}-${video.id}`
 }
 
+/** The aggregated video-posts listing. */
+export function videosListingUrl(): string {
+  return '/videos'
+}
+
 /** Static/legal page permalink — a clean top-level URL (e.g. /privacy). */
 export function pageUrl(slug: string): string {
   return `/${slug}`

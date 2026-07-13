@@ -4,9 +4,8 @@ import { notFound } from 'next/navigation'
 
 import { JsonLd } from '@/components/JsonLd'
 import { VideoPlayer } from '@/components/VideoPlayer'
-import { VideoSection } from '@/components/VideoSection'
 import { formatDate } from '@/lib/format'
-import { getRelatedVideos, getSiteConfig, getVideoById } from '@/lib/queries'
+import { getSiteConfig, getVideoById } from '@/lib/queries'
 import { categoryUrl, idFromSlugParam, videoWatchUrl } from '@/lib/routes'
 import { breadcrumbJsonLd, buildMetadata, ogImageUrl, videoObjectJsonLd } from '@/lib/seo'
 import type { Category } from '@/payload-types'
@@ -40,7 +39,6 @@ export default async function VideoWatchPage({ params }: Props) {
   const video = await getVideoById(id)
   if (!video) notFound()
 
-  const related = await getRelatedVideos(video)
   const category =
     video.category && typeof video.category === 'object' ? (video.category as Category) : null
 
@@ -92,8 +90,6 @@ export default async function VideoWatchPage({ params }: Props) {
           </div>
         </div>
       </div>
-
-      {related.length > 0 && <VideoSection videos={related} title="مقاطع ذات صلة" />}
     </div>
   )
 }

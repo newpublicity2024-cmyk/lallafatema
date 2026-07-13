@@ -5,12 +5,12 @@ import { HeroFeature } from '@/components/HeroFeature'
 import { LeadListBlock } from '@/components/LeadListBlock'
 import { SectionBlock } from '@/components/SectionBlock'
 import { VideoSection } from '@/components/VideoSection'
-import type { Category, Post, Video } from '@/payload-types'
+import type { Category, Post } from '@/payload-types'
 import {
   getCategories,
   getHomepage,
   getLatestPosts,
-  getLatestVideos,
+  getLatestVideoPosts,
   getPostsByCategory,
   getSiteConfig,
 } from '@/lib/queries'
@@ -33,9 +33,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const onlyPublished = (items: (number | Post)[] | null | undefined): Post[] =>
   (items ?? []).filter((p): p is Post => typeof p === 'object' && p._status === 'published')
-
-const onlyPublishedVideos = (items: (number | Video)[] | null | undefined): Video[] =>
-  (items ?? []).filter((v): v is Video => typeof v === 'object' && v._status === 'published')
 
 export default async function HomePage() {
   const homepage = await getHomepage()
@@ -68,15 +65,10 @@ export default async function HomePage() {
     )
   }
 
-  // Video band: admin-pinned videos win, else latest. Hidden if the toggle is off.
+  // Video band: latest video-posts (video is now an article property). Toggle-gated.
   const videoBand = homepage.videoBand
   const showVideoBand = videoBand?.enabled ?? true
-  const pinnedVideos = onlyPublishedVideos(videoBand?.pinnedVideos)
-  const videos = showVideoBand
-    ? pinnedVideos.length
-      ? pinnedVideos
-      : await getLatestVideos(5)
-    : []
+  const videos = showVideoBand ? await getLatestVideoPosts(5) : []
 
   // The featured (LeadListBlock) section is admin-selectable; default to the first.
   const featuredCategoryId =
