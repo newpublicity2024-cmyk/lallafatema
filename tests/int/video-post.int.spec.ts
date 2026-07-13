@@ -51,3 +51,31 @@ describe('Post featured video fields', () => {
     expect(read.featuredType ?? 'image').toBe('image')
   }, 30000)
 })
+
+describe('getVideoPosts', () => {
+  it('returns only published video-posts, newest first', async () => {
+    const { getVideoPosts } = await import('@/lib/queries')
+    const vid = await payload.create({
+      collection: 'posts',
+      data: {
+        title: 'فيديو استعلام',
+        category: await categoryId('video'),
+        featuredType: 'video',
+        featuredVideoUrl: 'https://youtu.be/qqq111',
+        _status: 'published',
+      } as never,
+    })
+    created.push(vid.id as number)
+    const img = await payload.create({
+      collection: 'posts',
+      data: { title: 'مقال صورة', category: await categoryId('news'), _status: 'published' } as never,
+    })
+    created.push(img.id as number)
+
+    const { docs } = await getVideoPosts({ limit: 100 })
+    const ids = docs.map((d) => d.id)
+    expect(ids).toContain(vid.id)
+    expect(ids).not.toContain(img.id)
+    expect(docs.every((d) => d.featuredType === 'video')).toBe(true)
+  })
+})

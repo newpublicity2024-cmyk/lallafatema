@@ -143,6 +143,26 @@ export async function getPostsByCategory(categoryId: number, limit = 6): Promise
   return docs
 }
 
+type VideoPostQuery = { limit?: number; page?: number }
+
+/** Published posts whose featured media is a video, newest first (the /videos listing + homepage band). */
+export async function getVideoPosts({ limit = 12, page = 1 }: VideoPostQuery = {}) {
+  const payload = await getPayloadClient()
+  return payload.find({
+    collection: 'posts',
+    where: { and: [PUBLISHED, { featuredType: { equals: 'video' } }] },
+    sort: ['-publishedAt', '-createdAt'],
+    limit,
+    page,
+    depth: 1,
+  })
+}
+
+export async function getLatestVideoPosts(limit = 5): Promise<Post[]> {
+  const { docs } = await getVideoPosts({ limit })
+  return docs
+}
+
 export async function getPostById(id: number, draft = false): Promise<Post | null> {
   const payload = await getPayloadClient()
   try {
