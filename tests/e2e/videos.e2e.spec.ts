@@ -6,7 +6,9 @@ test.describe('Videos section + article video hero', () => {
   test('/videos lists video-posts that link to their article', async ({ page }) => {
     await page.goto(`${BASE}/videos`)
     await expect(page.getByRole('heading', { name: 'فيديو' })).toBeVisible()
-    const card = page.locator('a[href^="/"]').filter({ has: page.locator('h3') }).first()
+    // PostCard markup is <article>…<h3><a href="/cat/slug-id">…</a></h3>; assert a card
+    // links to an article. (article h3 a — the anchor is INSIDE the heading.)
+    const card = page.locator('article h3 a[href*="/"]').first()
     await expect(card).toBeVisible()
   })
 
