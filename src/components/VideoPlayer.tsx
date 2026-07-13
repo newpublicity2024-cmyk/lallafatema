@@ -25,10 +25,13 @@ export function VideoPlayer({
   videoUrl,
   thumbnail,
   title,
+  fallbackPosterUrl,
 }: {
   videoUrl: string
   thumbnail: number | Media | null | undefined
   title: string
+  /** Plain poster URL (e.g. YouTube hqdefault) used when no Media thumbnail exists. Renders a plain <img> (no /_next/image). */
+  fallbackPosterUrl?: string
 }) {
   const [playing, setPlaying] = useState(false)
   const src = embedUrl(videoUrl)
@@ -46,7 +49,14 @@ export function VideoPlayer({
         />
       ) : (
         <>
-          <PostImage image={thumbnail} alt={title} sizes="(max-width: 1024px) 100vw, 1024px" priority />
+          {thumbnail && typeof thumbnail === 'object' && thumbnail.url ? (
+            <PostImage image={thumbnail} alt={title} sizes="(max-width: 1024px) 100vw, 1024px" priority />
+          ) : fallbackPosterUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- external poster, kept off /_next/image for CWV
+            <img src={fallbackPosterUrl} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <PostImage image={thumbnail} alt={title} sizes="(max-width: 1024px) 100vw, 1024px" priority />
+          )}
           {src ? (
             <button
               type="button"

@@ -4,11 +4,13 @@ import Link from 'next/link'
 import type { Category, Post, User } from '@/payload-types'
 import { formatDate } from '@/lib/format'
 import { authorUrl, categoryUrl, postUrl } from '@/lib/routes'
+import { youtubeThumbnailUrl } from '@/lib/video'
 import { AdSlot } from './AdSlot'
 import { PostCard } from './PostCard'
 import { PostImage } from './PostImage'
 import { SectionHeading } from './SectionHeading'
 import { ShareButtons } from './ShareButtons'
+import { VideoPlayer } from './VideoPlayer'
 
 export function ArticleView({ post, related = [] }: { post: Post; related?: Post[] }) {
   const category = post.category && typeof post.category === 'object' ? (post.category as Category) : null
@@ -54,9 +56,20 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
           )}
         </div>
 
-        <div className="relative mt-6 aspect-[16/9] overflow-hidden rounded-2xl">
-          <PostImage image={post.featuredImage} alt={post.title} priority sizes="(max-width: 1000px) 100vw, 1000px" />
-        </div>
+        {post.featuredType === 'video' && post.featuredVideoUrl ? (
+          <div className="mt-6">
+            <VideoPlayer
+              videoUrl={post.featuredVideoUrl}
+              thumbnail={post.featuredImage}
+              title={post.title}
+              fallbackPosterUrl={youtubeThumbnailUrl(post.featuredVideoUrl) ?? undefined}
+            />
+          </div>
+        ) : (
+          <div className="relative mt-6 aspect-[16/9] overflow-hidden rounded-2xl">
+            <PostImage image={post.featuredImage} alt={post.title} priority sizes="(max-width: 1000px) 100vw, 1000px" />
+          </div>
+        )}
 
         {post.excerpt && <p className="mt-6 text-lg font-medium text-zinc-600">{post.excerpt}</p>}
 

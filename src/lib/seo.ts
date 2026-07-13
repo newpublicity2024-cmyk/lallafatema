@@ -207,6 +207,22 @@ export function videoObjectJsonLd(video: Video) {
   }
 }
 
+export function videoObjectJsonLdForPost(post: Post) {
+  if (post.featuredType !== 'video' || !post.featuredVideoUrl) return null
+  const thumb = asMedia(post.featuredImage)
+  return {
+    '@context': CONTEXT,
+    '@type': 'VideoObject',
+    name: post.title,
+    description: post.excerpt ?? post.title,
+    thumbnailUrl: thumb?.url ? [absoluteUrl(thumb.url)] : undefined,
+    uploadDate: post.publishedAt ?? post.createdAt,
+    contentUrl: post.featuredVideoUrl,
+    embedUrl: post.featuredVideoUrl,
+    inLanguage: 'ar',
+  }
+}
+
 export function breadcrumbJsonLd(items: { name: string; url: string }[]) {
   return {
     '@context': CONTEXT,
