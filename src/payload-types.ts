@@ -332,6 +332,8 @@ export interface User {
   collection: 'users';
 }
 /**
+ * مجموعة الفيديو المستقلة متقاعدة — الفيديو الآن خاصية للمقال.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "videos".
  */

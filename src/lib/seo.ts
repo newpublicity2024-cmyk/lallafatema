@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import type { SiteConfig } from '@/lib/queries'
-import type { Media, MagazineIssue, Post, Video } from '@/payload-types'
+import type { Media, MagazineIssue, Post } from '@/payload-types'
 import { SITE } from '@/lib/site'
 import { authorUrl, postUrl } from '@/lib/routes'
 
@@ -189,21 +189,6 @@ export function recipeJsonLd(post: Post) {
       '@type': 'HowToStep',
       text: s.step,
     })),
-  }
-}
-
-export function videoObjectJsonLd(video: Video) {
-  const thumb = asMedia(video.thumbnail)
-  return {
-    '@context': CONTEXT,
-    '@type': 'VideoObject',
-    name: video.title,
-    description: video.description ?? video.title,
-    thumbnailUrl: thumb?.url ? [absoluteUrl(thumb.url)] : undefined,
-    uploadDate: video.publishedAt ?? video.createdAt,
-    contentUrl: video.videoUrl,
-    embedUrl: video.videoUrl,
-    inLanguage: 'ar',
   }
 }
 

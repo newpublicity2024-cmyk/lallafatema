@@ -4,7 +4,7 @@ import {
   magazineArchiveUrl,
   magazineIssueUrl,
   issueNumberFromParam,
-  videoWatchUrl,
+  videosListingUrl,
   pageUrl,
   pageShowsUpdatedDate,
 } from '@/lib/routes'
@@ -34,12 +34,9 @@ describe('magazine routes', () => {
   })
 })
 
-describe('videoWatchUrl', () => {
-  it('builds /videos/<slug>-<id>', () => {
-    expect(videoWatchUrl({ id: 7, slug: 'my-video' })).toBe('/videos/my-video-7')
-  })
-  it('falls back to "video" when slug is missing', () => {
-    expect(videoWatchUrl({ id: 7, slug: null })).toBe('/videos/video-7')
+describe('videosListingUrl', () => {
+  it('videosListingUrl is /videos', () => {
+    expect(videosListingUrl()).toBe('/videos')
   })
 })
 

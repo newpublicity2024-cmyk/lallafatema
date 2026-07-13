@@ -12,6 +12,8 @@ export const Videos: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', '_status', 'publishedAt'],
     group: 'المحتوى',
+    hidden: true,
+    description: 'مجموعة الفيديو المستقلة متقاعدة — الفيديو الآن خاصية للمقال.',
   },
   access: {
     read: canReadPublished,
