@@ -1,5 +1,6 @@
 import type { Category, Post } from '@/payload-types'
 import { categoryUrl } from '@/lib/routes'
+import { Carousel } from './Carousel'
 import { PostCard } from './PostCard'
 import { SectionHeading } from './SectionHeading'
 
@@ -25,11 +26,11 @@ export function SectionBlock({
     <section className={band ? 'lf-band' : ''}>
       <div className="lf-container py-12">
         <SectionHeading title={title || category.name} href={categoryUrl(category.slug ?? '')} />
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+        <Carousel trackClassName="md:grid-cols-4">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
-        </div>
+        </Carousel>
       </div>
     </section>
   )
