@@ -51,10 +51,10 @@ export function Carousel({
       <div
         ref={trackRef}
         data-testid="carousel-track"
-        className={`flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:gap-6 md:overflow-visible ${trackClassName}`}
+        className={`flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 md:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:gap-6 md:overflow-visible ${trackClassName}`}
       >
         {items.map((child, i) => (
-          <div key={i} className={`shrink-0 snap-center ${slideClassName} md:basis-auto`}>
+          <div key={i} className={`shrink-0 snap-center ${slideClassName} md:basis-auto md:contents`}>
             {child}
           </div>
         ))}
