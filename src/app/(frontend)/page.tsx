@@ -1,14 +1,18 @@
 import type { Metadata } from 'next'
+import { Fragment } from 'react'
 
 import { AdSlot } from '@/components/AdSlot'
 import { HeroFeature } from '@/components/HeroFeature'
 import { LeadListBlock } from '@/components/LeadListBlock'
+import { MagazineSection } from '@/components/MagazineSection'
 import { SectionBlock } from '@/components/SectionBlock'
 import { VideoSection } from '@/components/VideoSection'
 import type { Category, Post } from '@/payload-types'
+import { magazineInsertAfterIndex } from '@/lib/homepage'
 import {
   getCategories,
   getHomepage,
+  getLatestMagazineIssues,
   getLatestPosts,
   getLatestVideoPosts,
   getPostsByCategory,
@@ -81,6 +85,9 @@ export default async function HomePage() {
   const featured = sections[featuredIndex]
   const standard = sections.filter((_, i) => i !== featuredIndex)
 
+  const magazineIssues = await getLatestMagazineIssues(6)
+  const magazineAfter = magazineInsertAfterIndex(standard.map((s) => s.category.slug ?? ''))
+
   const showBetweenAd = homepage.ads?.betweenSections ?? true
 
   return (
@@ -103,13 +110,11 @@ export default async function HomePage() {
       {showBetweenAd && <AdSlot placement="between-sections" className="my-8 px-4" />}
 
       {standard.map(({ category, posts, title }, i) => (
-        <SectionBlock
-          key={category.id}
-          category={category}
-          posts={posts}
-          title={title}
-          band={i % 2 === 1}
-        />
+        <Fragment key={category.id}>
+          {i === 0 && magazineAfter < 0 && <MagazineSection issues={magazineIssues} />}
+          <SectionBlock category={category} posts={posts} title={title} band={i % 2 === 1} />
+          {i === magazineAfter && <MagazineSection issues={magazineIssues} />}
+        </Fragment>
       ))}
     </div>
   )

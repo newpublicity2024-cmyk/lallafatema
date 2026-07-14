@@ -46,6 +46,10 @@ next-env.d.ts
 # migration time only; never committed (media lives in object storage, not the repo).
 /lallafatema-content
 
+# Magazine issue PDFs (source for the magazine import) — hundreds of MB, read at
+# import time only; the files live in object storage (Vercel Blob), never in the repo.
+/magazines
+
 # Playwright
 node_modules/
 /test-results/
@@ -55,6 +59,9 @@ node_modules/
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Subagent-driven-development scratch ledger
+/.superpowers
 
 # Local verification screenshots / scratch
 /lf-*.png

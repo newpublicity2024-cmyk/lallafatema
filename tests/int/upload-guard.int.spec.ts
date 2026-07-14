@@ -19,14 +19,16 @@ describe('validateUpload', () => {
     expect(validateUpload({ mimeType: 'image/png', size: 11 * 1024 * 1024 })).toContain('الحد الأقصى')
   })
 
-  it('accepts a PDF up to 25MB and rejects over', () => {
-    expect(validateUpload({ mimeType: 'application/pdf', size: 24 * 1024 * 1024 })).toBe(true)
-    expect(validateUpload({ mimeType: 'application/pdf', size: 26 * 1024 * 1024 })).toContain('الحد الأقصى')
+  it('accepts a PDF up to 40MB and rejects over', () => {
+    expect(validateUpload({ mimeType: 'application/pdf', size: 28 * 1024 * 1024 })).toBe(true)
+    const rejected = validateUpload({ mimeType: 'application/pdf', size: 41 * 1024 * 1024 })
+    expect(rejected).toContain('40')
+    expect(rejected).toContain('ميغابايت')
   })
 
   it('accepts a file exactly AT the cap (inclusive boundary)', () => {
     expect(validateUpload({ mimeType: 'image/png', size: 10 * 1024 * 1024 })).toBe(true)
-    expect(validateUpload({ mimeType: 'application/pdf', size: 25 * 1024 * 1024 })).toBe(true)
+    expect(validateUpload({ mimeType: 'application/pdf', size: 40 * 1024 * 1024 })).toBe(true)
   })
 
   it('exposes an allowlist without SVG but with PDF', () => {

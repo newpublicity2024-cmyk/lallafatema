@@ -24,10 +24,13 @@ export default async function MagazinePage() {
   return (
     <div className="lf-container py-8">
       <SectionHeading title="أعداد المجلة" />
+      <p className="mb-8 max-w-2xl text-zinc-600">
+        تصفّحي كل أعداد مجلة لالة فاطمة الرقمية، واقرئي أو حمّلي كل عدد بصيغة PDF.
+      </p>
       {issues.length === 0 ? (
         <p className="py-16 text-center text-zinc-500">لا توجد أعداد بعد.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {issues.map((issue) => (
             <IssueCard key={issue.id} issue={issue} />
           ))}

@@ -285,6 +285,19 @@ export async function getMagazineIssues(): Promise<MagazineIssue[]> {
   return docs
 }
 
+/** Newest N published magazine issues (homepage band). `depth:1` populates covers. */
+export async function getLatestMagazineIssues(limit = 6): Promise<MagazineIssue[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'magazine-issues',
+    where: { _status: { equals: 'published' } },
+    sort: '-issueNumber',
+    depth: 1,
+    limit,
+  })
+  return docs
+}
+
 /** One published issue by its number, or null. `depth:1` populates cover + pdf. */
 export async function getMagazineIssueByNumber(issueNumber: number): Promise<MagazineIssue | null> {
   const payload = await getPayloadClient()

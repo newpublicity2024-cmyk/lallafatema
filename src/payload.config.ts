@@ -120,7 +120,7 @@ export default buildConfig({
   // Global hard cap for all upload collections (busboy). Per-type caps live in the Media
   // guard; this is the outer backstop against oversized/DoS uploads.
   upload: {
-    limits: { fileSize: 26_214_400 }, // 25 MB
+    limits: { fileSize: 41_943_040 }, // 40 MB
     abortOnLimit: true,
   },
   typescript: {
