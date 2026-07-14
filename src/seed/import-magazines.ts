@@ -113,68 +113,100 @@ async function importMagazines(entries: MagazineIndexEntry[]) {
 
   let imported = 0
   let skipped = 0
+  let failed = 0
 
   for (const entry of entries) {
     const issueNumber = issueNumberFor(entry)
-    const title = `العدد ${issueNumber}`
-    const pdfPath = join(MAGAZINES_DIR, entry.file)
 
-    const existing = await payload.find({
-      collection: 'magazine-issues',
-      where: { issueNumber: { equals: issueNumber } },
-      limit: 1,
-    })
-    const existingDoc = existing.docs[0]
+    // Track media created *in this iteration* so a later failure (e.g. the
+    // magazine-issues create/update) can be rolled back — otherwise a re-run
+    // would re-upload a fresh cover + PDF and permanently orphan these.
+    let coverId: number | null = null
+    let pdfId: number | null = null
 
-    if (existingDoc?.cover && existingDoc?.pdf) {
-      console.log(`skip    issue ${issueNumber}  ${entry.file}  (already has cover + pdf)`)
-      skipped += 1
-      continue
-    }
+    try {
+      const title = `العدد ${issueNumber}`
+      const pdfPath = join(MAGAZINES_DIR, entry.file)
 
-    console.log(`import  issue ${issueNumber}  ${entry.file}  rendering cover…`)
-    const coverFile = await renderCover(pdfPath)
-    const cover = await payload.create({
-      collection: 'media',
-      data: { alt: `غلاف العدد ${issueNumber}` },
-      file: {
-        data: coverFile.data,
-        mimetype: coverFile.mimetype,
-        name: coverFile.name,
-        size: coverFile.data.length,
-      },
-    })
-
-    const pdfMedia = await payload.create({
-      collection: 'media',
-      data: { alt: `مجلة لالة فاطمة — العدد ${issueNumber}` },
-      filePath: pdfPath,
-    })
-
-    if (existingDoc) {
-      await payload.update({
+      const existing = await payload.find({
         collection: 'magazine-issues',
-        id: existingDoc.id,
-        data: { cover: cover.id, pdf: pdfMedia.id, title, _status: 'published' },
+        where: { issueNumber: { equals: issueNumber } },
+        limit: 1,
       })
-    } else {
-      await payload.create({
-        collection: 'magazine-issues',
-        data: {
-          issueNumber,
-          title,
-          cover: cover.id,
-          pdf: pdfMedia.id,
-          _status: 'published',
+      const existingDoc = existing.docs[0]
+
+      if (existingDoc?.cover && existingDoc?.pdf) {
+        console.log(`skip    issue ${issueNumber}  ${entry.file}  (already has cover + pdf)`)
+        skipped += 1
+        continue
+      }
+
+      console.log(`import  issue ${issueNumber}  ${entry.file}  rendering cover…`)
+      const coverFile = await renderCover(pdfPath)
+      const cover = await payload.create({
+        collection: 'media',
+        data: { alt: `غلاف العدد ${issueNumber}` },
+        file: {
+          data: coverFile.data,
+          mimetype: coverFile.mimetype,
+          name: coverFile.name,
+          size: coverFile.data.length,
         },
       })
-    }
+      coverId = cover.id
 
-    console.log(`done    issue ${issueNumber}`)
-    imported += 1
+      const pdfMedia = await payload.create({
+        collection: 'media',
+        data: { alt: `مجلة لالة فاطمة — العدد ${issueNumber}` },
+        filePath: pdfPath,
+      })
+      pdfId = pdfMedia.id
+
+      if (existingDoc) {
+        await payload.update({
+          collection: 'magazine-issues',
+          id: existingDoc.id,
+          data: { cover: cover.id, pdf: pdfMedia.id, title, _status: 'published' },
+        })
+      } else {
+        await payload.create({
+          collection: 'magazine-issues',
+          data: {
+            issueNumber,
+            title,
+            cover: cover.id,
+            pdf: pdfMedia.id,
+            _status: 'published',
+          },
+        })
+      }
+
+      console.log(`done    issue ${issueNumber}`)
+      imported += 1
+    } catch (err) {
+      console.error(`failed  issue ${issueNumber}  ${entry.file}`, err)
+
+      if (coverId !== null) {
+        try {
+          await payload.delete({ collection: 'media', id: coverId })
+        } catch (cleanupErr) {
+          console.error(`  cleanup failed: could not delete orphaned cover media ${coverId}`, cleanupErr)
+        }
+      }
+      if (pdfId !== null) {
+        try {
+          await payload.delete({ collection: 'media', id: pdfId })
+        } catch (cleanupErr) {
+          console.error(`  cleanup failed: could not delete orphaned pdf media ${pdfId}`, cleanupErr)
+        }
+      }
+
+      failed += 1
+      continue
+    }
   }
 
-  console.log(`\nimported ${imported} / skipped ${skipped} / total ${entries.length}`)
+  console.log(`\nimported ${imported} / skipped ${skipped} / failed ${failed} / total ${entries.length}`)
 }
 
 async function main() {
