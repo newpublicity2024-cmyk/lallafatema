@@ -1,5 +1,6 @@
 import type { Category, Post } from '@/payload-types'
 import { categoryUrl } from '@/lib/routes'
+import { Carousel } from './Carousel'
 import { PostCard } from './PostCard'
 import { SectionHeading } from './SectionHeading'
 
@@ -27,15 +28,28 @@ export function LeadListBlock({
     <section className={band ? 'lf-band' : ''}>
       <div className="lf-container py-12">
         <SectionHeading title={title || category.name} href={categoryUrl(category.slug ?? '')} />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <PostCard post={lead} variant="lead" />
-          {list.length > 0 && (
-            <div className="flex flex-col gap-5">
-              {list.map((post) => (
-                <PostCard key={post.id} post={post} variant="compact" />
-              ))}
-            </div>
-          )}
+
+        {/* Mobile (<md): swipe carousel of the section's posts. */}
+        <div className="md:hidden">
+          <Carousel>
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </Carousel>
+        </div>
+
+        {/* Desktop (md+): the original lead + stacked list. Unchanged. */}
+        <div className="hidden md:block">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <PostCard post={lead} variant="lead" />
+            {list.length > 0 && (
+              <div className="flex flex-col gap-5">
+                {list.map((post) => (
+                  <PostCard key={post.id} post={post} variant="compact" />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
