@@ -10,8 +10,9 @@
  * Usage:
  *   tsx src/seed/migrate-wp.ts [--limit N] [--only 123,456] [--dry] [--force]
  *
- * Deferred (skipped) by design: primary category "فيديو" (video) and
- * "أعداد لالة فاطمة" (magazine issues) — see the migration notes.
+ * Video articles import as video-posts (featuredType='video', videos[0].url →
+ * featuredVideoUrl). Deferred (skipped) by design: only "أعداد لالة فاطمة"
+ * (magazine issues) — see the migration notes.
  */
 import 'dotenv/config'
 import fs from 'fs'
