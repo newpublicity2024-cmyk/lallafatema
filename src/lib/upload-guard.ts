@@ -14,7 +14,7 @@ export const ALLOWED_UPLOAD_MIME_TYPES = [
 ] as const
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // 10 MB
-const MAX_PDF_BYTES = 25 * 1024 * 1024 // 25 MB
+const MAX_PDF_BYTES = 40 * 1024 * 1024 // 40 MB
 
 /**
  * Returns `true` when the file is acceptable, or an Arabic error message describing why it
