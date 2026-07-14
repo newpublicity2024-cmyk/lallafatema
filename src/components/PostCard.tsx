@@ -11,22 +11,7 @@ type Variant = 'default' | 'hero' | 'overlay' | 'compact' | 'lead'
 const categoryOf = (post: Post): Category | null =>
   post.category && typeof post.category === 'object' ? post.category : null
 
-const isExclusive = (category: Category | null): boolean => category?.slug === 'exclusive'
-
 const isVideoPost = (post: Post): boolean => post.featuredType === 'video'
-
-/** Magenta "حصري" pill pinned to the top corner of a thumbnail (foochia cue). */
-function ExclusiveBadge({ small = false }: { small?: boolean }) {
-  return (
-    <span
-      className={`absolute top-2 end-2 z-10 rounded-full bg-brand-600 font-bold text-white shadow-sm ${
-        small ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
-      }`}
-    >
-      حصري
-    </span>
-  )
-}
 
 /** Small centered play badge overlaid on a video-post thumbnail. */
 function PlayBadge({ small = false }: { small?: boolean }) {
@@ -69,7 +54,6 @@ export function PostCard({
   priority?: boolean
 }) {
   const category = categoryOf(post)
-  const exclusive = isExclusive(category)
   const isVideo = isVideoPost(post)
   const href = postUrl(post)
   // By default overlay/lead/hero eager-load; callers can force false (e.g. the
@@ -81,7 +65,6 @@ export function PostCard({
     return (
       <article className="group flex items-start gap-3">
         <Link href={href} className="relative block aspect-[4/3] w-28 flex-none overflow-hidden rounded-lg">
-          {exclusive && <ExclusiveBadge small />}
           {isVideo && <PlayBadge small />}
           <PostImage image={post.featuredImage} alt={post.title} sizes="112px" />
         </Link>
@@ -108,7 +91,6 @@ export function PostCard({
             : 'aspect-[4/5] md:aspect-video'
         }`}
       >
-        {exclusive && <ExclusiveBadge />}
         {isVideo && <PlayBadge />}
         <PostImage
           image={post.featuredImage}
@@ -136,7 +118,6 @@ export function PostCard({
     return (
       <article className="lf-card group flex flex-col">
         <Link href={href} className="relative block aspect-video overflow-hidden">
-          {exclusive && <ExclusiveBadge />}
           {isVideo && <PlayBadge />}
           <PostImage
             image={post.featuredImage}
@@ -167,7 +148,6 @@ export function PostCard({
         href={href}
         className={`relative block ${isHero ? 'aspect-video' : 'aspect-[4/3]'} overflow-hidden`}
       >
-        {exclusive && <ExclusiveBadge />}
         {isVideo && <PlayBadge />}
         <PostImage
           image={post.featuredImage}
