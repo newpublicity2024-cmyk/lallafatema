@@ -5,7 +5,9 @@ const BASE = 'http://localhost:3000'
 test.describe('Videos section + article video hero', () => {
   test('/videos lists video-posts that link to their article', async ({ page }) => {
     await page.goto(`${BASE}/videos`)
-    await expect(page.getByRole('heading', { name: 'فيديو' })).toBeVisible()
+    // exact: the section <h2> is exactly "فيديو"; card titles like "…-فيديو" would
+    // otherwise collide under Playwright's default substring name match (strict mode).
+    await expect(page.getByRole('heading', { name: 'فيديو', exact: true })).toBeVisible()
     // PostCard markup is <article>…<h3><a href="/cat/slug-id">…</a></h3>; assert a card
     // links to an article. (article h3 a — the anchor is INSIDE the heading.)
     const card = page.locator('article h3 a[href*="/"]').first()
