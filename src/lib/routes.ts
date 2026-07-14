@@ -1,4 +1,4 @@
-import type { Category, MagazineIssue, Post, Video } from '@/payload-types'
+import type { Category, MagazineIssue, Post } from '@/payload-types'
 
 /**
  * URL scheme (RTL Arabic magazine):
@@ -53,9 +53,9 @@ export function issueNumberFromParam(param: string): number | null {
   return /^[1-9]\d*$/.test(param) ? Number(param) : null
 }
 
-/** Permalink for a video watch page. Plural `/videos/` avoids the `video` category route. */
-export function videoWatchUrl(video: Pick<Video, 'id' | 'slug'>): string {
-  return `/videos/${video.slug || 'video'}-${video.id}`
+/** The aggregated video-posts listing. */
+export function videosListingUrl(): string {
+  return '/videos'
 }
 
 /** Static/legal page permalink — a clean top-level URL (e.g. /privacy). */

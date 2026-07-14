@@ -18,3 +18,25 @@ export function embedUrl(url: string): string | null {
     return null
   }
 }
+
+/** Extract the YouTube video id from watch / youtu.be / embed URLs. Null otherwise. */
+export function youtubeId(url: string): string | null {
+  try {
+    const u = new URL(url)
+    const host = u.hostname.replace(/^www\./, '')
+    if (host === 'youtu.be') return u.pathname.slice(1) || null
+    if (host.endsWith('youtube.com')) {
+      if (u.pathname.startsWith('/embed/')) return u.pathname.split('/')[2] || null
+      return u.searchParams.get('v')
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/** YouTube poster fallback (used when a video-post has no uploaded featuredImage). */
+export function youtubeThumbnailUrl(url: string): string | null {
+  const id = youtubeId(url)
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null
+}

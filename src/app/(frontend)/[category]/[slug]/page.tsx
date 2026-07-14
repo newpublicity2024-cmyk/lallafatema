@@ -11,6 +11,7 @@ import {
   newsArticleJsonLd,
   recipeJsonLd,
   breadcrumbJsonLd,
+  videoObjectJsonLdForPost,
 } from '@/lib/seo'
 
 export const revalidate = 3600
@@ -56,6 +57,7 @@ export default async function ArticlePage({ params }: Props) {
   const [related, cfg] = await Promise.all([getRelatedPosts(post, 4), getSiteConfig()])
   const category = post.category && typeof post.category === 'object' ? post.category : null
   const recipe = recipeJsonLd(post)
+  const videoLd = videoObjectJsonLdForPost(post)
 
   const crumbs = [
     { name: 'الرئيسية', url: '/' },
@@ -67,6 +69,7 @@ export default async function ArticlePage({ params }: Props) {
     <>
       <JsonLd data={newsArticleJsonLd(post, cfg)} />
       {recipe && <JsonLd data={recipe} />}
+      {videoLd && <JsonLd data={videoLd} />}
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <ArticleView post={post} related={related} />
     </>

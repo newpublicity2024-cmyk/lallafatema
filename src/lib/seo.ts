@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 
 import type { SiteConfig } from '@/lib/queries'
-import type { Media, MagazineIssue, Post, Video } from '@/payload-types'
+import type { Media, MagazineIssue, Post } from '@/payload-types'
 import { SITE } from '@/lib/site'
 import { authorUrl, postUrl } from '@/lib/routes'
+import { embedUrl, youtubeThumbnailUrl } from '@/lib/video'
 
 /** Canonical origin for every absolute URL (canonical tags, OG, sitemaps, RSS). */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SERVER_URL || 'https://lallafatema.ma').replace(
@@ -192,17 +193,22 @@ export function recipeJsonLd(post: Post) {
   }
 }
 
-export function videoObjectJsonLd(video: Video) {
-  const thumb = asMedia(video.thumbnail)
+export function videoObjectJsonLdForPost(post: Post) {
+  if (post.featuredType !== 'video' || !post.featuredVideoUrl) return null
+  const thumb = asMedia(post.featuredImage)
+  // Thumbnail is required for Google video rich results; fall back to the YouTube
+  // poster (same source the hero uses) when no image was uploaded.
+  const thumbUrl = thumb?.url ? absoluteUrl(thumb.url) : youtubeThumbnailUrl(post.featuredVideoUrl)
   return {
     '@context': CONTEXT,
     '@type': 'VideoObject',
-    name: video.title,
-    description: video.description ?? video.title,
-    thumbnailUrl: thumb?.url ? [absoluteUrl(thumb.url)] : undefined,
-    uploadDate: video.publishedAt ?? video.createdAt,
-    contentUrl: video.videoUrl,
-    embedUrl: video.videoUrl,
+    name: post.title,
+    description: post.excerpt ?? post.title,
+    thumbnailUrl: thumbUrl ? [thumbUrl] : undefined,
+    uploadDate: post.publishedAt ?? post.createdAt,
+    contentUrl: post.featuredVideoUrl,
+    // Prefer the canonical embed URL (youtube.com/embed/ID) when derivable.
+    embedUrl: embedUrl(post.featuredVideoUrl) ?? post.featuredVideoUrl,
     inLanguage: 'ar',
   }
 }

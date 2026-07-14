@@ -1,6 +1,6 @@
 import type { Where } from 'payload'
 
-import type { Ad, Category, MagazineIssue, Media, Page, Post, User, Video } from '@/payload-types'
+import type { Ad, Category, MagazineIssue, Media, Page, Post, User } from '@/payload-types'
 import {
   FOOTER_PAGES,
   NEWPUB_LINKS,
@@ -143,6 +143,26 @@ export async function getPostsByCategory(categoryId: number, limit = 6): Promise
   return docs
 }
 
+type VideoPostQuery = { limit?: number; page?: number }
+
+/** Published posts whose featured media is a video, newest first (the /videos listing + homepage band). */
+export async function getVideoPosts({ limit = 12, page = 1 }: VideoPostQuery = {}) {
+  const payload = await getPayloadClient()
+  return payload.find({
+    collection: 'posts',
+    where: { and: [PUBLISHED, { featuredType: { equals: 'video' } }] },
+    sort: ['-publishedAt', '-createdAt'],
+    limit,
+    page,
+    depth: 1,
+  })
+}
+
+export async function getLatestVideoPosts(limit = 5): Promise<Post[]> {
+  const { docs } = await getVideoPosts({ limit })
+  return docs
+}
+
 export async function getPostById(id: number, draft = false): Promise<Post | null> {
   const payload = await getPayloadClient()
   try {
@@ -160,18 +180,6 @@ export async function getRelatedPosts(post: Post, limit = 4): Promise<Post[]> {
     post.category && typeof post.category === 'object' ? post.category.id : post.category
   if (!categoryId) return getLatestPosts(limit, [post.id])
   const { docs } = await getPosts({ categoryId, limit, excludeIds: [post.id] })
-  return docs
-}
-
-export async function getLatestVideos(limit = 5): Promise<Video[]> {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: 'videos',
-    where: PUBLISHED,
-    sort: ['-publishedAt', '-createdAt'],
-    limit,
-    depth: 1,
-  })
   return docs
 }
 
@@ -262,51 +270,6 @@ export async function getPostsByIds(ids: number[]): Promise<Post[]> {
   })
   const order = new Map(ids.map((id, i) => [id, i]))
   return [...docs].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
-}
-
-/** One published video by id, or null. `depth:1` populates thumbnail + category. */
-export async function getVideoById(id: number): Promise<Video | null> {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: 'videos',
-    where: { and: [{ id: { equals: id } }, PUBLISHED] },
-    depth: 1,
-    limit: 1,
-  })
-  return docs[0] ?? null
-}
-
-/** Related videos: same category first (excluding self), topped up with latest. */
-export async function getRelatedVideos(video: Video, limit = 5): Promise<Video[]> {
-  const payload = await getPayloadClient()
-  const categoryId =
-    video.category && typeof video.category === 'object' ? video.category.id : video.category
-  const out: Video[] = []
-  const seen = new Set<number>([video.id])
-
-  if (categoryId) {
-    const { docs } = await payload.find({
-      collection: 'videos',
-      where: { and: [{ category: { equals: categoryId } }, { id: { not_equals: video.id } }, PUBLISHED] },
-      sort: ['-publishedAt', '-createdAt'],
-      depth: 1,
-      limit,
-    })
-    for (const v of docs) {
-      out.push(v)
-      seen.add(v.id)
-    }
-  }
-  if (out.length < limit) {
-    for (const v of await getLatestVideos(limit + 1)) {
-      if (out.length >= limit) break
-      if (!seen.has(v.id)) {
-        out.push(v)
-        seen.add(v.id)
-      }
-    }
-  }
-  return out.slice(0, limit)
 }
 
 /** All published magazine issues, newest first. `depth:1` populates covers. */

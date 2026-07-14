@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
-import type { Video } from '@/payload-types'
-import { videoWatchUrl } from '@/lib/routes'
+import type { Post } from '@/payload-types'
+import { postUrl } from '@/lib/routes'
 import { PlayIcon } from './icons'
 import { PostImage } from './PostImage'
 
@@ -24,24 +24,14 @@ function PlayButton({ large = false }: { large?: boolean }) {
   )
 }
 
-function Duration({ value }: { value?: string | null }) {
-  if (!value) return null
-  return (
-    <span className="absolute bottom-2 end-2 rounded bg-black/75 px-1.5 py-0.5 text-xs font-medium text-white tabular-nums">
-      {value}
-    </span>
-  )
-}
-
 /**
- * Video thumbnail that LINKS to the watch page (/videos/<slug>-<id>). The embed
- * itself lives on the watch page (VideoPlayer), so cards are navigational only —
- * a plain server component. Always rendered inside the dark VideoSection band.
+ * Video-post thumbnail for the dark homepage band. Navigational server component —
+ * it LINKS to the article (/<category>/<slug>-<id>), where the video plays.
  */
-export function VideoCard({ video, variant = 'list' }: { video: Video; variant?: Variant }) {
+export function VideoCard({ post, variant = 'list' }: { post: Post; variant?: Variant }) {
   const isLead = variant === 'lead'
   const sizes = isLead ? '(max-width: 768px) 100vw, 50vw' : '160px'
-  const href = videoWatchUrl(video)
+  const href = postUrl(post)
 
   const frame = (
     <Link
@@ -49,13 +39,12 @@ export function VideoCard({ video, variant = 'list' }: { video: Video; variant?:
       className="relative block aspect-video w-full overflow-hidden rounded-xl bg-brand-900"
     >
       <PostImage
-        image={video.thumbnail}
-        alt={video.title}
+        image={post.featuredImage}
+        alt={post.title}
         sizes={sizes}
         className="transition-transform duration-500 group-hover:scale-105"
       />
       <PlayButton large={isLead} />
-      <Duration value={video.duration} />
     </Link>
   )
 
@@ -64,10 +53,10 @@ export function VideoCard({ video, variant = 'list' }: { video: Video; variant?:
       <article className="group">
         {frame}
         <h3 className="mt-3 text-xl font-extrabold leading-tight text-white sm:text-2xl">
-          <Link href={href}>{video.title}</Link>
+          <Link href={href}>{post.title}</Link>
         </h3>
-        {video.description && (
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/70">{video.description}</p>
+        {post.excerpt && (
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/70">{post.excerpt}</p>
         )}
       </article>
     )
@@ -78,11 +67,8 @@ export function VideoCard({ video, variant = 'list' }: { video: Video; variant?:
       <div className="w-40 flex-none">{frame}</div>
       <div className="min-w-0 pt-1">
         <h3 className="line-clamp-3 text-sm font-bold leading-snug text-white/90 group-hover:text-brand-200">
-          <Link href={href}>{video.title}</Link>
+          <Link href={href}>{post.title}</Link>
         </h3>
-        {video.duration && (
-          <span className="mt-1 block text-xs text-white/50 tabular-nums">{video.duration}</span>
-        )}
       </div>
     </article>
   )

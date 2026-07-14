@@ -7,6 +7,7 @@ import * as migration_20260701_113624_add_category_seo from './20260701_113624_a
 import * as migration_20260701_120518_add_redirects from './20260701_120518_add_redirects';
 import * as migration_20260706_115449_add_consent_settings from './20260706_115449_add_consent_settings';
 import * as migration_20260712_000000_add_legacy_wp_id from './20260712_000000_add_legacy_wp_id';
+import * as migration_20260713_153854_add_post_featured_video from './20260713_153854_add_post_featured_video';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20260712_000000_add_legacy_wp_id.up,
     down: migration_20260712_000000_add_legacy_wp_id.down,
-    name: '20260712_000000_add_legacy_wp_id'
+    name: '20260712_000000_add_legacy_wp_id',
+  },
+  {
+    up: migration_20260713_153854_add_post_featured_video.up,
+    down: migration_20260713_153854_add_post_featured_video.down,
+    name: '20260713_153854_add_post_featured_video'
   },
 ];

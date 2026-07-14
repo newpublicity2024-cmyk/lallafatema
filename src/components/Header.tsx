@@ -29,12 +29,17 @@ export async function Header() {
           children: (item.children ?? []).map((c) => ({ label: c.label, href: hrefOf(c) })),
         }))
       : categories
-          .filter((c) => !c.parent)
+          .filter((c) => !c.parent && c.slug !== 'video')
           .map((c) => ({ label: c.name, href: categoryUrl(c.slug ?? ''), children: [] }))
 
-  // Always expose the magazine archive (a guaranteed floor, independent of the
-  // admin menu / category fallback). Admins can also add their own entry.
-  const items = [...baseItems, { label: 'المجلة', href: '/magazine', children: [] }]
+  // Always expose the videos section and magazine archive (guaranteed floor
+  // items, independent of the admin menu / category fallback). Admins can
+  // also add their own entries.
+  const items = [
+    ...baseItems,
+    { label: 'فيديو', href: '/videos', children: [] },
+    { label: 'المجلة', href: '/magazine', children: [] },
+  ]
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">

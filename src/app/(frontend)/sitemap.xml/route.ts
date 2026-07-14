@@ -1,7 +1,7 @@
 import { getPayloadClient } from '@/lib/payload'
 import { SITE_URL, absoluteUrl } from '@/lib/seo'
 import { getPublishedPages } from '@/lib/queries'
-import { postUrl, categoryUrl, authorUrl, magazineArchiveUrl, magazineIssueUrl, videoWatchUrl, pageUrl } from '@/lib/routes'
+import { postUrl, categoryUrl, authorUrl, magazineArchiveUrl, magazineIssueUrl, videosListingUrl, pageUrl } from '@/lib/routes'
 
 export const revalidate = 3600
 
@@ -15,7 +15,7 @@ function urlTag(loc: string, lastmod?: string) {
 export async function GET() {
   const payload = await getPayloadClient()
 
-  const [posts, categories, issues, videos, pages] = await Promise.all([
+  const [posts, categories, issues, pages] = await Promise.all([
     payload.find({
       collection: 'posts',
       where: { _status: { equals: 'published' } },
@@ -31,13 +31,6 @@ export async function GET() {
       limit: 500,
       depth: 0,
     }),
-    payload.find({
-      collection: 'videos',
-      where: { _status: { equals: 'published' } },
-      sort: '-publishedAt',
-      limit: 500,
-      depth: 0,
-    }),
     getPublishedPages(),
   ])
 
@@ -46,6 +39,8 @@ export async function GET() {
   for (const c of categories.docs) {
     if (c.slug) urls.push(urlTag(absoluteUrl(categoryUrl(c.slug))))
   }
+
+  urls.push(urlTag(absoluteUrl(videosListingUrl())))
 
   // Author pages: only authors who have at least one published post (derived from
   // the posts above), so admin/editor accounts with no bylines aren't advertised.
@@ -68,10 +63,6 @@ export async function GET() {
     for (const m of issues.docs) {
       urls.push(urlTag(absoluteUrl(magazineIssueUrl(m)), m.updatedAt ?? undefined))
     }
-  }
-
-  for (const v of videos.docs) {
-    urls.push(urlTag(absoluteUrl(videoWatchUrl(v)), v.updatedAt ?? undefined))
   }
 
   for (const p of pages) {
