@@ -11,7 +11,6 @@ export type SeedCategory = {
 export const SEED_CATEGORIES: SeedCategory[] = [
   { name: 'مشاهير', slug: 'celebrities' },
   { name: 'آخر الأخبار', slug: 'news' },
-  { name: 'أخبار حصرية', slug: 'exclusive' },
   { name: 'موضة', slug: 'fashion' },
   { name: 'جمال', slug: 'beauty' },
   { name: 'صحة', slug: 'health' },
