@@ -60,6 +60,9 @@ node_modules/
 # Playwright MCP artifacts
 .playwright-mcp/
 
+# Subagent-driven-development scratch ledger
+/.superpowers
+
 # Local verification screenshots / scratch
 /lf-*.png
 /lf-*.jpeg
