@@ -32,9 +32,10 @@ const CATEGORY_MAP: Record<string, string> = {
   صحة: 'health',
   'لايف ستايل': 'lifestyle',
   مطبخ: 'kitchen',
+  فيديو: 'video',
 }
-// Explicitly deferred primary categories (no import in v1).
-const SKIP_CATEGORIES = new Set(['فيديو', 'أعداد لالة فاطمة'])
+// Only magazine issues remain deferred.
+const SKIP_CATEGORIES = new Set(['أعداد لالة فاطمة'])
 
 const AUTHOR_NAME = 'لالة فاطمة'
 const AUTHOR_EMAIL = 'editorial@lallafatema.ma'
@@ -53,6 +54,14 @@ type Article = {
   content_text?: string
   hero_image?: Img
   inline_images?: NonNullable<Img>[]
+  categories?: { id?: number; name: string; slug?: string }[]
+  videos?: { platform: string; url: string; embed_url?: string }[]
+}
+
+/** First video URL on an article, if any (we use the canonical watch `url`, not the scrape's embed_url). */
+function firstVideoUrl(art: Article): string | null {
+  const v = (art.videos ?? [])[0]
+  return v?.url ?? null
 }
 
 function parseArgs() {
@@ -116,12 +125,36 @@ async function main() {
     stats.seen++
 
     const art = JSON.parse(fs.readFileSync(path.join(CONTENT_ROOT, entry.file), 'utf8')) as Article
-    const catName = art.primary_category?.name ?? entry.primary_category
-    if (!catName || SKIP_CATEGORIES.has(catName) || !CATEGORY_MAP[catName]) {
+    const primaryName = art.primary_category?.name ?? entry.primary_category
+    const videoUrl = firstVideoUrl(art)
+
+    // Resolve the DB category slug + featured media mode for this article.
+    let catSlug: string | undefined
+    let featuredType: 'image' | 'video' = 'image'
+
+    if (primaryName === 'فيديو') {
+      if (videoUrl) {
+        // A real video article → lives in the `video` category, video hero.
+        catSlug = 'video'
+        featuredType = 'video'
+      } else {
+        // No captured link → import as a normal image post in its first mapped secondary category.
+        const secondary = (art.categories ?? [])
+          .map((c) => c.name)
+          .find((n) => n !== 'فيديو' && CATEGORY_MAP[n])
+        catSlug = secondary ? CATEGORY_MAP[secondary] : undefined
+        featuredType = 'image'
+      }
+    } else if (primaryName && CATEGORY_MAP[primaryName] && !SKIP_CATEGORIES.has(primaryName)) {
+      catSlug = CATEGORY_MAP[primaryName]
+      featuredType = videoUrl ? 'video' : 'image'
+    }
+
+    if (!catSlug) {
       stats.skippedCategory++
       continue
     }
-    const categoryId = catBySlug.get(CATEGORY_MAP[catName])
+    const categoryId = catBySlug.get(catSlug)
     if (categoryId == null) {
       stats.skippedCategory++
       continue
@@ -136,7 +169,7 @@ async function main() {
 
     processed++
     if (dry) {
-      console.log(`[dry] ${art.id}  ${art.title}  → ${CATEGORY_MAP[catName]}  (${(art.inline_images ?? []).length} imgs)`)
+      console.log(`[dry] ${art.id}  ${art.title}  → ${catSlug} (${featuredType})`)
       stats.imported++
       continue
     }
@@ -191,6 +224,8 @@ async function main() {
           metaDescription: art.seo?.description || art.excerpt || undefined,
           ...(heroId != null ? { ogImage: heroId } : {}),
         },
+        featuredType,
+        ...(featuredType === 'video' && videoUrl ? { featuredVideoUrl: videoUrl } : {}),
         ...(heroId != null ? { featuredImage: heroId } : {}),
       }
 
@@ -207,7 +242,7 @@ async function main() {
       // 301 redirect: old single-segment WP path → new /<category>/<slug>-<id>.
       try {
         const fromPath = decodeURIComponent(new URL(art.source_url).pathname)
-        const to = `/${CATEGORY_MAP[catName]}/${art.slug}-${postId}`
+        const to = `/${catSlug}/${art.slug}-${postId}`
         const existingRedirect = await payload.find({ collection: 'redirects', where: { from: { equals: fromPath } }, limit: 1, depth: 0 })
         if (!existingRedirect.docs[0]) {
           await payload.create({ collection: 'redirects', data: { from: fromPath, to, type: '301', active: true } as never })
@@ -217,7 +252,7 @@ async function main() {
         /* redirect is best-effort; never fail the import over it */
       }
 
-      console.log(`✓ ${art.id}  ${art.title.slice(0, 50)}  → /${CATEGORY_MAP[catName]}/…-${postId}  (${imgMap.size} imgs)`)
+      console.log(`✓ ${art.id}  ${art.title.slice(0, 50)}  → /${catSlug}/…-${postId}  (${imgMap.size} imgs)`)
     } catch (e) {
       stats.failed++
       console.error(`✗ ${art.id}  ${art.title.slice(0, 50)}: ${(e as Error).message}`)
