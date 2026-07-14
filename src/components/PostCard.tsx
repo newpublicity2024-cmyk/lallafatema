@@ -59,16 +59,22 @@ export function PostCard({
   post,
   variant = 'default',
   fill = false,
+  priority,
 }: {
   post: Post
   variant?: Variant
   /** Overlay only: stretch to the parent's height instead of a fixed 16:9 ratio. */
   fill?: boolean
+  /** Override the per-variant eager-load default (e.g. false for below-fold posters). */
+  priority?: boolean
 }) {
   const category = categoryOf(post)
   const exclusive = isExclusive(category)
   const isVideo = isVideoPost(post)
   const href = postUrl(post)
+  // By default overlay/lead/hero eager-load; callers can force false (e.g. the
+  // stacked mobile hero secondaries, which sit below the fold).
+  const eager = priority ?? (variant === 'overlay' || variant === 'lead' || variant === 'hero')
 
   // Compact: small horizontal thumbnail + title (used in sidebars / hero lists).
   if (variant === 'compact') {
@@ -92,12 +98,14 @@ export function PostCard({
     )
   }
 
-  // Overlay: text sits over the image (used for hero feature). foochia hero = 16:9.
+  // Overlay: text sits over the image. Mobile = 4:5 poster w/ small title; md+ unchanged.
   if (variant === 'overlay') {
     return (
       <article
         className={`group relative overflow-hidden rounded-xl ${
-          fill ? 'aspect-video lg:aspect-auto lg:h-full' : 'aspect-video'
+          fill
+            ? 'aspect-[4/5] md:aspect-video lg:aspect-auto lg:h-full'
+            : 'aspect-[4/5] md:aspect-video'
         }`}
       >
         {exclusive && <ExclusiveBadge />}
@@ -106,13 +114,13 @@ export function PostCard({
           image={post.featuredImage}
           alt={post.title}
           sizes="(max-width: 768px) 100vw, 66vw"
-          priority
+          priority={eager}
           className="transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
           <Kicker category={category} light />
-          <h2 className="mt-2 text-2xl font-bold leading-tight text-white drop-shadow sm:text-3xl">
+          <h2 className="mt-2 text-lg font-bold leading-tight text-white drop-shadow md:text-3xl">
             <Link href={href} className="after:absolute after:inset-0">
               {post.title}
             </Link>
@@ -134,7 +142,7 @@ export function PostCard({
             image={post.featuredImage}
             alt={post.title}
             sizes="(max-width: 768px) 100vw, 50vw"
-            priority
+            priority={eager}
             className="transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
@@ -165,7 +173,7 @@ export function PostCard({
           image={post.featuredImage}
           alt={post.title}
           sizes={isHero ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 50vw, 25vw'}
-          priority={isHero}
+          priority={eager}
           className="transition-transform duration-500 group-hover:scale-105"
         />
       </Link>
