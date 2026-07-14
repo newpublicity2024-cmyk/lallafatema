@@ -30,3 +30,10 @@ test.describe('Magazine archive', () => {
     await expect(frame).toHaveAttribute('src', /.+/)
   })
 })
+
+test('homepage shows the magazine section linking to the archive', async ({ page }) => {
+  await page.goto(`${BASE}/`)
+  await expect(page.getByRole('heading', { name: 'مجلة لالة فاطمة' })).toBeVisible()
+  const cover = page.locator('a[href^="/magazine/"]').first()
+  await expect(cover).toBeVisible()
+})
