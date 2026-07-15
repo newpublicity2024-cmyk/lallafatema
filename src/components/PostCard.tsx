@@ -63,14 +63,19 @@ export function PostCard({
   // Compact: small horizontal thumbnail + title (used in sidebars / hero lists).
   if (variant === 'compact') {
     return (
-      <article className="group flex items-start gap-3">
-        <Link href={href} className="relative block aspect-[4/3] w-28 flex-none overflow-hidden rounded-lg">
+      <article className="group flex items-start gap-3.5">
+        <Link href={href} className="relative block aspect-[4/3] w-32 flex-none overflow-hidden rounded-lg lg:w-40">
           {isVideo && <PlayBadge small />}
-          <PostImage image={post.featuredImage} alt={post.title} sizes="112px" />
+          <PostImage
+            image={post.featuredImage}
+            alt={post.title}
+            sizes="(max-width: 1024px) 128px, 160px"
+            className="transition-transform duration-500 group-hover:scale-105"
+          />
         </Link>
         <div className="min-w-0">
           <Kicker category={category} />
-          <h3 className="mt-1 line-clamp-3 text-[15px] font-medium leading-snug text-zinc-900 group-hover:text-brand-700">
+          <h3 className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-zinc-900 group-hover:text-brand-700">
             <Link href={href}>{post.title}</Link>
           </h3>
           {/* zinc-600 (not -500): this compact variant renders on the .lf-band gray
