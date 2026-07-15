@@ -99,6 +99,7 @@ export default async function HomePage() {
           category={featured.category}
           posts={featured.posts}
           title={featured.title}
+          magazineIssue={magazineIssues[0] ?? null}
           band
         />
       )}
