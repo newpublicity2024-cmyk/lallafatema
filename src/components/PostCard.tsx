@@ -69,7 +69,7 @@ export function PostCard({
           <PostImage
             image={post.featuredImage}
             alt={post.title}
-            sizes="(max-width: 1024px) 128px, 160px"
+            sizes="(max-width: 1023px) 128px, 160px"
             className="transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
