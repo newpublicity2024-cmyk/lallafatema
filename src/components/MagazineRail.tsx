@@ -30,14 +30,16 @@ export function MagazineRail({ issue }: { issue: MagazineIssue }) {
         href={href}
         className="group mx-auto mt-4 block w-full max-w-[220px] bg-white p-2 shadow-[0_2px_14px_rgba(0,0,0,0.12)]"
       >
-        <span className="relative block aspect-[3/4] overflow-hidden">
+        {/* The padded mat can't be the positioned ancestor — `fill` ignores its
+            padding — so this inner box reserves the ratio instead. */}
+        <div className="relative aspect-[3/4] overflow-hidden">
           <PostImage
             image={issue.cover}
             alt={title}
             sizes="220px"
             className="transition-transform duration-500 group-hover:scale-105"
           />
-        </span>
+        </div>
       </Link>
       <Link
         href={href}

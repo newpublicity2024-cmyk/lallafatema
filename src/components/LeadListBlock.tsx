@@ -82,7 +82,10 @@ export function LeadListBlock({
               </div>
             )}
             {magazineIssue && (
-              <div className="lg:col-span-3">
+              // `grid` (like `leadClass`): stretches the aside to the row so its
+              // vertical split rule spans the full height even when the compact
+              // list is the tallest column (a section limit of 5+ → 4 cards).
+              <div className="grid lg:col-span-3">
                 <MagazineRail issue={magazineIssue} />
               </div>
             )}
