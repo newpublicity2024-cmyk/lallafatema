@@ -101,6 +101,19 @@ describe('LeadListBlock with a magazineIssue', () => {
     expect(grid.children[2].className).toContain('lg:col-span-3')
   })
 
+  // The lead's wrapper is the grid item, so the .lf-card inside it only stretches to
+  // the list's height if the wrapper is itself a grid container. A plain block wrapper
+  // leaves the card short and exposes the .lf-band gray beneath it.
+  it('makes the lead column a grid container so its card stretches to the row height', () => {
+    const { container } = render(
+      <LeadListBlock category={category} posts={posts} magazineIssue={issue} />,
+    )
+
+    const leadColumn = desktopGrid(container).children[0]
+    expect(leadColumn.className).toContain('grid')
+    expect(leadColumn.querySelector('article')).not.toBeNull()
+  })
+
   it('also renders the rail below the mobile carousel', () => {
     const { container } = render(
       <LeadListBlock category={category} posts={posts} magazineIssue={issue} />,
@@ -109,7 +122,36 @@ describe('LeadListBlock with a magazineIssue', () => {
     const mobile = Array.from(container.querySelectorAll('div')).find((d) =>
       d.className.includes('md:hidden'),
     )!
-    expect(mobile.textContent).toContain('إصدارات المجلة')
+    // Position, not just presence: the rail must be the LAST child, below the carousel.
+    const last = mobile.lastElementChild!
+    expect(last.querySelector('aside')).not.toBeNull()
+    expect(last.textContent).toContain('إصدارات المجلة')
+  })
+})
+
+// posts.length === 1 is reachable: page.tsx renders the block whenever the category has
+// at least one post. With no list column, 5 + 3 would leave four dead columns and float
+// the rail mid-row instead of flush at the visual left.
+describe('LeadListBlock with a magazineIssue but only one post', () => {
+  it('widens the lead to fill the freed span so the columns still add up to 12', () => {
+    const { container } = render(
+      <LeadListBlock category={category} posts={[post(1)]} magazineIssue={issue} />,
+    )
+
+    const grid = desktopGrid(container)
+    expect(grid.children.length).toBe(2)
+    expect(grid.children[0].className).toContain('lg:col-span-9')
+    expect(grid.children[0].className).not.toContain('lg:col-span-5')
+    expect(grid.children[1].className).toContain('lg:col-span-3')
+  })
+
+  it('keeps the rail last in DOM order', () => {
+    const { container } = render(
+      <LeadListBlock category={category} posts={[post(1)]} magazineIssue={issue} />,
+    )
+
+    const last = desktopGrid(container).lastElementChild!
+    expect(last.querySelector('aside')).not.toBeNull()
   })
 })
 
@@ -124,6 +166,9 @@ describe('LeadListBlock without a magazineIssue', () => {
     expect(grid.className).toContain('lg:grid-cols-2')
     expect(grid.className).not.toContain('lg:grid-cols-12')
     expect(grid.children.length).toBe(2)
+
+    // The lead column still stretches, but the 2-col fallback carries no span classes.
+    expect(grid.children[0].className).toBe('grid')
   })
 
   it('treats an explicit null the same as an omitted prop', () => {

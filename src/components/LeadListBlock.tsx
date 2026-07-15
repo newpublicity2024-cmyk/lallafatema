@@ -33,6 +33,16 @@ export function LeadListBlock({
   const [lead, ...rest] = posts
   const list = rest.slice(0, 4)
 
+  // The lead's wrapper is itself `grid`, not a plain block: the wrapper is the grid
+  // item that stretches to the row height, and a single-item grid container passes
+  // that stretch down so the `.lf-card` article fills it (a block wrapper would leave
+  // the card auto-height and expose the band beneath it).
+  // Spans: 5 + 4 + 3 = 12. With a rail but no list there is no 4-col column, so the
+  // lead absorbs it (9 + 3) instead of leaving four dead columns at the visual left.
+  const leadClass = magazineIssue
+    ? `grid ${list.length ? 'lg:col-span-5' : 'lg:col-span-9'}`
+    : 'grid'
+
   return (
     <section className={band ? 'lf-band' : ''}>
       <div className="lf-container py-12">
@@ -53,15 +63,15 @@ export function LeadListBlock({
         </div>
 
         {/* Desktop (md+): lead card + stacked compact list. At lg+ a third, narrower
-            magazine-rail column joins them (12-col grid: 5 + 4 + 3) — but only when
-            there's an issue to show, else the 2-col layout stays as it was. The rail
-            is last in DOM order, which under dir="rtl" puts it on the visual left.
-            At md (768–1023) all three stack full-width. */}
+            magazine-rail column joins them (12-col grid: 5 + 4 + 3, see `leadClass`) —
+            but only when there's an issue to show, else the 2-col layout stays as it
+            was. The rail is last in DOM order, which under dir="rtl" puts it on the
+            visual left. At md (768–1023) all three stack full-width. */}
         <div className="hidden md:block">
           <div
             className={`grid grid-cols-1 gap-6 ${magazineIssue ? 'lg:grid-cols-12' : 'lg:grid-cols-2'}`}
           >
-            <div className={magazineIssue ? 'lg:col-span-5' : ''}>
+            <div className={leadClass}>
               <PostCard post={lead} variant="lead" />
             </div>
             {list.length > 0 && (
