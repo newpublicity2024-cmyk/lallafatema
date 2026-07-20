@@ -1,4 +1,4 @@
-import { getCategories, getLatestPosts, getSiteConfig } from '@/lib/queries'
+import { getNonEmptyCategories, getLatestPosts, getSiteConfig } from '@/lib/queries'
 import { absoluteUrl } from '@/lib/seo'
 import { postUrl, categoryUrl } from '@/lib/routes'
 
@@ -7,7 +7,7 @@ export const revalidate = 3600
 export async function GET() {
   const [cfg, categories, posts] = await Promise.all([
     getSiteConfig(),
-    getCategories(),
+    getNonEmptyCategories(),
     getLatestPosts(20),
   ])
 

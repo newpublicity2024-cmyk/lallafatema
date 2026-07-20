@@ -1,4 +1,4 @@
-import type { Field } from 'payload'
+import type { Field, TextFieldSingleValidation } from 'payload'
 
 /**
  * Slugify that preserves Arabic letters (and Latin alphanumerics).
@@ -15,11 +15,49 @@ export const slugify = (value: string): string =>
     .replace(/^-+|-+$/g, '')
 
 /**
+ * Top-level route segments an editor's slug must not shadow. A Category or Page whose
+ * slug equals one of these would be permanently unreachable (Next resolves named
+ * segments before the `[category]` catch-all) or would silently shadow real content.
+ * Only single-segment, slugify-producible names are listed — dotted files like
+ * `sitemap.xml` can never be produced by `slugify` (it strips the dot), so they can't
+ * collide. `video` is intentionally absent: it is a legitimate category slug (the route
+ * is the plural `/videos`).
+ */
+export const RESERVED_ROUTE_SLUGS = [
+  'videos',
+  'magazine',
+  'search',
+  'author',
+  'preview',
+  'newsletter',
+  'healthz',
+  'admin',
+  'api',
+] as const
+
+/** True when `value` is a reserved route segment (or in the caller-supplied `extra` list). */
+export function isReservedSlug(value: string, extra: readonly string[] = []): boolean {
+  return new Set<string>([...RESERVED_ROUTE_SLUGS, ...extra]).has(value)
+}
+
+type SlugOptions = {
+  /** Reject slugs that would shadow a real route (use on Categories/Pages, not Posts). */
+  reserved?: boolean
+  /** Extra reserved slugs beyond the route segments — e.g. the legal-page slugs, so a
+   *  category can't shadow /about, /privacy, … which resolve as Pages. */
+  reservedExtra?: readonly string[]
+}
+
+/**
  * A slug field that auto-generates from `sourceField` (default: "title") when empty,
  * but stays editable. Permalinks use the pattern `<slug>-<id>` (the numeric id is the
  * stable part), so editors can change the slug without breaking inbound links.
+ *
+ * Pass `{ reserved: true }` on collections whose slug becomes a top-level path segment
+ * (Categories, Pages) to block reserved-route collisions before a non-technical editor
+ * can create an unreachable page.
  */
-export const slugField = (sourceField = 'title'): Field => ({
+export const slugField = (sourceField = 'title', opts: SlugOptions = {}): Field => ({
   name: 'slug',
   type: 'text',
   index: true,
@@ -37,4 +75,14 @@ export const slugField = (sourceField = 'title'): Field => ({
       },
     ],
   },
+  ...(opts.reserved
+    ? {
+        validate: ((value: string | null | undefined) => {
+          if (typeof value === 'string' && isReservedSlug(value, opts.reservedExtra)) {
+            return `المعرّف "${value}" محجوز لمسار في الموقع، اختر معرّفًا آخر.`
+          }
+          return true
+        }) as TextFieldSingleValidation,
+      }
+    : {}),
 })

@@ -23,13 +23,14 @@ const canReadActiveAds: Access = ({ req: { user } }) => {
   } as Where
 }
 
+// Only placements that actually render a slot in the layout are offered. `sidebar`
+// and `popup` were dropped: the current design has no rail/popup slot, so scheduling
+// one would silently never display. Re-add here (and wire an <AdSlot>) if that changes.
 const PLACEMENT_OPTIONS = [
   { label: 'الترويسة / بانر علوي', value: 'header' },
-  { label: 'الشريط الجانبي', value: 'sidebar' },
   { label: 'داخل المقال', value: 'in-article' },
   { label: 'بين الأقسام', value: 'between-sections' },
   { label: 'التذييل', value: 'footer' },
-  { label: 'نافذة منبثقة', value: 'popup' },
 ]
 
 /**

@@ -98,6 +98,32 @@ export async function getCategories(): Promise<Category[]> {
   return docs
 }
 
+/**
+ * Categories with at least one published post. Every surface that ADVERTISES a
+ * category (nav, footer, llms.txt, sitemap) uses this so an empty category is never
+ * offered as a dead/thin link — nor listed in the sitemap as thin content. Direct
+ * navigation to an empty category still works (its page shows "no articles"); it's
+ * just not promoted. Count is on direct membership (the taxonomy is flat).
+ */
+export async function getNonEmptyCategories(): Promise<Category[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'categories',
+    limit: 100,
+    sort: 'createdAt',
+    depth: 1,
+  })
+  const counts = await Promise.all(
+    docs.map((c) =>
+      payload.count({
+        collection: 'posts',
+        where: { and: [PUBLISHED, { category: { equals: c.id } }] },
+      }),
+    ),
+  )
+  return docs.filter((_, i) => counts[i].totalDocs > 0)
+}
+
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({

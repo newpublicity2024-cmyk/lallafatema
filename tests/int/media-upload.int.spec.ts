@@ -19,16 +19,12 @@ describe('Media upload guard (hook unit)', () => {
     let message = ''
     expect(() =>
       enforceUploadGuard({
-        req: { file: { mimetype: 'image/png', size: 11 * 1024 * 1024 } },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any),
+        req: { file: { mimetype: 'image/png', size: 11 * 1024 * 1024 } },      } as any),
     ).toThrow()
 
     try {
       enforceUploadGuard({
-        req: { file: { mimetype: 'image/png', size: 11 * 1024 * 1024 } },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any)
+        req: { file: { mimetype: 'image/png', size: 11 * 1024 * 1024 } },      } as any)
     } catch (err) {
       message = err instanceof Error ? err.message : String(err)
     }
@@ -42,27 +38,21 @@ describe('Media upload guard (hook unit)', () => {
   it('does not throw on a valid small image', () => {
     expect(() =>
       enforceUploadGuard({
-        req: { file: { mimetype: 'image/jpeg', size: 1024 } },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any),
+        req: { file: { mimetype: 'image/jpeg', size: 1024 } },      } as any),
     ).not.toThrow()
   })
 
   it('throws on an SVG (disallowed type)', () => {
     expect(() =>
       enforceUploadGuard({
-        req: { file: { mimetype: 'image/svg+xml', size: 100 } },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any),
+        req: { file: { mimetype: 'image/svg+xml', size: 100 } },      } as any),
     ).toThrow(/غير مسموح/)
   })
 
   it('does not throw when there is no file (metadata-only update)', () => {
     expect(() =>
       enforceUploadGuard({
-        req: { file: undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any),
+        req: { file: undefined },      } as any),
     ).not.toThrow()
   })
 })

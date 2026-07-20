@@ -40,7 +40,7 @@ export const Pages: CollectionConfig = {
       type: 'richText',
       label: 'المحتوى',
     },
-    slugField('title'),
+    slugField('title', { reserved: true }),
     seoField,
   ],
 }

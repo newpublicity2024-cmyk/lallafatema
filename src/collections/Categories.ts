@@ -43,7 +43,13 @@ export const Categories: CollectionConfig = {
       type: 'textarea',
       label: 'الوصف',
     },
-    slugField('name'),
+    // Reserve route segments AND the legal-page slugs — a category resolves before a
+    // Page in the /[category] dispatcher, so a category slug of `about`/`privacy`/… would
+    // silently shadow those pages.
+    slugField('name', {
+      reserved: true,
+      reservedExtra: ['about', 'editorial-board', 'advertise', 'privacy', 'terms'],
+    }),
     seoField,
   ],
 }

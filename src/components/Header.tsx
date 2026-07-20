@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import type { Category } from '@/payload-types'
-import { getCategories, getMainMenu, getSiteConfig } from '@/lib/queries'
+import { getNonEmptyCategories, getMainMenu, getSiteConfig } from '@/lib/queries'
 import { categoryUrl } from '@/lib/routes'
 import { SearchIcon } from './icons'
 import { SocialLinks } from './SocialLinks'
@@ -16,7 +16,7 @@ const hrefOf = (item: LinkLike): string => {
 export async function Header() {
   const [menu, categories, site] = await Promise.all([
     getMainMenu(),
-    getCategories(),
+    getNonEmptyCategories(),
     getSiteConfig(),
   ])
 

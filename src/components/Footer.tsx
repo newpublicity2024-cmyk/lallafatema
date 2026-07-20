@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { getCategories, getSiteConfig } from '@/lib/queries'
+import { getNonEmptyCategories, getSiteConfig } from '@/lib/queries'
 import { categoryUrl } from '@/lib/routes'
 import { AdSlot } from './AdSlot'
 import { CookieSettingsButton } from './CookieSettingsButton'
@@ -8,7 +8,7 @@ import { NewsletterSignup } from './NewsletterSignup'
 import { SocialLinks } from './SocialLinks'
 
 export async function Footer() {
-  const [categories, site] = await Promise.all([getCategories(), getSiteConfig()])
+  const [categories, site] = await Promise.all([getNonEmptyCategories(), getSiteConfig()])
   const topLevel = categories.filter((c) => !c.parent)
 
   return (

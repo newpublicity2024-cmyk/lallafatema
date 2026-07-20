@@ -447,7 +447,7 @@ export interface Ad {
   /**
    * مكان عرض الإعلان على الموقع.
    */
-  placement: 'header' | 'sidebar' | 'in-article' | 'between-sections' | 'footer' | 'popup';
+  placement: 'header' | 'in-article' | 'between-sections' | 'footer';
   format: 'image' | 'script';
   image?: (number | null) | Media;
   /**

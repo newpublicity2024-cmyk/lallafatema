@@ -36,8 +36,16 @@ export async function GET() {
 
   const urls: string[] = [urlTag(SITE_URL)]
 
+  // Only advertise categories that actually contain published posts — an empty
+  // category is thin content and shouldn't be offered to crawlers. Derived from the
+  // posts already fetched above (no extra query).
+  const nonEmptyCategoryIds = new Set<number>()
+  for (const p of posts.docs) {
+    const cid = p.category && typeof p.category === 'object' ? p.category.id : p.category
+    if (typeof cid === 'number') nonEmptyCategoryIds.add(cid)
+  }
   for (const c of categories.docs) {
-    if (c.slug) urls.push(urlTag(absoluteUrl(categoryUrl(c.slug))))
+    if (c.slug && nonEmptyCategoryIds.has(c.id)) urls.push(urlTag(absoluteUrl(categoryUrl(c.slug))))
   }
 
   urls.push(urlTag(absoluteUrl(videosListingUrl())))

@@ -14,11 +14,9 @@ type Placement = Ad['placement']
  */
 const PLACEMENT_BOX: Record<Placement, string> = {
   header: 'mx-auto h-[90px] w-full max-w-[728px]',
-  sidebar: 'mx-auto h-[250px] w-full max-w-[300px]',
   'in-article': 'mx-auto h-[280px] w-full max-w-[336px]',
   'between-sections': 'mx-auto h-[90px] w-full max-w-[728px]',
   footer: 'mx-auto h-[90px] w-full max-w-[728px]',
-  popup: 'h-[250px] w-[300px]',
 }
 
 /**
