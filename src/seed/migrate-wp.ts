@@ -65,6 +65,42 @@ function firstVideoUrl(art: Article): string | null {
   return v?.url ?? null
 }
 
+const MIME_BY_EXT: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+}
+
+/**
+ * Build a globally-unique, SEO-friendly filename for an uploaded image:
+ * `<slug>-<wpId>-<kind>.<ext>`. The `<wpId>-<kind>` tail guarantees uniqueness
+ * (post ids are unique; `kind` is unique per image within an article), so parallel
+ * workers never contend for Payload's auto-suffix — and the slug carries keywords
+ * for image SEO. Slug is capped so the whole name stays well under the FS limit.
+ */
+function seoFilename(art: Article, kind: string, localPath: string): string {
+  const ext = (path.extname(localPath) || '.jpg').toLowerCase()
+  const slug = (art.slug || 'lalla-fatema').replace(/[/\\?%*:|"<>]/g, '-').slice(0, 60).replace(/-+$/g, '')
+  return `${slug}-${art.id}-${kind}${ext}`
+}
+
+/** Retry a write across transient serialization / unique-suffix races (parallel workers). */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  let lastErr: unknown
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      lastErr = e
+      // jittered backoff; deterministic-random not required here (best-effort retry)
+      await new Promise((r) => setTimeout(r, 120 * (i + 1) + Math.floor(Math.random() * 120)))
+    }
+  }
+  throw lastErr
+}
+
 function parseArgs() {
   const args = process.argv.slice(2)
   const get = (flag: string) => {
@@ -178,15 +214,21 @@ async function main() {
     try {
       // Upload images: hero + inline. Build a local_path → mediaId map for the converter.
       const imgMap = new Map<string, number | string>()
-      const uploadImage = async (img: NonNullable<Img>): Promise<number | string | null> => {
+      const uploadImage = async (img: NonNullable<Img>, kind: string): Promise<number | string | null> => {
         const abs = path.join(CONTENT_ROOT, img.local_path)
         if (!fs.existsSync(abs)) return null
         try {
-          const media = await payload.create({
-            collection: 'media',
-            data: { alt: (img.alt && img.alt.trim()) || art.title },
-            filePath: abs,
-          })
+          const name = seoFilename(art, kind, img.local_path)
+          const data = fs.readFileSync(abs)
+          const mimetype = MIME_BY_EXT[path.extname(abs).toLowerCase()] ?? 'image/jpeg'
+          const media = await withRetry(() =>
+            payload.create({
+              collection: 'media',
+              data: { alt: (img.alt && img.alt.trim()) || art.title },
+              // Explicit unique, SEO-named file (kills the parallel auto-suffix race).
+              file: { data, mimetype, name, size: data.length },
+            }),
+          )
           stats.images++
           return media.id
         } catch (e) {
@@ -199,11 +241,13 @@ async function main() {
       let heroId: number | string | null = null
       if (!noImages) {
         if (art.hero_image) {
-          heroId = await uploadImage(art.hero_image)
+          heroId = await uploadImage(art.hero_image, 'hero')
           if (heroId != null) imgMap.set(art.hero_image.local_path, heroId)
         }
+        let inlineN = 0
         for (const img of art.inline_images ?? []) {
-          const id = await uploadImage(img)
+          inlineN++
+          const id = await uploadImage(img, `inline-${String(inlineN).padStart(2, '0')}`)
           if (id != null) imgMap.set(img.local_path, id)
         }
       }
@@ -232,10 +276,10 @@ async function main() {
 
       let postId: number | string
       if (existing.docs[0]) {
-        const updated = await payload.update({ collection: 'posts', id: existing.docs[0].id, data: data as never })
+        const updated = await withRetry(() => payload.update({ collection: 'posts', id: existing.docs[0]!.id, data: data as never }))
         postId = updated.id
       } else {
-        const created = await payload.create({ collection: 'posts', data: data as never })
+        const created = await withRetry(() => payload.create({ collection: 'posts', data: data as never }))
         postId = created.id
       }
       stats.imported++

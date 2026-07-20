@@ -135,6 +135,16 @@ export function webSiteJsonLd(cfg: SiteConfig) {
     url: SITE_URL,
     inLanguage: 'ar',
     description: cfg.tagline,
+    // Sitelinks search box → the /search page (?q=). Lights up as soon as the
+    // Meilisearch provider is activated; the endpoint already resolves.
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
   }
 }
 
