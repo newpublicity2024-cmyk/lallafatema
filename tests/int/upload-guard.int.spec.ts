@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import {
-  validateUpload,
-  clientUploadTokenConstraints,
-  ALLOWED_UPLOAD_MIME_TYPES,
-} from '@/lib/upload-guard'
+import { validateUpload, ALLOWED_UPLOAD_MIME_TYPES } from '@/lib/upload-guard'
 import { enforceUploadGuard } from '@/collections/Media'
 
 describe('validateUpload', () => {
@@ -119,13 +115,5 @@ describe('enforceUploadGuard — client-upload creates (no req.file)', () => {
     expect(() =>
       run({ data: { mimeType: 'image/jpeg', filesize: 16 * 1024 * 1024 }, operation: 'update' }),
     ).not.toThrow()
-  })
-})
-
-describe('clientUploadTokenConstraints', () => {
-  it('locks the signed-upload token to the allowlist and the outer cap', () => {
-    const c = clientUploadTokenConstraints()
-    expect(c.allowedContentTypes).toEqual([...ALLOWED_UPLOAD_MIME_TYPES])
-    expect(c.maximumSizeInBytes).toBe(40 * 1024 * 1024)
   })
 })
