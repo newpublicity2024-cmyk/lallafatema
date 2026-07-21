@@ -1,4 +1,4 @@
-import type { ServerProps } from 'payload'
+import type { ServerProps, Where } from 'payload'
 
 import type { Post, User } from '@/payload-types'
 
@@ -18,7 +18,7 @@ export default async function BeforeDashboard(props: ServerProps) {
   const isJournalist = user.role === 'journalist'
 
   // Draft filter — journalists see only their own; editors/admins see all.
-  const draftWhere = isJournalist
+  const draftWhere: Where = isJournalist
     ? { and: [{ _status: { equals: 'draft' } }, { authors: { in: [user.id] } }] }
     : { _status: { equals: 'draft' } }
 
@@ -89,6 +89,10 @@ export default async function BeforeDashboard(props: ServerProps) {
               {isJournalist ? 'مرحبًا بك في لوحة التحرير.' : 'لوحة التحكم في مجلة لالة فاطمة.'}
             </p>
           </div>
+          {/* Hard navigation is correct here: this is a Payload admin route, not
+              a Next app page, and Payload's own nav uses anchors. next/link would
+              attempt client-side routing the admin catch-all doesn't own. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/admin/collections/posts/create" style={primaryButtonStyle}>
             ✍️ اكتب مقالًا جديدًا
           </a>

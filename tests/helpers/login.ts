@@ -26,9 +26,11 @@ export async function login({
 
   await page.waitForURL(`${serverURL}/admin`)
 
-  // Confirms the authenticated dashboard actually rendered. Asserts on this admin's
-  // own content (the custom BeforeDashboard shortcuts) rather than a Payload-internal
-  // `span[title="Dashboard"]`, which no longer exists in this build.
-  const dashboardArtifact = page.getByRole('link', { name: 'مقال جديد' }).first()
+  // Confirms the authenticated dashboard actually rendered. Asserts on the custom
+  // BeforeDashboard's welcome heading ("أهلًا، <name> 👋"), which renders for every
+  // role once the panel loads server-side — a stable artifact that does not depend
+  // on button/pill copy (the "مقال جديد" pill it used to check was replaced by the
+  // WordPress-style "اكتب مقالًا جديدًا" CTA + At-a-Glance strip).
+  const dashboardArtifact = page.getByRole('heading', { name: /أهلًا/ }).first()
   await expect(dashboardArtifact).toBeVisible()
 }

@@ -21,10 +21,11 @@ test.describe('Admin Panel', () => {
   test('can navigate to dashboard', async () => {
     await page.goto('http://localhost:3000/admin')
     await expect(page).toHaveURL('http://localhost:3000/admin')
-    // Assert on the dashboard's own content (the custom BeforeDashboard shortcuts)
-    // rather than a Payload-internal `span[title="Dashboard"]`, which no longer exists
-    // in this admin build and made the check silently unanchored.
-    const dashboardArtifact = page.getByRole('link', { name: 'مقال جديد' }).first()
+    // Assert on the custom BeforeDashboard's welcome heading ("أهلًا، <name> 👋"),
+    // which renders for every role and is stable against dashboard copy changes
+    // (the "مقال جديد" pill it used to check was replaced by the WordPress-style
+    // "اكتب مقالًا جديدًا" CTA + At-a-Glance strip).
+    const dashboardArtifact = page.getByRole('heading', { name: /أهلًا/ }).first()
     await expect(dashboardArtifact).toBeVisible()
   })
 
