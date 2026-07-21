@@ -89,9 +89,15 @@ describe('deriveExcerpt', () => {
   })
 
   it('strips trailing punctuation before the ellipsis', () => {
-    const long = `${'كلمة '.repeat(40).trim()}، ${'أخرى '.repeat(40).trim()}`
-    const result = deriveExcerpt(doc(long))
-    expect(result).not.toContain('،…')
+    // The comma must land exactly on the cut for this to exercise the strip:
+    // 'كلمة كلمة، كلمة' puts it at index 9, and a maxLength of 10 clips right
+    // after it. A comma beyond the cut would never reach that branch.
+    expect(deriveExcerpt(doc('كلمة كلمة، كلمة'), 10)).toBe('كلمة كلمة…')
+  })
+
+  it('cuts mid-token when a single token is longer than the limit', () => {
+    // A pasted URL as the whole body: there is no earlier space to fall back to.
+    expect(deriveExcerpt(doc('https://example.com/a-very-long-path'), 12)).toBe('https://exam…')
   })
 
   it('honours a custom maxLength', () => {

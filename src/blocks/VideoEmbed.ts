@@ -9,6 +9,10 @@ import type { Block } from 'payload'
  */
 export const VideoEmbedBlock: Block = {
   slug: 'videoEmbed',
+  // Emits a `VideoEmbedBlock` interface in payload-types so the frontend
+  // converter can use the generated type instead of a hand-kept mirror.
+  // Type-generation only — no schema impact.
+  interfaceName: 'VideoEmbedBlock',
   labels: { singular: 'فيديو', plural: 'فيديوهات' },
   fields: [
     {

@@ -1,18 +1,13 @@
 import { RichText, type JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 
+import type { VideoEmbedBlock } from '@/payload-types'
 import { youtubeThumbnailUrl } from '@/lib/video'
 import { VideoPlayer } from './VideoPlayer'
-
-type VideoEmbedFields = {
-  blockType: 'videoEmbed'
-  url?: string | null
-  caption?: string | null
-}
 
 const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
   ...defaultConverters,
   blocks: {
-    videoEmbed: ({ node }: { node: { fields: VideoEmbedFields } }) => {
+    videoEmbed: ({ node }: { node: { fields: VideoEmbedBlock } }) => {
       const { url, caption } = node.fields
       if (!url) return null
 

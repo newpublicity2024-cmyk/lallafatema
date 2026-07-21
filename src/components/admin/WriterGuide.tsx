@@ -28,6 +28,11 @@ export default function WriterGuide() {
         اكتب العنوان ثم المقال، واختر القسم من الجانب. الرابط والمقتطف وتاريخ النشر وبيانات محركات
         البحث كلها تُضبط تلقائيًا. عملك يُحفظ أولًا بأول، ويصل إلى المحرّر لمراجعته ونشره.
       </span>
+      {/* The byline is set automatically and journalists cannot reassign it, so
+          it is shown as plain text rather than as a field they can't use. */}
+      <span style={{ display: 'block', marginTop: '.6rem', opacity: 0.8 }}>
+        ✍️ سيُنشر المقال باسم: <strong>{user.name || user.email}</strong>
+      </span>
     </div>
   )
 }

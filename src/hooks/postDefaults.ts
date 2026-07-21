@@ -12,6 +12,19 @@ export const deriveFeaturedType = (videoUrl: unknown): 'image' | 'video' =>
   typeof videoUrl === 'string' && videoUrl.trim().length > 0 ? 'video' : 'image'
 
 /**
+ * Reads a field the way a derivation must: `data` is the INCOMING PATCH, not the
+ * merged document (Payload passes it straight through — see
+ * `collections/operations/utilities/update.js`). A partial write that omits a
+ * key must fall back to the stored value, or the derivation below would compute
+ * from `undefined` and overwrite good data.
+ */
+const readField = <T,>(
+  data: Record<string, unknown>,
+  originalDoc: Record<string, unknown> | undefined,
+  key: string,
+): T | undefined => (key in data ? data[key] : originalDoc?.[key]) as T | undefined
+
+/**
  * Everything the editorial team should not have to think about.
  *
  * Publish permission and the first-publish timestamp were already here; the
@@ -44,8 +57,13 @@ export const applyPostDefaults: CollectionBeforeChangeHook = ({
     data.authors = [req.user.id]
   }
 
-  // Header media kind follows the video URL.
-  data.featuredType = deriveFeaturedType(data?.featuredVideoUrl)
+  const original = originalDoc as Record<string, unknown> | undefined
+
+  // Header media kind follows the video URL. Read through to the stored value so
+  // a partial update that omits featuredVideoUrl does not silently demote a
+  // video post to 'image' — that flag drives /videos, the card badge, the
+  // article header and the VideoObject JSON-LD.
+  data.featuredType = deriveFeaturedType(readField(data, original, 'featuredVideoUrl'))
 
   // The excerpt is filled from the opening of the article — and kept in step
   // with it while the writer types.
@@ -56,12 +74,22 @@ export const applyPostDefaults: CollectionBeforeChangeHook = ({
   // re-derive from the PREVIOUS body: if the stored excerpt is exactly what the
   // old content would have produced, it is ours to refresh. Anything else was
   // typed by a person and is never touched.
+  //
+  // Two accepted limitations of doing this without a tracking column:
+  //   1. If the client's excerpt ever falls a generation behind originalDoc's
+  //      content (a dropped or late autosave response), `isOurs` latches false
+  //      and the excerpt freezes at that draft's text. It stays valid, just
+  //      stale — the writer can always overwrite it by hand.
+  //   2. A writer who types an excerpt identical to what we would have derived
+  //      (e.g. copying their own first sentence) will see it re-derived later.
   if (data?.content) {
-    const current = data.excerpt
+    const current = readField<string>(data, original, 'excerpt')
     const isBlank = typeof current !== 'string' || current.trim().length === 0
-    const previousContent = (originalDoc as { content?: unknown } | undefined)?.content
+    const previousContent = original?.content
     const isOurs =
-      !isBlank && Boolean(previousContent) && current === deriveExcerpt(previousContent as LexicalRoot)
+      !isBlank &&
+      Boolean(previousContent) &&
+      current === deriveExcerpt(previousContent as LexicalRoot)
 
     if (isBlank || isOurs) {
       const derived = deriveExcerpt(data.content as LexicalRoot)

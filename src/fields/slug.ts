@@ -67,6 +67,14 @@ export const slugField = (sourceField = 'title', opts: SlugOptions = {}): Field 
     position: 'sidebar',
     // Auto-generated and safe to change, but it is still a URL — not something a
     // non-technical writer should have to look at. Editorial roles keep it.
+    //
+    // CAUTION: Payload computes `skipValidationFromHere = skipValidation ||
+    // !passesCondition`, so hiding a field ALSO skips its `validate`. The
+    // reserved-slug guard below is therefore only enforced for users who can see
+    // the field. That is safe today because the two collections using
+    // `reserved: true` (Categories, Pages) are admin/editor-only anyway. If
+    // `reserved: true` is ever added to a journalist-writable collection, move
+    // the check into a beforeValidate hook instead — a condition will not run it.
     condition: editorialOnly,
     description: 'يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.',
   },

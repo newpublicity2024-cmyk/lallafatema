@@ -112,6 +112,26 @@ describe('applyPostDefaults', () => {
     expect(result.excerpt).toBe('بداية النص الكامل بعد الكتابة')
   })
 
+  // `data` is the incoming patch, NOT the merged document. A partial write must
+  // read through to the stored values rather than treating "absent" as "empty".
+  it('does not demote a video post when the patch omits the video URL', () => {
+    const stored = { featuredVideoUrl: 'https://youtu.be/abc', featuredType: 'video' }
+    const result = run({ title: 'عنوان محدَّث' }, editor, 'update', stored)
+    expect(result.featuredType).toBe('video')
+  })
+
+  it('demotes to image when the patch explicitly clears the video URL', () => {
+    const stored = { featuredVideoUrl: 'https://youtu.be/abc', featuredType: 'video' }
+    const result = run({ featuredVideoUrl: '' }, editor, 'update', stored)
+    expect(result.featuredType).toBe('image')
+  })
+
+  it('does not clobber a stored hand-written excerpt when the patch omits it', () => {
+    const stored = { content: doc('نص قديم'), excerpt: 'مقتطف يدوي' }
+    const result = run({ content: doc('نص جديد') }, editor, 'update', stored)
+    expect(result.excerpt).toBeUndefined()
+  })
+
   it('still refuses to touch a hand-written excerpt when the body changes', () => {
     const previous = { content: doc('بداية'), excerpt: 'مقتطف من تحرير الكاتب' }
     const result = run(
