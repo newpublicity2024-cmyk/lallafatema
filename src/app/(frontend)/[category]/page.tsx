@@ -87,7 +87,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <SectionHeading title={category.name} />
 
         {docs.length === 0 ? (
-          <p className="py-16 text-center text-zinc-500">لا توجد مقالات في هذا القسم بعد.</p>
+          <p className="py-16 text-center text-zinc-700">لا توجد مقالات في هذا القسم بعد.</p>
         ) : (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {docs.map((post) => (

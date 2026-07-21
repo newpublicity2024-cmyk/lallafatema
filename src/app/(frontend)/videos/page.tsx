@@ -39,7 +39,7 @@ export default async function VideosPage({ searchParams }: Props) {
       <SectionHeading title="فيديو" />
 
       {docs.length === 0 ? (
-        <p className="py-16 text-center text-zinc-500">لا توجد مقاطع فيديو بعد.</p>
+        <p className="py-16 text-center text-zinc-700">لا توجد مقاطع فيديو بعد.</p>
       ) : (
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {docs.map((post) => (

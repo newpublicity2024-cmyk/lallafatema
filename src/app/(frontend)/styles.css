@@ -20,6 +20,11 @@
   --color-brand-800: #810a48;
   --color-brand-900: #6c0d3f;
   --color-brand-950: #420022;
+
+  /* Page surface — the warm apricot the whole site sits on. Everything that used
+   * to be white (body, light bands, header, footer) reads from this one token;
+   * cards deliberately stay #ffffff so they lift off it. */
+  --color-surface: #fbc490;
 }
 
 @layer components {
@@ -36,9 +41,11 @@
     }
   }
 
-  /* Alternating section bands (foochia: light gray #f0f0f0 / dark purple #23112c). */
+  /* Section bands. The light band matches the page surface (was #f0f0f0), so the
+   * alternation is now carried by the white cards rather than the band itself;
+   * the dark purple band is unchanged. */
   .lf-band {
-    background-color: #f0f0f0;
+    background-color: var(--color-surface);
   }
   .lf-band-dark {
     background-color: #23112c;
@@ -63,7 +70,7 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: #ffffff;
+    background-color: var(--color-surface);
     color: #18181b;
   }
 

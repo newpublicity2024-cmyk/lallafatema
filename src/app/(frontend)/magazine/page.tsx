@@ -28,7 +28,7 @@ export default async function MagazinePage() {
         تصفّحي كل أعداد مجلة لالة فاطمة الرقمية، واقرئي أو حمّلي كل عدد بصيغة PDF.
       </p>
       {issues.length === 0 ? (
-        <p className="py-16 text-center text-zinc-500">لا توجد أعداد بعد.</p>
+        <p className="py-16 text-center text-zinc-700">لا توجد أعداد بعد.</p>
       ) : (
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {issues.map((issue) => (

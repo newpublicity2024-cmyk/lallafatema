@@ -92,14 +92,14 @@ export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
       <div className="lf-container flex flex-col gap-4">
         <p className="text-sm leading-relaxed text-zinc-700">
           نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس الأداء وعرض إعلانات مناسبة.{' '}
-          <a href={policyUrl} className="font-bold text-brand-600 underline">
+          <a href={policyUrl} className="font-bold text-brand-700 underline">
             اعرف المزيد
           </a>
         </p>
 
         {customizing && (
           <div className="flex flex-col gap-3 rounded-md bg-zinc-50 p-3">
-            <label className="flex items-center justify-between gap-3 text-sm text-zinc-500">
+            <label className="flex items-center justify-between gap-3 text-sm text-zinc-700">
               <span>ضرورية (دائمًا مفعّلة)</span>
               <input type="checkbox" checked disabled aria-label="ضرورية" />
             </label>
@@ -135,7 +135,7 @@ export function ConsentBanner({ policyUrl }: { policyUrl: string }) {
           <button
             type="button"
             onClick={() => resolve({ analytics: false, ads: false })}
-            className="rounded-md border border-brand-600 px-5 py-2 text-sm font-bold text-brand-600"
+            className="rounded-md border border-brand-600 px-5 py-2 text-sm font-bold text-brand-700"
           >
             رفض الكل
           </button>

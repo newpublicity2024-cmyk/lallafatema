@@ -12,8 +12,8 @@ export function PageView({ page }: { page: Page }) {
   return (
     <div className="mx-auto max-w-[800px] px-4 py-8">
       <article>
-        <nav className="mb-3 text-sm text-zinc-500">
-          <Link href="/" className="hover:text-brand-600">الرئيسية</Link>
+        <nav className="mb-3 text-sm text-zinc-700">
+          <Link href="/" className="hover:text-brand-700">الرئيسية</Link>
           <span className="px-1">/</span>
           <span className="text-zinc-700">{page.title}</span>
         </nav>
@@ -21,7 +21,7 @@ export function PageView({ page }: { page: Page }) {
         <h1 className="text-3xl font-extrabold leading-tight text-zinc-900 sm:text-4xl">{page.title}</h1>
 
         {showUpdated && page.updatedAt && (
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-700">
             آخر تحديث:{' '}
             <time dateTime={new Date(page.updatedAt).toISOString()}>{formatDate(page.updatedAt)}</time>
           </p>

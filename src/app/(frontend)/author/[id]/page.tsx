@@ -51,14 +51,14 @@ export default async function AuthorPage({ params, searchParams }: Props) {
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-zinc-900">{author.name}</h1>
-          {author.title && <p className="text-brand-600">{author.title}</p>}
+          {author.title && <p className="text-brand-700">{author.title}</p>}
           {author.bio && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-600">{author.bio}</p>}
         </div>
       </header>
 
       <SectionHeading title="أحدث المقالات" />
       {docs.length === 0 ? (
-        <p className="py-16 text-center text-zinc-500">لا توجد مقالات منشورة بعد.</p>
+        <p className="py-16 text-center text-zinc-700">لا توجد مقالات منشورة بعد.</p>
       ) : (
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {docs.map((post) => (

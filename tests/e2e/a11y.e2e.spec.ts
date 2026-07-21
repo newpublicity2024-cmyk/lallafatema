@@ -225,9 +225,11 @@ test.describe('axe gate — WCAG A/AA, 7 routes', () => {
  * the axe gate above does NOT actually verify Arabic text contrast. This sweep reuses the
  * deterministic `expectAaTextContrast` (canvas rasterization → WCAG ratio, colorspace- and
  * language-agnostic) to assert AA (>= 4.5:1) on the representative Arabic text that sits on
- * SOLID / token backgrounds, per route — especially the alternating homepage bands, where a
- * token that clears AA on white can fail on a band (exactly how Task 1 found the compact
- * timestamp zinc-500 → zinc-600, 4.24:1 → 6.77:1 on the #f0f0f0 band).
+ * SOLID / token backgrounds, per route — especially the homepage bands, where a token that
+ * clears AA on white can fail on a band. Task 1 found the compact timestamp that way
+ * (zinc-500 → zinc-600, 4.24:1 → 6.77:1 on the then-#f0f0f0 band); the later move to the
+ * peach `--color-surface` (#fbc490, luminance .62 vs white's 1.0) caught two more the same
+ * way — zinc-500 at 3.08:1 and brand-600 at 4.01:1, now zinc-700 and brand-700.
  *
  * EXCLUDED (documented limitation): text overlaid on PHOTOGRAPHS. The hero
  * `PostCard variant="overlay"` title (text-white) and date (text-white/70) sit on the
@@ -244,22 +246,28 @@ test.describe('Arabic contrast sweep', () => {
     if (await locator.count()) await expectAaTextContrast(locator.first())
   }
 
-  test('/ — header, white cards, gray band, dark video band, footer', async ({ page }) => {
+  test('/ — header, white cards, peach band, dark video band, footer', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'load' })
 
-    // Header (white): brand-600 wordmark + zinc-700 section-nav links.
-    await expectAaTextContrast(page.locator('header a.text-brand-600').first())
+    // Header (peach --color-surface): the masthead is an <img> logo now, not a text
+    // wordmark, so there is no brand token to measure — assert it is present and
+    // labelled instead. The zinc-800 section-nav links carry the header's contrast.
+    const logo = page.locator('header a[href="/"] img')
+    await expect(logo).toBeVisible()
+    await expect(logo).toHaveAttribute('alt', /\S/)
     await expectAaTextContrast(page.locator('header nav[aria-label="الأقسام"] a').first())
 
-    // Default/lead cards on the white .lf-card: brand-600 kicker + zinc-900 title.
-    await expectAaTextContrast(page.locator('.lf-card a.text-brand-600').first())
+    // Default/lead cards on the white .lf-card: brand-700 kicker + zinc-900 title.
+    await expectAaTextContrast(page.locator('.lf-card a.text-brand-700').first())
     await expectAaTextContrast(page.locator('.lf-card h3').first())
 
-    // GRAY BAND .lf-band (#f0f0f0): section heading, plus the compact card that sits
+    // PEACH BAND .lf-band (#fbc490): section heading, plus the compact card that sits
     // DIRECTLY on the band (no white card wrapper) — kicker/title/timestamp. This is the
-    // exact surface where a white-passing token can fail (Task 1's compact-timestamp fix).
+    // exact surface where a white-passing token can fail: the peach surface is markedly
+    // darker than white (luminance .62 vs 1.0), which is why the muted tokens here are
+    // zinc-700/brand-700 rather than the zinc-500/brand-600 that only clear AA on white.
     await expectAaTextContrast(page.locator('.lf-band h2').first())
-    await expectAaIfPresent(page.locator('.lf-band article.items-start a.text-brand-600'))
+    await expectAaIfPresent(page.locator('.lf-band article.items-start a.text-brand-700'))
     await expectAaIfPresent(page.locator('.lf-band article.items-start h3'))
     await expectAaIfPresent(page.locator('.lf-band article.items-start time'))
 
@@ -269,8 +277,9 @@ test.describe('Arabic contrast sweep', () => {
     await expectAaIfPresent(page.locator('.lf-band-dark p'))
     await expectAaIfPresent(page.locator('.lf-band-dark h3'))
 
-    // Footer (bg-zinc-50): brand-600 wordmark, zinc-600 tagline + nav links, and the
-    // zinc-500 copyright line — the tightest footer token (~4.6:1 on zinc-50).
+    // Footer (peach --color-surface): brand-700 wordmark, zinc-600 tagline + nav links,
+    // and the zinc-700 copyright line. zinc-600 is the tightest footer token on peach
+    // (4.93:1) — anything lighter fails, which is what the zinc-500 sweep fixed.
     await expectAaTextContrast(page.locator('footer h3').first())
     await expectAaTextContrast(page.locator('footer p').first())
     await expectAaTextContrast(page.locator('footer nav a').first())
@@ -282,16 +291,16 @@ test.describe('Arabic contrast sweep', () => {
     await expectAaTextContrast(page.locator('#main h1'))
     // White label on the brand-600 submit button.
     await expectAaTextContrast(page.getByRole('button', { name: 'بحث' }))
-    // zinc-500 status line (present in every state: disabled / empty / no-results).
-    await expectAaTextContrast(page.locator('#main p.text-zinc-500').first())
+    // zinc-700 status line (present in every state: disabled / empty / no-results).
+    await expectAaTextContrast(page.locator('#main p.text-zinc-700').first())
   })
 
   test('/about — heading, breadcrumb, prose body', async ({ page }) => {
     await page.goto(`${BASE}/about`, { waitUntil: 'load' })
     await expectAaTextContrast(page.locator('#main h1'))
-    // Breadcrumb home link (zinc-500 on white).
+    // Breadcrumb home link (zinc-700 on peach).
     await expectAaTextContrast(page.locator('#main nav a').first())
-    // Rendered rich-text body (.prose-ar, #27272a on white).
+    // Rendered rich-text body (.prose-ar, #27272a on peach).
     await expectAaIfPresent(page.locator('#main .prose-ar p'))
   })
 
@@ -299,7 +308,7 @@ test.describe('Arabic contrast sweep', () => {
     await page.goto(`${BASE}/magazine`, { waitUntil: 'load' })
     await expectAaTextContrast(page.locator('#main h2').first())
     await expectAaIfPresent(page.locator('#main article.lf-card h3'))
-    // Issue timestamp (zinc-500 on white) — a magazine surface axe never checks.
+    // Issue timestamp (zinc-700 on peach) — a magazine surface axe never checks.
     await expectAaIfPresent(page.locator('#main article.lf-card time'))
   })
 
@@ -308,24 +317,24 @@ test.describe('Arabic contrast sweep', () => {
     await page.goto(await firstMatchingHref(page, /^\/[^/]+\/[^/]+-\d+$/), { waitUntil: 'load' })
 
     await expectAaTextContrast(page.locator('#main h1'))
-    // Breadcrumb category link (bold brand-600 on white).
-    await expectAaIfPresent(page.locator('#main article a.text-brand-600'))
-    // Byline/date meta (zinc-500 on white).
+    // Breadcrumb category link (bold brand-700 on peach).
+    await expectAaIfPresent(page.locator('#main article a.text-brand-700'))
+    // Byline/date meta (zinc-700 on peach).
     await expectAaIfPresent(page.locator('#main article time'))
-    // Excerpt (zinc-600 on white) — optional field.
+    // Excerpt (zinc-600 on peach) — optional field.
     await expectAaIfPresent(page.locator('#main article > p'))
     // Rendered article body (.prose-ar).
     await expectAaIfPresent(page.locator('#main .prose-ar p'))
   })
 
-  test('category — section heading + card title/kicker/date on white', async ({ page }) => {
+  test('category — section heading + card title/kicker/date on peach', async ({ page }) => {
     await page.goto(BASE, { waitUntil: 'load' })
     await page.goto(await firstMatchingHref(page, /^\/[^/]+$/), { waitUntil: 'load' })
 
     await expectAaTextContrast(page.locator('#main h2').first())
     await expectAaIfPresent(page.locator('#main .lf-card h3'))
-    await expectAaIfPresent(page.locator('#main .lf-card a.text-brand-600'))
-    // Category listing timestamp (zinc-500 on white).
+    await expectAaIfPresent(page.locator('#main .lf-card a.text-brand-700'))
+    // Category listing timestamp (zinc-700 on peach).
     await expectAaIfPresent(page.locator('#main .lf-card time'))
   })
 
@@ -334,9 +343,9 @@ test.describe('Arabic contrast sweep', () => {
     await page.goto(await firstMatchingHref(page, /^\/videos\//), { waitUntil: 'load' })
 
     await expectAaTextContrast(page.locator('#main h1'))
-    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-500)
-    await expectAaIfPresent(page.locator('#main a.text-brand-600').first()) // category kicker
-    await expectAaIfPresent(page.locator('#main time').first()) // publish date (zinc-500)
+    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-700)
+    await expectAaIfPresent(page.locator('#main a.text-brand-700').first()) // category kicker
+    await expectAaIfPresent(page.locator('#main time').first()) // publish date (zinc-700)
     // Related videos, when present, render in the dark band.
     await expectAaIfPresent(page.locator('.lf-band-dark h2'))
   })
@@ -346,8 +355,8 @@ test.describe('Arabic contrast sweep', () => {
     await page.goto(await firstMatchingHref(page, /^\/magazine\/\d+/), { waitUntil: 'load' })
 
     await expectAaTextContrast(page.locator('#main h1'))
-    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-500)
-    await expectAaIfPresent(page.locator('#main time').first()) // issue date (zinc-500)
+    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-700)
+    await expectAaIfPresent(page.locator('#main time').first()) // issue date (zinc-700)
     await expectAaIfPresent(page.locator('#main header p')) // description (zinc-600)
   })
 })
