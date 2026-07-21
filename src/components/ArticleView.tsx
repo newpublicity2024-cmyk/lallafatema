@@ -20,12 +20,12 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
   return (
     <div className="mx-auto max-w-[1000px] px-4 py-8">
       <article>
-        <nav className="mb-3 text-sm text-zinc-500">
-          <Link href="/" className="hover:text-brand-600">الرئيسية</Link>
+        <nav className="mb-3 text-sm text-zinc-700">
+          <Link href="/" className="hover:text-brand-700">الرئيسية</Link>
           {category && (
             <>
               <span className="px-1">/</span>
-              <Link href={categoryUrl(category.slug ?? '')} className="font-bold text-brand-600 hover:underline">
+              <Link href={categoryUrl(category.slug ?? '')} className="font-bold text-brand-700 hover:underline">
                 {category.name}
               </Link>
             </>
@@ -34,13 +34,13 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
 
         <h1 className="text-3xl font-extrabold leading-tight text-zinc-900 sm:text-4xl">{post.title}</h1>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500">
+        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-700">
           {authors.length > 0 && (
             <span className="flex flex-wrap items-center gap-1">
               بقلم:
               {authors.map((a, i) => (
                 <span key={a.id}>
-                  <Link href={authorUrl(a.id)} className="font-bold text-zinc-700 hover:text-brand-600">
+                  <Link href={authorUrl(a.id)} className="font-bold text-zinc-700 hover:text-brand-700">
                     {a.name}
                   </Link>
                   {i < authors.length - 1 && '، '}

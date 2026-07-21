@@ -43,13 +43,13 @@ export function MagazineRail({ issue }: { issue: MagazineIssue }) {
       </Link>
       <Link
         href={href}
-        className="mt-3 block text-center text-sm font-bold text-brand-600 hover:underline"
+        className="mt-3 block text-center text-sm font-bold text-brand-700 hover:underline"
       >
         النسخة الرقمية
       </Link>
       <Link
         href={magazineArchiveUrl()}
-        className="mt-4 block border-t border-zinc-300 pt-3 text-center text-xs text-zinc-600 hover:text-brand-600"
+        className="mt-4 block border-t border-zinc-300 pt-3 text-center text-xs text-zinc-600 hover:text-brand-700"
       >
         كل الأعداد ←
       </Link>

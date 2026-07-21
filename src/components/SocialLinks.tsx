@@ -27,7 +27,7 @@ export function SocialLinks({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="text-current transition-colors hover:text-brand-600"
+              className="text-current transition-colors hover:text-brand-700"
             >
               <Icon />
             </a>

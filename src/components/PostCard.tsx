@@ -33,7 +33,7 @@ function Kicker({ category, light = false }: { category: Category | null; light?
   return (
     <Link
       href={categoryUrl(category.slug ?? '')}
-      className={`inline-block text-xs font-bold ${light ? 'text-brand-200' : 'text-brand-600'} hover:underline`}
+      className={`inline-block text-xs font-bold ${light ? 'text-brand-200' : 'text-brand-700'} hover:underline`}
     >
       {category.name}
     </Link>
@@ -139,7 +139,7 @@ export function PostCard({
             <Link href={href}>{post.title}</Link>
           </h3>
           {post.excerpt && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-600">{post.excerpt}</p>}
-          <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-500" />
+          <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-700" />
         </div>
       </article>
     )
@@ -175,7 +175,7 @@ export function PostCard({
         {isHero && post.excerpt && (
           <p className="mt-2 line-clamp-2 text-sm text-zinc-600">{post.excerpt}</p>
         )}
-        <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-500" />
+        <RelativeTime date={post.publishedAt} className="mt-2 block text-xs text-zinc-700" />
       </div>
     </article>
   )

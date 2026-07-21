@@ -12,7 +12,7 @@ export async function Footer() {
   const topLevel = categories.filter((c) => !c.parent)
 
   return (
-    <footer className="mt-12 border-t border-zinc-200 bg-zinc-50">
+    <footer className="mt-12 border-t border-black/10 bg-surface">
       {/* Footer ad — renders nothing when none is scheduled. */}
       <AdSlot placement="footer" className="my-6 px-4" />
       {/* Newsletter signup — renders inert (graceful) without Brevo creds. */}
@@ -21,9 +21,9 @@ export async function Footer() {
       </div>
       <div className="lf-container grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <h3 className="text-xl font-extrabold text-brand-600">{site.name}</h3>
+          <h3 className="text-xl font-extrabold text-brand-700">{site.name}</h3>
           <p className="mt-3 text-sm leading-relaxed text-zinc-600">{site.tagline}</p>
-          <SocialLinks className="mt-4 text-zinc-500" links={site.social} />
+          <SocialLinks className="mt-4 text-zinc-700" links={site.social} />
         </div>
 
         <nav aria-label="الأقسام">
@@ -31,7 +31,7 @@ export async function Footer() {
           <ul className="grid grid-cols-2 gap-y-2 text-sm text-zinc-600">
             {topLevel.map((cat) => (
               <li key={cat.id}>
-                <Link href={categoryUrl(cat.slug ?? '')} className="hover:text-brand-600">
+                <Link href={categoryUrl(cat.slug ?? '')} className="hover:text-brand-700">
                   {cat.name}
                 </Link>
               </li>
@@ -44,7 +44,7 @@ export async function Footer() {
           <ul className="space-y-2 text-sm text-zinc-600">
             {site.footerPages.map((p) => (
               <li key={p.href}>
-                <Link href={p.href} className="hover:text-brand-600">
+                <Link href={p.href} className="hover:text-brand-700">
                   {p.label}
                 </Link>
               </li>
@@ -57,7 +57,7 @@ export async function Footer() {
           <ul className="space-y-2 text-sm text-zinc-600">
             {site.newpubLinks.map((l) => (
               <li key={l.href}>
-                <a href={l.href} target="_blank" rel="noopener noreferrer" className="hover:text-brand-600">
+                <a href={l.href} target="_blank" rel="noopener noreferrer" className="hover:text-brand-700">
                   {l.label}
                 </a>
               </li>
@@ -66,10 +66,10 @@ export async function Footer() {
         </nav>
       </div>
 
-      <div className="flex flex-col items-center gap-2 border-t border-zinc-200 py-4 text-center text-xs text-zinc-500">
+      <div className="flex flex-col items-center gap-2 border-t border-zinc-200 py-4 text-center text-xs text-zinc-700">
         <span>© {new Date().getFullYear()} {site.name}. جميع الحقوق محفوظة.</span>
         {site.consentEnabled && (
-          <CookieSettingsButton className="text-brand-600 underline hover:text-brand-700" />
+          <CookieSettingsButton className="text-brand-700 underline hover:text-brand-800" />
         )}
       </div>
     </footer>

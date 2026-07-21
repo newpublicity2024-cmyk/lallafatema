@@ -54,7 +54,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
   return (
     <html lang="ar" dir="rtl" className={arabic.variable}>
-      <body className="flex min-h-screen flex-col bg-white text-zinc-900">
+      <body className="flex min-h-screen flex-col bg-surface text-zinc-900">
         <a
           href="#main"
           className="sr-only rounded-md bg-brand-600 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[200]"

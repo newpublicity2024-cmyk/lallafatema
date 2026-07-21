@@ -1,9 +1,11 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import type { Category } from '@/payload-types'
 import { getNonEmptyCategories, getMainMenu, getSiteConfig } from '@/lib/queries'
 import { categoryUrl } from '@/lib/routes'
 import { SearchIcon } from './icons'
+import { MainNav } from './MainNav'
 import { SocialLinks } from './SocialLinks'
 
 type LinkLike = { label: string; category?: number | Category | null; url?: string | null }
@@ -42,47 +44,33 @@ export async function Header() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-black/10 bg-surface/95 backdrop-blur">
       <div className="lf-container flex items-center justify-between gap-4 py-3">
-        <Link href="/" className="text-2xl font-extrabold tracking-tight text-brand-600">
-          {site.name}
+        {/* The logo is admin-managed (Site Settings → الهوية). Fall back to the
+         * wordmark so the masthead is never blank if it hasn't been set. */}
+        <Link href="/" aria-label={site.name} className="flex items-center">
+          {site.logo?.url ? (
+            <Image
+              src={site.logo.url}
+              alt={site.name}
+              width={site.logo.width ?? 700}
+              height={site.logo.height ?? 206}
+              priority
+              className="h-10 w-auto sm:h-12 lg:h-14"
+            />
+          ) : (
+            <span className="text-2xl font-extrabold tracking-tight text-brand-700">{site.name}</span>
+          )}
         </Link>
         <div className="flex items-center gap-4">
-          <SocialLinks className="hidden text-zinc-500 sm:flex" links={site.social} />
-          <Link href="/search" aria-label="بحث" className="text-zinc-600 transition-colors hover:text-brand-600">
+          <SocialLinks className="hidden text-zinc-700 sm:flex" links={site.social} />
+          <Link href="/search" aria-label="بحث" className="text-zinc-700 transition-colors hover:text-brand-700">
             <SearchIcon width={22} height={22} />
           </Link>
         </div>
       </div>
 
-      <nav aria-label="الأقسام" className="border-t border-zinc-100 bg-white">
-        <ul className="lf-container flex items-center gap-1 overflow-x-auto py-1 text-sm font-bold whitespace-nowrap">
-          {items.map((item) => (
-            <li key={item.label} className="group relative">
-              <Link
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-zinc-700 transition-colors hover:bg-brand-50 hover:text-brand-700"
-              >
-                {item.label}
-              </Link>
-              {item.children.length > 0 && (
-                <ul className="invisible absolute start-0 top-full z-50 min-w-44 rounded-lg border border-zinc-200 bg-white py-2 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                  {item.children.map((child) => (
-                    <li key={child.label}>
-                      <Link
-                        href={child.href}
-                        className="block px-4 py-2 text-zinc-700 hover:bg-brand-50 hover:text-brand-700"
-                      >
-                        {child.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <MainNav items={items} />
     </header>
   )
 }

@@ -49,7 +49,7 @@ export function PdfFacade({
           href={pdfUrl}
           download
           rel="noopener"
-          className="rounded-md border border-brand-600 px-5 py-2 text-sm font-bold text-brand-600"
+          className="rounded-md border border-brand-600 px-5 py-2 text-sm font-bold text-brand-700"
         >
           تحميل PDF
         </a>

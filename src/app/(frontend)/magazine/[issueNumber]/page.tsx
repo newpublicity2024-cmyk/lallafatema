@@ -51,12 +51,12 @@ export default async function MagazineIssuePage({ params }: Props) {
         ])}
       />
 
-      <nav aria-label="مسار التنقل" className="mb-4 text-sm text-zinc-500">
-        <Link href="/" className="hover:text-brand-600">
+      <nav aria-label="مسار التنقل" className="mb-4 text-sm text-zinc-700">
+        <Link href="/" className="hover:text-brand-700">
           الرئيسية
         </Link>
         {' / '}
-        <Link href={magazineArchiveUrl()} className="hover:text-brand-600">
+        <Link href={magazineArchiveUrl()} className="hover:text-brand-700">
           المجلة
         </Link>
         {' / '}
@@ -68,7 +68,7 @@ export default async function MagazineIssuePage({ params }: Props) {
         {issue.publishDate && (
           <time
             dateTime={new Date(issue.publishDate).toISOString()}
-            className="mt-1 block text-sm text-zinc-500"
+            className="mt-1 block text-sm text-zinc-700"
           >
             {formatDate(issue.publishDate)}
           </time>
@@ -83,7 +83,7 @@ export default async function MagazineIssuePage({ params }: Props) {
       {pdf?.url ? (
         <PdfFacade pdfUrl={pdf.url} cover={issue.cover} title={title} />
       ) : (
-        <p className="py-8 text-center text-zinc-500">ملف العدد غير متوفر حاليًا.</p>
+        <p className="py-8 text-center text-zinc-700">ملف العدد غير متوفر حاليًا.</p>
       )}
     </div>
   )
