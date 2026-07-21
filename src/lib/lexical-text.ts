@@ -64,3 +64,28 @@ export function deriveExcerpt(data: LexicalRoot, maxLength = EXCERPT_MAX_LENGTH)
 
   return `${base.replace(/[\s،,.:;-]+$/u, '')}…`
 }
+
+/**
+ * Guards against saving a blank article.
+ *
+ * Deliberately a `validate` function rather than `required: true`: dev and
+ * production share one Neon database with `push: false`, and a custom validator
+ * changes no column. Payload skips validation on draft saves, so this bites at
+ * publish time — exactly where it should — while autosave keeps working on an
+ * empty new post.
+ *
+ * A body with no text but at least one media node (a photo essay) is valid.
+ */
+export function validateArticleContent(value: unknown): true | string {
+  const data = value as LexicalRoot
+  const children = data?.root?.children
+
+  if (Array.isArray(children) && children.length > 0) {
+    if (lexicalToPlainText(data).length > 0) return true
+    // No text — allow it only if a real media node is present.
+    const hasMedia = children.some((child) => child?.type === 'upload' || child?.type === 'block')
+    if (hasMedia) return true
+  }
+
+  return 'لا يمكن نشر مقال فارغ. اكتب نص المقال أولًا.'
+}

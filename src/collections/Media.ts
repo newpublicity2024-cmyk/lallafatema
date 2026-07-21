@@ -50,10 +50,10 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      label: 'النص البديل (Alt)',
+      label: 'ماذا تظهر الصورة؟',
       required: true,
       admin: {
-        description: 'وصف موجز للصورة لأغراض الوصول وتحسين محركات البحث (إلزامي).',
+        description: 'جملة قصيرة تصف الصورة. مثال: إطلالة الفنانة خلال حفل توزيع الجوائز بالرباط.',
       },
     },
     {

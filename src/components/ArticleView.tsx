@@ -1,5 +1,6 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
 import Link from 'next/link'
+
+import { RichTextBody } from './RichTextBody'
 
 import type { Category, Post, User } from '@/payload-types'
 import { formatDate } from '@/lib/format'
@@ -75,7 +76,7 @@ export function ArticleView({ post, related = [] }: { post: Post; related?: Post
 
         {post.content && (
           <div className="mt-6">
-            <RichText data={post.content} className="prose-ar" />
+            <RichTextBody data={post.content} className="prose-ar" />
           </div>
         )}
 

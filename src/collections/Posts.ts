@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { APIError } from 'payload'
 
 import {
   canModifyOwnPosts,
@@ -9,6 +8,9 @@ import {
 } from '../access'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
+import { editorialOnly } from '../fields/visibility'
+import { validateArticleContent } from '../lib/lexical-text'
+import { applyPostDefaults } from '../hooks/postDefaults'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { searchIndexAfterChange, searchIndexAfterDelete } from '../hooks/searchIndex'
 
@@ -33,32 +35,18 @@ export const Posts: CollectionConfig = {
     maxPerDoc: 25,
   },
   hooks: {
-    beforeChange: [
-      ({ data, req, operation }) => {
-        // Journalists may not publish — only admins/editors can.
-        if (
-          data?._status === 'published' &&
-          req.user &&
-          req.user.role !== 'admin' &&
-          req.user.role !== 'editor'
-        ) {
-          throw new APIError('غير مسموح لك بنشر المقالات. يرجى تركها كمسودة لمراجعة المحرّر.', 403)
-        }
-        // Stamp the first publish date.
-        if (data?._status === 'published' && !data.publishedAt) {
-          data.publishedAt = new Date().toISOString()
-        }
-        // Default authorship to the creating user.
-        if (operation === 'create' && req.user && (!data.authors || data.authors.length === 0)) {
-          data.authors = [req.user.id]
-        }
-        return data
-      },
-    ],
+    beforeChange: [applyPostDefaults],
     afterChange: [revalidateAfterChange, searchIndexAfterChange],
     afterDelete: [revalidateAfterDelete, searchIndexAfterDelete],
   },
   fields: [
+    {
+      name: 'writerGuide',
+      type: 'ui',
+      admin: {
+        components: { Field: '/components/admin/WriterGuide#default' },
+      },
+    },
     {
       name: 'title',
       type: 'text',
@@ -68,8 +56,8 @@ export const Posts: CollectionConfig = {
     {
       name: 'excerpt',
       type: 'textarea',
-      label: 'المقتطف',
-      admin: { description: 'ملخص قصير يظهر في البطاقات ونتائج البحث.' },
+      label: 'المقتطف (اختياري)',
+      admin: { description: 'اتركه فارغًا وسنكتبه تلقائيًا من بداية المقال.' },
     },
     {
       name: 'featuredType',
@@ -81,46 +69,52 @@ export const Posts: CollectionConfig = {
         { label: 'فيديو', value: 'video' },
       ],
       admin: {
-        position: 'sidebar',
-        description: 'اختر صورة أو رابط فيديو ليظهر في رأس المقال.',
+        // Derived from featuredVideoUrl in applyPostDefaults — never chosen by hand.
+        // Left visible to nobody: an editor picking a value the hook then
+        // overwrites is worse than not offering the choice at all.
+        hidden: true,
       },
     },
     {
       name: 'featuredImage',
       type: 'upload',
       relationTo: 'media',
-      label: 'الصورة البارزة (الغلاف)',
+      label: 'صورة الغلاف',
       admin: {
-        description: 'تُستخدم كغلاف على البطاقات، وكصورة مصغّرة للفيديو.',
+        description: 'الصورة الرئيسية التي تظهر أعلى المقال وفي قوائم الموقع.',
       },
     },
     {
       name: 'featuredVideoUrl',
       type: 'text',
-      label: 'رابط الفيديو',
+      label: 'رابط فيديو الغلاف (اختياري)',
       admin: {
-        condition: (data) => data?.featuredType === 'video',
+        // NO `condition` here. featuredType is derived FROM this field, so a
+        // condition of `featuredType === 'video'` would be circular — the field
+        // could only appear once a URL had been saved, which can never happen
+        // while the field is hidden. Regression-guarded in editor-journalist.e2e.
         description:
-          'رابط YouTube/Vimeo (يُحمَّل الإطار عند النقر فقط). المصادر غير المدعومة تُعرض كرابط خارجي.',
+          'ألصق رابط يوتيوب أو فيميو ليظهر الفيديو في أعلى المقال. اتركه فارغًا ليظهر الغلاف كصورة.',
       },
-      validate: (
-        value: string | null | undefined,
-        { siblingData }: { siblingData: { featuredType?: string } },
-      ) => {
-        if (siblingData?.featuredType !== 'video') return true
-        if (!value) return 'رابط الفيديو مطلوب عند اختيار نوع الفيديو.'
+      validate: (value: string | null | undefined) => {
+        if (!value) return true
         try {
           new URL(value)
           return true
         } catch {
-          return 'الرجاء إدخال رابط صحيح.'
+          return 'هذا لا يبدو رابطًا صحيحًا. انسخ الرابط كاملًا من شريط العنوان.'
         }
       },
     },
     {
       name: 'content',
       type: 'richText',
-      label: 'المحتوى',
+      label: 'نص المقال',
+      validate: validateArticleContent,
+      admin: {
+        description:
+          'اكتب المقال هنا. استخدم زر الصورة لإضافة صور، وزر الفيديو لإدراج مقطع بالرابط.',
+      },
     },
     // ── Recipe support (kitchen articles → Recipe structured data in Phase 4) ──
     {
@@ -156,6 +150,14 @@ export const Posts: CollectionConfig = {
     },
     // ── Sidebar: taxonomy, authorship, publishing ──
     {
+      name: 'publishChecklist',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: { Field: '/components/admin/PublishChecklist#default' },
+      },
+    },
+    {
       name: 'category',
       type: 'relationship',
       relationTo: 'categories',
@@ -169,7 +171,7 @@ export const Posts: CollectionConfig = {
       relationTo: 'tags',
       hasMany: true,
       label: 'الوسوم',
-      admin: { position: 'sidebar' },
+      admin: { position: 'sidebar', condition: editorialOnly },
     },
     {
       name: 'authors',
@@ -179,10 +181,11 @@ export const Posts: CollectionConfig = {
       label: 'الكاتب/الكتّاب',
       defaultValue: ({ user }) => (user ? [user.id] : []),
       access: {
-        // Journalists can't reassign authorship; editors/admins can.
+        // Journalists can't reassign authorship; editors/admins can. The
+        // condition below only hides it — this access control is what enforces it.
         update: isAdminOrEditorFieldLevel,
       },
-      admin: { position: 'sidebar' },
+      admin: { position: 'sidebar', condition: editorialOnly },
     },
     {
       name: 'publishedAt',
@@ -190,6 +193,7 @@ export const Posts: CollectionConfig = {
       label: 'تاريخ النشر',
       admin: {
         position: 'sidebar',
+        condition: editorialOnly,
         date: { pickerAppearance: 'dayAndTime' },
       },
     },
