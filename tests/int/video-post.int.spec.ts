@@ -14,6 +14,30 @@ afterAll(async () => {
   }
 })
 
+/**
+ * A minimal article body. Published posts must carry one — `validateArticleContent`
+ * (src/lib/lexical-text.ts) rejects an empty article at publish time.
+ */
+const body = (text = 'نص المقال') => ({
+  root: {
+    type: 'root',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'rtl' as const,
+    children: [
+      {
+        type: 'paragraph',
+        format: '',
+        indent: 0,
+        version: 1,
+        direction: 'rtl' as const,
+        children: [{ type: 'text', text, format: 0, detail: 0, mode: 'normal', style: '', version: 1 }],
+      },
+    ],
+  },
+})
+
 async function categoryId(slug: string): Promise<number> {
   const { docs } = await payload.find({
     collection: 'categories',
@@ -30,6 +54,7 @@ describe('Post featured video fields', () => {
       data: {
         title: 'فيديو اختبار',
         category: await categoryId('video'),
+        content: body(),
         featuredType: 'video',
         featuredVideoUrl: 'https://www.youtube.com/watch?v=abc123',
         _status: 'published',
@@ -44,7 +69,12 @@ describe('Post featured video fields', () => {
   it('defaults featuredType to image when omitted', async () => {
     const post = await payload.create({
       collection: 'posts',
-      data: { title: 'صورة اختبار', category: await categoryId('news'), _status: 'published' } as never,
+      data: {
+        title: 'صورة اختبار',
+        category: await categoryId('news'),
+        content: body(),
+        _status: 'published',
+      } as never,
     })
     created.push(post.id as number)
     const read = await payload.findByID({ collection: 'posts', id: post.id })
@@ -60,6 +90,7 @@ describe('getVideoPosts', () => {
       data: {
         title: 'فيديو استعلام',
         category: await categoryId('video'),
+        content: body(),
         featuredType: 'video',
         featuredVideoUrl: 'https://youtu.be/qqq111',
         _status: 'published',
@@ -68,7 +99,12 @@ describe('getVideoPosts', () => {
     created.push(vid.id as number)
     const img = await payload.create({
       collection: 'posts',
-      data: { title: 'مقال صورة', category: await categoryId('news'), _status: 'published' } as never,
+      data: {
+        title: 'مقال صورة',
+        category: await categoryId('news'),
+        content: body(),
+        _status: 'published',
+      } as never,
     })
     created.push(img.id as number)
 

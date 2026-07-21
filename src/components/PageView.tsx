@@ -1,4 +1,4 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
+import { RichTextBody } from './RichTextBody'
 import Link from 'next/link'
 
 import type { Page } from '@/payload-types'
@@ -29,7 +29,7 @@ export function PageView({ page }: { page: Page }) {
 
         {page.content && (
           <div className="mt-6">
-            <RichText data={page.content} className="prose-ar" />
+            <RichTextBody data={page.content} className="prose-ar" />
           </div>
         )}
       </article>
