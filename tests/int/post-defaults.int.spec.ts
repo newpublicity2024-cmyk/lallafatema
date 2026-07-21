@@ -7,15 +7,20 @@ const doc = (text: string) => ({
 })
 
 /** Builds the hook argument shape; only the fields the hook reads are populated. */
-const run = (data: Record<string, unknown>, user: unknown, operation = 'create') =>
+const run = (
+  data: Record<string, unknown>,
+  user: unknown,
+  operation = 'create',
+  originalDoc?: Record<string, unknown>,
+) =>
   applyPostDefaults({
     data,
     req: { user },
     operation,
+    originalDoc,
     // Unused by the hook but present on the real signature.
     collection: undefined,
     context: {},
-    originalDoc: undefined,
   } as never) as Record<string, unknown>
 
 const journalist = { id: 7, role: 'journalist' }
@@ -92,5 +97,29 @@ describe('applyPostDefaults', () => {
 
   it('leaves the excerpt untouched when there is no content', () => {
     expect(run({ title: 'عنوان' }, journalist).excerpt).toBeUndefined()
+  })
+
+  // Autosave fires every ~375ms while the writer types. Without these two rules
+  // the excerpt would freeze at whatever the first keystroke produced.
+  it('refreshes an excerpt it generated itself as the body grows', () => {
+    const previous = { content: doc('بداية'), excerpt: 'بداية' }
+    const result = run(
+      { content: doc('بداية النص الكامل بعد الكتابة'), excerpt: 'بداية' },
+      journalist,
+      'update',
+      previous,
+    )
+    expect(result.excerpt).toBe('بداية النص الكامل بعد الكتابة')
+  })
+
+  it('still refuses to touch a hand-written excerpt when the body changes', () => {
+    const previous = { content: doc('بداية'), excerpt: 'مقتطف من تحرير الكاتب' }
+    const result = run(
+      { content: doc('نص جديد تمامًا'), excerpt: 'مقتطف من تحرير الكاتب' },
+      journalist,
+      'update',
+      previous,
+    )
+    expect(result.excerpt).toBe('مقتطف من تحرير الكاتب')
   })
 })

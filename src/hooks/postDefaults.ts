@@ -18,7 +18,12 @@ export const deriveFeaturedType = (videoUrl: unknown): 'image' | 'video' =>
  * featuredType and excerpt derivations are what let those two fields disappear
  * from a journalist's screen.
  */
-export const applyPostDefaults: CollectionBeforeChangeHook = ({ data, req, operation }) => {
+export const applyPostDefaults: CollectionBeforeChangeHook = ({
+  data,
+  req,
+  operation,
+  originalDoc,
+}) => {
   // Journalists may not publish — only admins/editors can.
   if (
     data?._status === 'published' &&
@@ -42,10 +47,26 @@ export const applyPostDefaults: CollectionBeforeChangeHook = ({ data, req, opera
   // Header media kind follows the video URL.
   data.featuredType = deriveFeaturedType(data?.featuredVideoUrl)
 
-  // A blank excerpt is filled from the opening of the article.
-  if (data?.content && (typeof data.excerpt !== 'string' || data.excerpt.trim().length === 0)) {
-    const derived = deriveExcerpt(data.content as LexicalRoot)
-    if (derived) data.excerpt = derived
+  // The excerpt is filled from the opening of the article — and kept in step
+  // with it while the writer types.
+  //
+  // Autosave runs every ~375ms, so "fill only when blank" would freeze the
+  // excerpt at whatever the first keystroke produced. To tell an excerpt we
+  // generated from one a human wrote, without adding a column to track it, we
+  // re-derive from the PREVIOUS body: if the stored excerpt is exactly what the
+  // old content would have produced, it is ours to refresh. Anything else was
+  // typed by a person and is never touched.
+  if (data?.content) {
+    const current = data.excerpt
+    const isBlank = typeof current !== 'string' || current.trim().length === 0
+    const previousContent = (originalDoc as { content?: unknown } | undefined)?.content
+    const isOurs =
+      !isBlank && Boolean(previousContent) && current === deriveExcerpt(previousContent as LexicalRoot)
+
+    if (isBlank || isOurs) {
+      const derived = deriveExcerpt(data.content as LexicalRoot)
+      if (derived) data.excerpt = derived
+    }
   }
 
   return data
