@@ -113,5 +113,8 @@ describe('getVideoPosts', () => {
     expect(ids).toContain(vid.id)
     expect(ids).not.toContain(img.id)
     expect(docs.every((d) => d.featuredType === 'video')).toBe(true)
-  })
+    // Two round-trip creates plus a query — same 30s budget as the sibling tests
+    // above. It had been running on the 5s default with ~1.4s of headroom, so it
+    // tipped over under full-suite load.
+  }, 30000)
 })
