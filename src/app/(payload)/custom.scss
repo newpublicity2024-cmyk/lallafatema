@@ -1,14 +1,276 @@
 /*
- * RTL fix — Lexical "draggable block menu".
+ * Lalla Fatema admin theme — a WordPress-style reskin of the Payload admin for
+ * non-technical Arabic journalists.
  *
- * While hidden, Lexical parks its drag handle at `left: -10000px`. In a
- * `dir="rtl"` document this inflates the page to ~10000px wide and produces a
- * spurious horizontal scrollbar across the whole admin on any screen with a
- * rich-text field. The handle's *active* position is within the editor's
- * gutter (on-screen), so clipping horizontal overflow only hides the parked
- * state. `clip` (not `hidden`) avoids creating a scroll container.
+ * Everything here is a cosmetic layer over Payload's own components: it overrides
+ * CSS custom properties and a handful of stable class/id hooks (verified against
+ * Payload 3.85.1's rendered DOM), and replaces NO component. Autosave, live
+ * preview, RTL, collapse behaviour and every e2e selector are untouched, and the
+ * whole reskin reverts by emptying this file.
+ *
+ * Nav items expose stable ids (`#nav-posts`, `#nav-global-site-settings`, …) that
+ * persist across the active/inactive swap — the active item is a `div.nav__link`
+ * (no href), an inactive one an `a.nav__link`. Icons key off those ids so they
+ * never drop on the current page. If a future Payload version changes this markup,
+ * only the icons/active-bar are cosmetic-degraded; the admin keeps working.
  */
+
+:root {
+  /* Brand — mirrors the frontend palette (src/app/(frontend)/styles.css). */
+  --lf-brand: #bc0168;
+  --lf-brand-hover: #9c0556;
+  --lf-brand-tint: rgba(188, 1, 104, 0.08);
+
+  /* Sidebar — the site's dark magazine-band colour, so the admin matches the
+     public site while reading as WordPress's dark menu. */
+  --lf-sidebar-bg: #23112c;
+  --lf-sidebar-bg-2: #2c1636;
+  --lf-sidebar-text: #ecd9e6;
+  --lf-sidebar-text-dim: #b493a7;
+  --lf-sidebar-hover: rgba(255, 255, 255, 0.07);
+  --lf-sidebar-active: rgba(255, 255, 255, 0.1);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * RTL fix — Lexical "draggable block menu" (pre-existing, keep).
+ * While hidden, Lexical parks its drag handle at left:-10000px; in a dir="rtl"
+ * document that inflates the page and creates a spurious horizontal scrollbar.
+ * `clip` hides the parked state without creating a scroll container.
+ * ──────────────────────────────────────────────────────────────────────────── */
 .field-type.rich-text-lexical,
 .editor {
   overflow-x: clip;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 1. THE SIDEBAR — WordPress dark menu
+ * ════════════════════════════════════════════════════════════════════════════ */
+.nav {
+  background: var(--lf-sidebar-bg);
+}
+
+.nav .nav__scroll {
+  background: var(--lf-sidebar-bg);
+}
+
+/* Group headers (المحتوى، التصنيف…) → small muted labels, WP-style. */
+.nav .nav-group__toggle {
+  color: var(--lf-sidebar-text-dim);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.nav .nav-group__indicator svg {
+  color: var(--lf-sidebar-text-dim);
+}
+
+/* Menu links — light text, comfortable rows. */
+.nav .nav__link {
+  display: flex;
+  align-items: center;
+  color: var(--lf-sidebar-text);
+  border-radius: 4px;
+  margin: 1px 0;
+  padding-block: 0.55rem;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.nav .nav__link-label {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+
+/* Per-item icons, keyed on the stable id so they survive the active swap.
+   The icon sits before the label; in RTL ::before is at the reading start.
+   The base rule carries a bullet fallback so a future unmapped collection still
+   gets an icon; the id rules below override `content` per item (id > class). */
+.nav .nav__link-label::before {
+  content: '•';
+  margin-inline-end: 0.6rem;
+  font-size: 1.05em;
+  line-height: 1;
+}
+#nav-posts .nav__link-label::before {
+  content: '📝';
+}
+#nav-magazine-issues .nav__link-label::before {
+  content: '📖';
+}
+#nav-pages .nav__link-label::before {
+  content: '📄';
+}
+#nav-media .nav__link-label::before {
+  content: '🖼️';
+}
+#nav-categories .nav__link-label::before {
+  content: '🗂️';
+}
+#nav-tags .nav__link-label::before {
+  content: '🏷️';
+}
+#nav-ads .nav__link-label::before {
+  content: '📣';
+}
+#nav-redirects .nav__link-label::before {
+  content: '↪️';
+}
+#nav-global-homepage .nav__link-label::before {
+  content: '🏠';
+}
+#nav-global-main-menu .nav__link-label::before {
+  content: '🧭';
+}
+#nav-global-site-settings .nav__link-label::before {
+  content: '⚙️';
+}
+#nav-users .nav__link-label::before {
+  content: '👤';
+}
+/* Hover on an inactive (anchor) link. */
+.nav a.nav__link:hover,
+.nav a.nav__link:focus-visible {
+  background: var(--lf-sidebar-hover);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Active link — Payload renders it as a `div.nav__link` (no href). Lighter row
+   + a magenta inline-start bar, exactly like WordPress's current menu item. */
+.nav div.nav__link {
+  background: var(--lf-sidebar-active);
+  color: #fff;
+  border-inline-start: 3px solid var(--lf-brand);
+  font-weight: 600;
+}
+/* Payload's own active indicator element → the magenta accent, not the default. */
+.nav .nav__link-indicator {
+  background: var(--lf-brand);
+}
+
+/* Log-out row at the foot of the menu. */
+.nav .nav__log-out {
+  color: var(--lf-sidebar-text-dim);
+}
+.nav .nav__log-out:hover {
+  color: #fff;
+}
+.nav .nav__log-out svg {
+  color: currentColor;
+}
+
+/* The mobile/RTL nav toggle + wrapper keep the dark treatment. */
+.nav-toggler {
+  color: inherit;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 2. ACCENT — magenta where WordPress is blue
+ * ════════════════════════════════════════════════════════════════════════════ */
+/* Primary action buttons (Save, Publish, login, "create new" primaries).
+   Payload's default is elevation-800 (#2f2f2f); brand them magenta. */
+.btn--style-primary .btn__content,
+.btn--style-primary {
+  background-color: var(--lf-brand);
+  border-color: var(--lf-brand);
+  color: #fff;
+}
+.btn--style-primary:not(.btn--disabled):hover,
+.btn--style-primary:not(.btn--disabled):focus-visible {
+  background-color: var(--lf-brand-hover);
+  border-color: var(--lf-brand-hover);
+  color: #fff;
+}
+.btn--style-primary:hover .btn__content {
+  background-color: var(--lf-brand-hover);
+}
+
+/* Text/secondary buttons: brand the label + icon on hover. */
+.btn--style-secondary:not(.btn--disabled):hover {
+  color: var(--lf-brand);
+  border-color: var(--lf-brand);
+}
+
+/* Focus outlines → brand. */
+*:focus-visible {
+  outline-color: var(--lf-brand);
+}
+
+/* Form controls: brand the focused field border + checkbox/radio. */
+.field-type input:focus,
+.field-type textarea:focus,
+.react-select .rs__control--is-focused {
+  border-color: var(--lf-brand) !important;
+  box-shadow: 0 0 0 1px var(--lf-brand);
+}
+.checkbox-input__input:checked + .checkbox-input__icon,
+.checkbox-input input:checked ~ .checkbox-input__icon {
+  background: var(--lf-brand);
+  border-color: var(--lf-brand);
+}
+
+/* Pill / tab active states. */
+.pill--has-action:hover {
+  border-color: var(--lf-brand);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 3. LIST TABLES — WordPress list-table polish
+ * ════════════════════════════════════════════════════════════════════════════ */
+.table table thead {
+  background: var(--theme-elevation-50);
+}
+.table table thead th {
+  font-weight: 700;
+  color: var(--theme-elevation-600);
+}
+.table table tbody tr {
+  transition: background 0.1s ease;
+}
+.table table tbody tr:hover {
+  background: var(--lf-brand-tint);
+}
+/* Row title links → brand on hover. */
+.table table tbody tr a:hover {
+  color: var(--lf-brand);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 4. DASHBOARD — card polish (the BeforeDashboard React panel handles the
+ *    "At a Glance" content; this is just the default group cards below it).
+ * ════════════════════════════════════════════════════════════════════════════ */
+.dashboard__card,
+.card {
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.dashboard__card:hover,
+.card:hover {
+  border-color: var(--lf-brand);
+  box-shadow: 0 2px 10px rgba(188, 1, 104, 0.1);
+}
+.dashboard__label a:hover,
+.card__title:hover {
+  color: var(--lf-brand);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 5. EDIT SCREEN — publish controls read like WordPress's "Publish" box
+ * ════════════════════════════════════════════════════════════════════════════ */
+.doc-controls {
+  border-bottom: 1px solid var(--theme-elevation-100);
+}
+/* The document status pill (draft/published). */
+.status__value {
+  font-weight: 600;
+}
+/* Section headings inside the editor (SEO group, recipe group…). */
+.render-fields .group-field__header h3,
+.collapsible__header {
+  color: var(--theme-elevation-800);
 }

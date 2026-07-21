@@ -69,6 +69,17 @@ const storagePlugins = blobEnabled
       vercelBlobStorage({
         collections: { media: true },
         token: process.env.BLOB_READ_WRITE_TOKEN as string,
+        // Browser uploads straight to Blob (signed, auth-gated route). Without
+        // this, the file rides inside the POST to /api/media and Vercel kills
+        // any body > 4.5 MB at the edge — a normal phone photo — leaving the
+        // admin stuck on "loading" with no error.
+        //
+        // Server-side validation is NOT bypassed: on doc-create Payload re-fetches
+        // the stored object and rebuilds req.file (real bytes + Content-Type), so
+        // its native buffer-sniff runs AND the Media beforeValidate guard
+        // (enforceUploadGuard) validates the declared mimeType/filesize. See the
+        // guard for how the type + per-size caps are enforced on this path.
+        clientUploads: true,
       }),
     ]
   : r2Enabled
@@ -76,6 +87,9 @@ const storagePlugins = blobEnabled
         s3Storage({
           collections: { media: true },
           bucket: process.env.R2_BUCKET as string,
+          // Same 4.5 MB rationale as the Blob branch — direct-to-storage uploads
+          // so a future switch to R2 doesn't reintroduce the serverless body cap.
+          clientUploads: true,
           config: {
             endpoint: process.env.R2_ENDPOINT,
             region: 'auto',

@@ -1,12 +1,12 @@
-import type { ServerProps } from 'payload'
+import type { ServerProps, Where } from 'payload'
 
 import type { Post, User } from '@/payload-types'
 
 /**
- * Custom RTL landing panel shown above the default Payload dashboard. Gives the
- * editorial team fast paths into the most common actions (create article / video /
- * ad), shortcuts to the curation surfaces, and a "my drafts" list — scoped per role
- * (journalists see only their own drafts; editors/admins see the newsroom's).
+ * Custom RTL landing panel shown above the default Payload dashboard. Styled to
+ * feel like the WordPress dashboard: an "At a Glance" stat strip, a prominent
+ * write-article action, quick-create + shortcut pills, and a per-role "my drafts"
+ * list (journalists see only their own; editors/admins see the newsroom's).
  *
  * Rendered server-side by Payload, so it can read `payload` + `user` directly.
  */
@@ -17,21 +17,44 @@ export default async function BeforeDashboard(props: ServerProps) {
 
   const isJournalist = user.role === 'journalist'
 
-  // Recent drafts — journalists see only their own; editors/admins see all.
-  const { docs: drafts } = await payload.find({
-    collection: 'posts',
-    where: isJournalist
-      ? { and: [{ _status: { equals: 'draft' } }, { authors: { in: [user.id] } }] }
-      : { _status: { equals: 'draft' } },
-    sort: '-updatedAt',
-    limit: 6,
-    depth: 0,
-    user,
-    overrideAccess: false,
-  })
+  // Draft filter — journalists see only their own; editors/admins see all.
+  const draftWhere: Where = isJournalist
+    ? { and: [{ _status: { equals: 'draft' } }, { authors: { in: [user.id] } }] }
+    : { _status: { equals: 'draft' } }
+
+  // "At a Glance" counts + recent drafts, gathered in parallel. `count` is cheap
+  // (COUNT(*) with the same access rules the collection already enforces).
+  const [publishedCount, draftCount, categoryCount, mediaCount, recentDrafts] = await Promise.all([
+    payload.count({
+      collection: 'posts',
+      where: { _status: { equals: 'published' } },
+      user,
+      overrideAccess: false,
+    }),
+    payload.count({ collection: 'posts', where: draftWhere, user, overrideAccess: false }),
+    payload.count({ collection: 'categories', user, overrideAccess: false }),
+    payload.count({ collection: 'media', user, overrideAccess: false }),
+    payload.find({
+      collection: 'posts',
+      where: draftWhere,
+      sort: '-updatedAt',
+      limit: 6,
+      depth: 0,
+      user,
+      overrideAccess: false,
+    }),
+  ])
+
+  const drafts = recentDrafts.docs as Post[]
+
+  const stats = [
+    { icon: '📝', label: 'مقالات منشورة', value: publishedCount.totalDocs, href: '/admin/collections/posts?where[_status][equals]=published' },
+    { icon: '✏️', label: isJournalist ? 'مسوّداتي' : 'مسوّدات', value: draftCount.totalDocs, href: '/admin/collections/posts?where[_status][equals]=draft' },
+    { icon: '🗂️', label: 'الأقسام', value: categoryCount.totalDocs, href: '/admin/collections/categories' },
+    { icon: '🖼️', label: 'الوسائط', value: mediaCount.totalDocs, href: '/admin/collections/media' },
+  ]
 
   const quickCreate = [
-    { label: 'مقال جديد', href: '/admin/collections/posts/create' },
     { label: 'فيديو جديد', href: '/admin/collections/videos/create' },
     ...(isJournalist ? [] : [{ label: 'إعلان جديد', href: '/admin/collections/ads/create' }]),
   ]
@@ -52,16 +75,50 @@ export default async function BeforeDashboard(props: ServerProps) {
     <div dir="rtl" style={{ marginBottom: '2rem' }}>
       <div
         style={{
-          background: 'var(--theme-elevation-50)',
+          background: 'var(--theme-elevation-0)',
           border: '1px solid var(--theme-elevation-100)',
-          borderRadius: '8px',
+          borderRadius: '10px',
           padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
         }}
       >
-        <h2 style={{ margin: '0 0 0.25rem' }}>أهلًا، {user.name || user.email} 👋</h2>
-        <p style={{ margin: 0, color: 'var(--theme-elevation-500)' }}>
-          {isJournalist ? 'مرحبًا بك في لوحة التحرير.' : 'لوحة التحكم في مجلة لالة فاطمة.'}
-        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+          <div>
+            <h2 style={{ margin: '0 0 0.25rem' }}>أهلًا، {user.name || user.email} 👋</h2>
+            <p style={{ margin: 0, color: 'var(--theme-elevation-500)' }}>
+              {isJournalist ? 'مرحبًا بك في لوحة التحرير.' : 'لوحة التحكم في مجلة لالة فاطمة.'}
+            </p>
+          </div>
+          {/* Hard navigation is correct here: this is a Payload admin route, not
+              a Next app page, and Payload's own nav uses anchors. next/link would
+              attempt client-side routing the admin catch-all doesn't own. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/admin/collections/posts/create" style={primaryButtonStyle}>
+            ✍️ اكتب مقالًا جديدًا
+          </a>
+        </div>
+
+        {/* At a Glance */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: '0.75rem',
+            marginTop: '1.25rem',
+          }}
+        >
+          {stats.map((s) => (
+            <a key={s.label} href={s.href} style={statTileStyle}>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{s.icon}</span>
+              <span style={{ display: 'flex', flexDirection: 'column' }}>
+                <strong style={{ fontSize: '1.5rem', lineHeight: 1.1, color: 'var(--theme-text)' }}>
+                  {s.value}
+                </strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--theme-elevation-500)' }}>{s.label}</span>
+              </span>
+            </a>
+          ))}
+        </div>
 
         <Section title="إنشاء سريع">
           {quickCreate.map((a) => (
@@ -75,12 +132,12 @@ export default async function BeforeDashboard(props: ServerProps) {
           ))}
         </Section>
 
-        <Section title={isJournalist ? 'مسوّداتي' : 'أحدث المسوّدات'}>
+        <Section title={isJournalist ? 'أحدث مسوّداتي' : 'أحدث المسوّدات'}>
           {drafts.length === 0 ? (
             <span style={{ color: 'var(--theme-elevation-500)' }}>لا توجد مسوّدات حاليًا.</span>
           ) : (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, width: '100%' }}>
-              {(drafts as Post[]).map((d) => (
+              {drafts.map((d) => (
                 <li key={d.id} style={{ padding: '0.35rem 0' }}>
                   <a
                     href={`/admin/collections/posts/${d.id}`}
@@ -96,6 +153,32 @@ export default async function BeforeDashboard(props: ServerProps) {
       </div>
     </div>
   )
+}
+
+const primaryButtonStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.4rem',
+  padding: '0.6rem 1.15rem',
+  borderRadius: '6px',
+  fontSize: '0.9rem',
+  fontWeight: 600,
+  textDecoration: 'none',
+  background: '#bc0168',
+  color: '#fff',
+  border: '1px solid #bc0168',
+  whiteSpace: 'nowrap',
+}
+
+const statTileStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.7rem',
+  padding: '0.9rem 1rem',
+  borderRadius: '8px',
+  textDecoration: 'none',
+  background: 'var(--theme-elevation-50)',
+  border: '1px solid var(--theme-elevation-100)',
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -119,9 +202,9 @@ function PillLink({ href, label, primary = false }: { href: string; label: strin
         borderRadius: '999px',
         fontSize: '0.85rem',
         textDecoration: 'none',
-        background: primary ? 'var(--theme-success-500, #2e8b57)' : 'var(--theme-elevation-100)',
+        background: primary ? '#bc0168' : 'var(--theme-elevation-100)',
         color: primary ? '#fff' : 'var(--theme-text)',
-        border: '1px solid var(--theme-elevation-150)',
+        border: primary ? '1px solid #bc0168' : '1px solid var(--theme-elevation-150)',
       }}
     >
       {label}
