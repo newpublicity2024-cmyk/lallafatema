@@ -17,6 +17,23 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // 10 MB
 const MAX_PDF_BYTES = 40 * 1024 * 1024 // 40 MB
 
 /**
+ * Constraints embedded into the signed client-upload token (clientUploads: true).
+ * Vercel Blob enforces these AT UPLOAD TIME, so an authenticated user cannot push
+ * an arbitrary file type — or anything over the outer cap — straight into storage
+ * through the signing route. Per-type caps (10MB images vs 40MB PDF) cannot be
+ * expressed in a token; those are enforced at doc-create by `enforceUploadGuard`.
+ */
+export function clientUploadTokenConstraints(): {
+  allowedContentTypes: string[]
+  maximumSizeInBytes: number
+} {
+  return {
+    allowedContentTypes: [...ALLOWED_UPLOAD_MIME_TYPES],
+    maximumSizeInBytes: MAX_PDF_BYTES,
+  }
+}
+
+/**
  * Returns `true` when the file is acceptable, or an Arabic error message describing why it
  * was rejected. Callers throw when a string comes back.
  */
