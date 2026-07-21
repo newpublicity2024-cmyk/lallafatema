@@ -207,10 +207,10 @@ test.describe('axe gate — WCAG A/AA, 7 routes', () => {
     await page.goto(BASE, { waitUntil: 'load' })
     await audit(page, await firstMatchingHref(page, /^\/[^/]+$/))
   })
-  test('video watch', async ({ page }) => {
-    await page.goto(BASE, { waitUntil: 'load' })
-    await audit(page, await firstMatchingHref(page, /^\/videos\//))
-  })
+  // The /videos/<slug> watch route was retired — it now 301s to the listing (see
+  // videos.e2e.spec.ts), and video-posts link to their article instead. Audit the
+  // listing, which is the video surface that actually exists.
+  test('videos listing', async ({ page }) => audit(page, `${BASE}/videos`))
   test('magazine issue', async ({ page }) => {
     await page.goto(`${BASE}/magazine`, { waitUntil: 'load' })
     await audit(page, await firstMatchingHref(page, /^\/magazine\/\d+/))
@@ -273,9 +273,11 @@ test.describe('Arabic contrast sweep', () => {
 
     // DARK BAND .lf-band-dark (#23112c): light section heading + white/70 lead description
     // + white/90 list title, all on the solid dark fill.
-    await expectAaIfPresent(page.locator('.lf-band-dark h2'))
-    await expectAaIfPresent(page.locator('.lf-band-dark p'))
-    await expectAaIfPresent(page.locator('.lf-band-dark h3'))
+    // `:visible` matters here — VideoSection renders a mobile carousel AND a desktop
+    // grid, mobile first in the DOM, so a bare .first() picks the display:none copy.
+    await expectAaIfPresent(page.locator('.lf-band-dark h2:visible'))
+    await expectAaIfPresent(page.locator('.lf-band-dark p:visible'))
+    await expectAaIfPresent(page.locator('.lf-band-dark h3:visible'))
 
     // Footer (peach --color-surface): brand-700 wordmark, zinc-600 tagline + nav links,
     // and the zinc-700 copyright line. zinc-600 is the tightest footer token on peach
@@ -338,16 +340,15 @@ test.describe('Arabic contrast sweep', () => {
     await expectAaIfPresent(page.locator('#main .lf-card time'))
   })
 
-  test('video watch — breadcrumb, category, h1, date', async ({ page }) => {
-    await page.goto(BASE, { waitUntil: 'load' })
-    await page.goto(await firstMatchingHref(page, /^\/videos\//), { waitUntil: 'load' })
+  // Was "video watch". That route is gone (301 → /videos), so this now covers the
+  // listing: its heading plus the card kicker/title/date tokens on the peach surface.
+  test('videos listing — heading, card kicker, title, date', async ({ page }) => {
+    await page.goto(`${BASE}/videos`, { waitUntil: 'load' })
 
-    await expectAaTextContrast(page.locator('#main h1'))
-    await expectAaIfPresent(page.locator('#main nav a').first()) // breadcrumb (zinc-700)
+    await expectAaTextContrast(page.getByRole('heading', { name: 'فيديو', exact: true }))
     await expectAaIfPresent(page.locator('#main a.text-brand-700').first()) // category kicker
+    await expectAaIfPresent(page.locator('#main article h3').first()) // card title
     await expectAaIfPresent(page.locator('#main time').first()) // publish date (zinc-700)
-    // Related videos, when present, render in the dark band.
-    await expectAaIfPresent(page.locator('.lf-band-dark h2'))
   })
 
   test('magazine issue — breadcrumb, h1, date, description', async ({ page }) => {

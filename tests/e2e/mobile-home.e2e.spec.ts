@@ -52,7 +52,11 @@ test.describe('Mobile homepage redesign', () => {
   test('video band is a carousel on mobile', async ({ page }) => {
     await page.setViewportSize(MOBILE)
     await page.goto(BASE, { waitUntil: 'domcontentloaded' })
-    const band = page.locator('.lf-band-dark')
+    // Scope to the VIDEO band by its heading: MagazineSection is also .lf-band-dark and
+    // also renders a mobile carousel, so a bare .lf-band-dark matches two sections.
+    const band = page
+      .locator('.lf-band-dark')
+      .filter({ has: page.getByRole('heading', { name: 'فيديو', exact: true }) })
     test.skip((await band.count()) === 0, 'no video band on the homepage')
     await expect(band.getByTestId('mobile-carousel')).toBeVisible()
   })

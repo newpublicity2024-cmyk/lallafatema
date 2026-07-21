@@ -21,14 +21,21 @@ test.describe('Admin Panel', () => {
   test('can navigate to dashboard', async () => {
     await page.goto('http://localhost:3000/admin')
     await expect(page).toHaveURL('http://localhost:3000/admin')
-    const dashboardArtifact = page.locator('span[title="Dashboard"]').first()
+    // Assert on the dashboard's own content (the custom BeforeDashboard shortcuts)
+    // rather than a Payload-internal `span[title="Dashboard"]`, which no longer exists
+    // in this admin build and made the check silently unanchored.
+    const dashboardArtifact = page.getByRole('link', { name: 'مقال جديد' }).first()
     await expect(dashboardArtifact).toBeVisible()
   })
 
   test('can navigate to list view', async () => {
     await page.goto('http://localhost:3000/admin/collections/users')
-    await expect(page).toHaveURL('http://localhost:3000/admin/collections/users')
-    const listViewArtifact = page.locator('h1', { hasText: 'Users' }).first()
+    // Payload appends its list-view query state (?depth=1&limit=10), so match the
+    // pathname rather than the exact URL.
+    await expect(page).toHaveURL(/\/admin\/collections\/users(\?|$)/)
+    // The admin is Arabic-localized: Users is labelled 'المستخدمون'
+    // (src/collections/Users.ts), so an 'Users' match never resolves.
+    const listViewArtifact = page.locator('h1', { hasText: 'المستخدمون' }).first()
     await expect(listViewArtifact).toBeVisible()
   })
 

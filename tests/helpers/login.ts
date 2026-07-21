@@ -26,6 +26,9 @@ export async function login({
 
   await page.waitForURL(`${serverURL}/admin`)
 
-  const dashboardArtifact = page.locator('span[title="Dashboard"]')
+  // Confirms the authenticated dashboard actually rendered. Asserts on this admin's
+  // own content (the custom BeforeDashboard shortcuts) rather than a Payload-internal
+  // `span[title="Dashboard"]`, which no longer exists in this build.
+  const dashboardArtifact = page.getByRole('link', { name: 'مقال جديد' }).first()
   await expect(dashboardArtifact).toBeVisible()
 }
