@@ -34,6 +34,8 @@ test.describe('Magazine archive', () => {
 test('homepage shows the magazine section linking to the archive', async ({ page }) => {
   await page.goto(`${BASE}/`)
   await expect(page.getByRole('heading', { name: 'مجلة لالة فاطمة' })).toBeVisible()
-  const cover = page.locator('a[href^="/magazine/"]').first()
+  // `:visible` — MagazineSection renders a mobile carousel and a desktop grid, mobile
+  // first in the DOM, so a bare .first() resolves to the display:none copy.
+  const cover = page.locator('a[href^="/magazine/"]:visible').first()
   await expect(cover).toBeVisible()
 })
