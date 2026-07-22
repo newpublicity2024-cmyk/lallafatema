@@ -21,10 +21,9 @@
   --color-brand-900: #6c0d3f;
   --color-brand-950: #420022;
 
-  /* Page surface — the warm apricot the whole site sits on. Everything that used
-   * to be white (body, light bands, header, footer) reads from this one token;
-   * cards deliberately stay #ffffff so they lift off it. */
-  --color-surface: #fbc490;
+  /* Page surface — white. Body, light bands, header and footer all read from this
+   * one token; cards are also #ffffff and separate via shadow rather than tone. */
+  --color-surface: #ffffff;
 }
 
 @layer components {
