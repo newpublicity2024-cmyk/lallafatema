@@ -14,8 +14,8 @@ import config from '../payload.config'
  * points Site Settings → الهوية → الشعار (صورة) at it. The Header renders that field.
  *
  * Why the white-keying step: the supplied artwork is flat 2-tone lettering flattened
- * onto an opaque white canvas. The site surface is peach (`--color-surface`), so an
- * un-keyed logo would render as a white rectangle. See `keyOutWhite` below.
+ * onto an opaque white canvas. Keying keeps the logo surface-independent — it renders
+ * cleanly on any `--color-surface`, not just white. See `keyOutWhite` below.
  *
  * Why resize rather than upload the original: `media` deliberately keeps originals
  * only (no Sharp variants — see `src/collections/Media.ts`), and the custom
@@ -40,7 +40,7 @@ import config from '../payload.config'
  *   pnpm seed:logo --dry-run        # report only; connects to nothing, writes nothing
  */
 
-const DEFAULT_SOURCE = 'Gemini_Generated_Image_3t3edu3t3edu3t3e.png'
+const DEFAULT_SOURCE = 'logo-lalla-fatema.png'
 const TARGET_NAME = 'logo-lalla-fatema.png'
 const TARGET_WIDTH = 700
 const ALT = 'مجلة لالة فاطمة — مجلة المرأة والعائلة المغربية'
