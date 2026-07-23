@@ -8,7 +8,10 @@
  * (Vercel Blob when BLOB_READ_WRITE_TOKEN is set; local disk otherwise).
  *
  * Usage:
- *   tsx src/seed/migrate-wp.ts [--limit N] [--only 123,456] [--dry] [--force]
+ *   tsx src/seed/migrate-wp.ts [--root DIR] [--limit N] [--only 123,456] [--dry] [--force]
+ *
+ * --root points at an alternate scrape folder (same index.json + articles/ + images/
+ * layout) for incremental batches; defaults to `lallafatema-content/`.
  *
  * Video articles import as video-posts (featuredType='video', videos[0].url →
  * featuredVideoUrl). Deferred (skipped) by design: only "أعداد لالة فاطمة"
@@ -22,7 +25,10 @@ import { getPayload } from 'payload'
 import config from '../payload.config'
 import { htmlToLexical, type ResolveImage } from './wp/htmlToLexical'
 
-const CONTENT_ROOT = path.resolve(process.cwd(), 'lallafatema-content')
+/** Read a JSON file tolerating a UTF-8 BOM (PowerShell-generated scrapes have one). */
+function readJson<T>(file: string): T {
+  return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^﻿/, '')) as T
+}
 
 // Scraped Arabic category name → DB category slug. Names not listed here are skipped.
 const CATEGORY_MAP: Record<string, string> = {
@@ -108,6 +114,7 @@ function parseArgs() {
     return i >= 0 ? args[i + 1] : undefined
   }
   return {
+    root: get('--root') ?? 'lallafatema-content',
     limit: get('--limit') ? Number(get('--limit')) : Infinity,
     only: get('--only')?.split(',').map((s) => Number(s.trim())) ?? null,
     dry: args.includes('--dry'),
@@ -119,13 +126,18 @@ function parseArgs() {
 }
 
 async function main() {
-  const { limit, only, dry, force, noImages } = parseArgs()
+  const { root, limit, only, dry, force, noImages } = parseArgs()
+  const CONTENT_ROOT = path.resolve(process.cwd(), root)
+  if (!fs.existsSync(path.join(CONTENT_ROOT, 'index.json'))) {
+    throw new Error(`no index.json under ${CONTENT_ROOT} — check --root`)
+  }
+  console.log(`ℹ content root: ${CONTENT_ROOT}`)
   if (noImages) console.log('ℹ --no-images: importing text only; images deferred (backfill later with a blob token + --force)')
   const payload = await getPayload({ config: await config })
 
-  const idx = JSON.parse(fs.readFileSync(path.join(CONTENT_ROOT, 'index.json'), 'utf8')) as {
+  const idx = readJson<{
     articles: { id: number; file: string; primary_category: string }[]
-  }
+  }>(path.join(CONTENT_ROOT, 'index.json'))
 
   // Resolve DB category ids by slug (once).
   const catBySlug = new Map<string, number | string>()
@@ -161,7 +173,7 @@ async function main() {
     if (processed >= limit) break
     stats.seen++
 
-    const art = JSON.parse(fs.readFileSync(path.join(CONTENT_ROOT, entry.file), 'utf8')) as Article
+    const art = readJson<Article>(path.join(CONTENT_ROOT, entry.file))
     const primaryName = art.primary_category?.name ?? entry.primary_category
     const videoUrl = firstVideoUrl(art)
 

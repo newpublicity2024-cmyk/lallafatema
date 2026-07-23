@@ -45,6 +45,8 @@ next-env.d.ts
 # WordPress migration scrape (source content + downloaded images) — read at
 # migration time only; never committed (media lives in object storage, not the repo).
 /lallafatema-content
+# Incremental scrape batches (same layout), imported via migrate-wp.ts --root.
+/new-articles-*
 
 # Magazine issue PDFs (source for the magazine import) — hundreds of MB, read at
 # import time only; the files live in object storage (Vercel Blob), never in the repo.
