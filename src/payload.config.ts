@@ -109,13 +109,46 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
-    // Editorial control-center landing panel (quick actions + my drafts), RTL.
     components: {
-      beforeDashboard: ['/components/admin/BeforeDashboard#default'],
       // Brand the admin login wordmark + nav icon (matches the public favicon).
       graphics: {
         Logo: '/components/admin/Logo#default',
         Icon: '/components/admin/Icon#default',
+      },
+    },
+    // The landing page is built from widgets (src/components/admin/dashboard/*)
+    // instead of Payload's collection cards, and laid out per role: a journalist
+    // gets their drafts, their published pieces and a 3-step guide; editors get
+    // the review queue, the newsroom numbers and shortcuts into curation. Users
+    // can still rearrange or add widgets (the built-in "collections" cards stay
+    // registered) from the dashboard breadcrumb menu.
+    dashboard: {
+      widgets: [
+        { slug: 'lf-welcome', label: 'الترحيب', Component: '/components/admin/dashboard/Welcome#default', minWidth: 'medium' },
+        { slug: 'lf-stats', label: 'الأرقام', Component: '/components/admin/dashboard/Stats#default', minWidth: 'medium' },
+        { slug: 'lf-drafts', label: 'المسوّدات', Component: '/components/admin/dashboard/Drafts#default', minWidth: 'small' },
+        { slug: 'lf-published', label: 'نُشر مؤخرًا', Component: '/components/admin/dashboard/RecentlyPublished#default', minWidth: 'small' },
+        { slug: 'lf-shortcuts', label: 'اختصارات', Component: '/components/admin/dashboard/Shortcuts#default', minWidth: 'small' },
+        { slug: 'lf-guide', label: 'دليل سريع', Component: '/components/admin/dashboard/Guide#default', minWidth: 'small' },
+      ],
+      defaultLayout: ({ req }) => {
+        const editorial = req.user?.role === 'admin' || req.user?.role === 'editor'
+        return editorial
+          ? [
+              { widgetSlug: 'lf-welcome', width: 'full' },
+              { widgetSlug: 'lf-stats', width: 'full' },
+              { widgetSlug: 'lf-drafts', width: 'medium' },
+              { widgetSlug: 'lf-published', width: 'medium' },
+              { widgetSlug: 'lf-shortcuts', width: 'full' },
+            ]
+          : [
+              { widgetSlug: 'lf-welcome', width: 'full' },
+              { widgetSlug: 'lf-stats', width: 'full' },
+              { widgetSlug: 'lf-drafts', width: 'medium' },
+              { widgetSlug: 'lf-published', width: 'medium' },
+              { widgetSlug: 'lf-guide', width: 'large' },
+              { widgetSlug: 'lf-shortcuts', width: 'small' },
+            ]
       },
     },
     // Live preview against the real frontend (draft-aware via /preview).

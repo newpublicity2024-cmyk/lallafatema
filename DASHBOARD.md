@@ -108,7 +108,9 @@ Two ad kinds, both managed in the dashboard:
 - [x] group `الإعدادات`; access read `anyone` / update `isAdmin`; revalidate on change.
 
 ### C. Admin landing dashboard
-- [x] `admin.components.beforeDashboard` → custom RTL component: welcome line,
+- [x] **2026-09-15:** rebuilt as role-aware `admin.dashboard` widgets (see
+  `docs/superpowers/specs/2026-09-15-journalist-dashboard-design.md`). Original:
+  `admin.components.beforeDashboard` → custom RTL component: welcome line,
   quick-create (مقال جديد، فيديو، إعلان), shortcuts (إدارة الصفحة الرئيسية، الوسائط،
   المستخدمون), recent drafts / "مسوّداتي" for journalists. Per-collection counts optional.
 - [x] Optional: `admin.components.graphics` (logo) + custom login screen.

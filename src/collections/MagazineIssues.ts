@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { canReadPublished, isAdminOrEditor } from '../access'
+import { canReadPublished, hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 export const MagazineIssues: CollectionConfig = {
@@ -11,6 +11,8 @@ export const MagazineIssues: CollectionConfig = {
     defaultColumns: ['issueNumber', 'title', 'publishDate', '_status'],
     group: 'المحتوى',
     description: 'الأعداد الرقمية المرقّمة من مجلة لالة فاطمة (غلاف + PDF).',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   access: {
     read: canReadPublished,

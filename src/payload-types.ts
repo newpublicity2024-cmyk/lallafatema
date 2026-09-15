@@ -115,6 +115,12 @@ export interface Config {
   };
   locale: null;
   widgets: {
+    'lf-welcome': LfWelcomeWidget;
+    'lf-stats': LfStatsWidget;
+    'lf-drafts': LfDraftsWidget;
+    'lf-published': LfPublishedWidget;
+    'lf-shortcuts': LfShortcutsWidget;
+    'lf-guide': LfGuideWidget;
     collections: CollectionsWidget;
   };
   user: User;
@@ -1118,6 +1124,66 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-welcome_widget".
+ */
+export interface LfWelcomeWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-stats_widget".
+ */
+export interface LfStatsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-drafts_widget".
+ */
+export interface LfDraftsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'small' | 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-published_widget".
+ */
+export interface LfPublishedWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'small' | 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-shortcuts_widget".
+ */
+export interface LfShortcutsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'small' | 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-guide_widget".
+ */
+export interface LfGuideWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'small' | 'medium' | 'large' | 'x-large' | 'full';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

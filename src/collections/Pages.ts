@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { canReadPublished, isAdminOrEditor } from '../access'
+import { canReadPublished, hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
@@ -16,6 +16,8 @@ export const Pages: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', '_status'],
     group: 'المحتوى',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   access: {
     read: canReadPublished,

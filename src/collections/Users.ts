@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { isAdmin, isAdminFieldLevel, isAdminOrSelf } from '../access'
+import { hiddenFromJournalists, isAdmin, isAdminFieldLevel, isAdminOrSelf } from '../access'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -9,6 +9,8 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'role'],
     group: 'الإدارة',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   auth: {
     // Account lockout after repeated failures (the in-app anti-brute-force control;

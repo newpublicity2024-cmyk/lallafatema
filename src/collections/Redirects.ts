@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyone, isAdminOrEditor } from '../access'
+import { anyone, hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { revalidateRedirects, revalidateRedirectsAfterDelete } from '../hooks/revalidate'
 
 /**
@@ -15,6 +15,8 @@ export const Redirects: CollectionConfig = {
     useAsTitle: 'from',
     defaultColumns: ['from', 'to', 'type', 'active'],
     group: 'الإعدادات',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   access: {
     read: anyone,

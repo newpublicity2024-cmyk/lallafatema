@@ -65,6 +65,7 @@ export const Media: CollectionConfig = {
   labels: { singular: 'ملف وسائط', plural: 'مكتبة الوسائط' },
   admin: {
     group: 'المحتوى',
+    hideAPIURL: true,
   },
   access: {
     read: anyone,

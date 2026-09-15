@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { anyone, isAdmin } from '../access'
+import { anyone, hiddenFromJournalists, isAdmin } from '../access'
 import { revalidateGlobalAfterChange } from '../hooks/revalidate'
 
 /**
@@ -20,7 +20,8 @@ export const SiteSettings: GlobalConfig = {
     group: 'الإعدادات',
     // Public read (Header/Footer/layout consume it) but never expose the
     // site-wide script editor to journalists.
-    hidden: ({ user }) => user?.role === 'journalist',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   access: { read: anyone, update: isAdmin },
   hooks: { afterChange: [revalidateGlobalAfterChange] },

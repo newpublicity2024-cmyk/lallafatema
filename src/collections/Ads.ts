@@ -1,6 +1,6 @@
 import type { Access, CollectionConfig, Where } from 'payload'
 
-import { isAdminOrEditor } from '../access'
+import { hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 /**
@@ -55,7 +55,8 @@ export const Ads: CollectionConfig = {
     group: 'الإعلانات',
     // Public read stays open (frontend API needs active ads), but ads are a
     // commercial surface — hide them from journalists' admin nav entirely.
-    hidden: ({ user }) => user?.role === 'journalist',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   access: {
     read: canReadActiveAds,

@@ -1,34 +1,101 @@
 /*
- * Lalla Fatema admin theme — a WordPress-style reskin of the Payload admin for
- * non-technical Arabic journalists.
+ * Lalla Fatema admin theme — light, calm, journalist-first.
  *
- * Everything here is a cosmetic layer over Payload's own components: it overrides
- * CSS custom properties and a handful of stable class/id hooks (verified against
- * Payload 3.85.1's rendered DOM), and replaces NO component. Autosave, live
- * preview, RTL, collapse behaviour and every e2e selector are untouched, and the
- * whole reskin reverts by emptying this file.
+ * A cosmetic layer over Payload's own components: CSS custom properties plus a
+ * handful of stable class/id hooks (verified against Payload 3.85.1's rendered
+ * DOM). No component is replaced, so autosave, live preview, RTL, collapse
+ * behaviour and every e2e selector are untouched; empty this file and the
+ * stock admin is back. Payload ships its CSS inside `@layer payload-default`,
+ * so unlayered rules here win without specificity games.
  *
- * Nav items expose stable ids (`#nav-posts`, `#nav-global-site-settings`, …) that
- * persist across the active/inactive swap — the active item is a `div.nav__link`
- * (no href), an inactive one an `a.nav__link`. Icons key off those ids so they
- * never drop on the current page. If a future Payload version changes this markup,
- * only the icons/active-bar are cosmetic-degraded; the admin keeps working.
+ * Nav items expose stable ids (`#nav-posts`, `#nav-global-site-settings`, …)
+ * that persist across the active/inactive swap — the active item is a
+ * `div.nav__link` (no href), an inactive one an `a.nav__link`. Icons key off
+ * those ids so they never drop on the current page.
+ *
+ * Dashboard widget styles live in `src/styles/admin-dashboard.scss`.
  */
+@use '../../styles/admin-dashboard';
 
+/* ── Tajawal, self-hosted (public/fonts/tajawal, OFL) — same face as the public
+   site, so the newsroom reads the same type it publishes in. ─────────────── */
+@each $w in 400, 500, 700, 800 {
+  @font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: $w;
+    font-display: swap;
+    src: url('/fonts/tajawal/tajawal-#{$w}-arabic.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF,
+      U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+  }
+  @font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: $w;
+    font-display: swap;
+    src: url('/fonts/tajawal/tajawal-#{$w}-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+      U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 0. TOKENS
+ * ════════════════════════════════════════════════════════════════════════════ */
 :root {
   /* Brand — mirrors the frontend palette (src/app/(frontend)/styles.css). */
   --lf-brand: #bc0168;
   --lf-brand-hover: #9c0556;
-  --lf-brand-tint: rgba(188, 1, 104, 0.08);
+  --lf-brand-soft: #fdeef5; /* tint for active/hover surfaces */
+  --lf-brand-ring: rgba(188, 1, 104, 0.18);
 
-  /* Sidebar — the site's dark magazine-band colour, so the admin matches the
-     public site while reading as WordPress's dark menu. */
-  --lf-sidebar-bg: #23112c;
-  --lf-sidebar-bg-2: #2c1636;
-  --lf-sidebar-text: #ecd9e6;
-  --lf-sidebar-text-dim: #b493a7;
-  --lf-sidebar-hover: rgba(255, 255, 255, 0.07);
-  --lf-sidebar-active: rgba(255, 255, 255, 0.1);
+  /* Surfaces: a barely-warm page ground with pure-white cards on top, so the
+     eye lands on content instead of on chrome. */
+  --lf-page: #faf8f9;
+  --lf-surface: #ffffff;
+  --lf-line: #ece7ea;
+  --lf-line-strong: #ddd5da;
+  --lf-ink: #241a20;
+  --lf-ink-2: #5b4f56;
+  --lf-ink-3: #8b7f86;
+
+  /* Status */
+  --lf-ok: #1f7a4d;
+  --lf-ok-soft: #e6f4ec;
+  --lf-warm: #a35d00;
+  --lf-warm-soft: #fff4e0;
+
+  --lf-radius: 12px;
+  --lf-radius-s: 8px;
+  --lf-shadow: 0 1px 2px rgba(36, 26, 32, 0.04), 0 6px 20px -12px rgba(36, 26, 32, 0.12);
+
+  /* Payload's own knobs. Radii round off; the body font becomes Tajawal;
+     the greys warm up slightly to match the page ground. */
+  --font-body: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --style-radius-s: 6px;
+  --style-radius-m: 8px;
+  --style-radius-l: 12px;
+  --theme-bg: var(--lf-page);
+  --theme-input-bg: var(--lf-surface);
+  --theme-text: var(--lf-ink);
+  --theme-border-color: var(--lf-line);
+  --theme-elevation-50: #f4f1f3;
+  --theme-elevation-100: #ece7ea;
+  --theme-elevation-150: #ddd5da;
+  --theme-elevation-200: #cfc5cb;
+}
+
+/* Tajawal sits small on the line; one notch up on the root makes every rem in
+   Payload (they scale from a 13px base) breathe a little. */
+html {
+  font-size: 14px;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--lf-page);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -43,169 +110,255 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
- * 1. THE SIDEBAR — WordPress dark menu
+ * 1. APP HEADER — quiet white bar with a soft rule
+ * ════════════════════════════════════════════════════════════════════════════ */
+.app-header {
+  background: var(--lf-surface);
+  border-bottom: 1px solid var(--lf-line);
+}
+.app-header__wrapper {
+  background: transparent;
+}
+.step-nav:after {
+  background: linear-gradient(to right, transparent, var(--lf-surface));
+}
+.step-nav a,
+.step-nav span {
+  color: var(--lf-ink-2);
+}
+.step-nav .step-nav__last {
+  color: var(--lf-ink);
+  font-weight: 700;
+}
+
+/* Nav toggle — on ≤1440px screens Payload keeps the sidebar closed on load, so
+   this button IS the navigation for most laptops. Make it read as one. */
+.hamburger,
+.nav-toggler {
+  background: var(--lf-surface);
+  color: var(--lf-ink);
+  box-shadow: 0 0 0 1px var(--lf-line-strong);
+  border-radius: var(--lf-radius-s);
+}
+.hamburger:hover,
+.nav-toggler:hover {
+  box-shadow: 0 0 0 1px var(--lf-brand);
+  color: var(--lf-brand);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 2. SIDEBAR — light, roomy, iconified
  * ════════════════════════════════════════════════════════════════════════════ */
 .nav {
-  background: var(--lf-sidebar-bg);
+  background: var(--lf-surface);
+  border-color: var(--lf-line);
 }
-
+[dir='rtl'] .nav {
+  border-left: 1px solid var(--lf-line);
+}
 .nav .nav__scroll {
-  background: var(--lf-sidebar-bg);
+  background: var(--lf-surface);
+  gap: 0.25rem;
 }
 
-/* Group headers (المحتوى، التصنيف…) → small muted labels, WP-style. */
+/* Group headers (المحتوى، التصنيف…) → quiet section labels. */
 .nav .nav-group__toggle {
-  color: var(--lf-sidebar-text-dim);
-  font-size: 0.7rem;
+  color: var(--lf-ink-3);
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  opacity: 0.85;
+  letter-spacing: 0.01em;
+  margin-top: 0.75rem;
+  margin-bottom: 0.35rem;
+  padding-inline: 0.75rem;
+}
+.nav .nav-group__toggle:hover,
+.nav .nav-group__toggle:focus-visible {
+  color: var(--lf-ink);
 }
 .nav .nav-group__indicator svg {
-  color: var(--lf-sidebar-text-dim);
+  color: var(--lf-ink-3);
 }
 
-/* Menu links — light text, comfortable rows. */
+/* Menu rows — 40px tall pills, icon before the label. */
 .nav .nav__link {
   display: flex;
   align-items: center;
-  color: var(--lf-sidebar-text);
-  border-radius: 4px;
+  gap: 0.65rem;
+  color: var(--lf-ink-2);
+  border-radius: var(--lf-radius-s);
   margin: 1px 0;
-  padding-block: 0.55rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
   transition:
     background 0.12s ease,
     color 0.12s ease;
 }
-
 .nav .nav__link-label {
   display: inline-flex;
   align-items: center;
+  gap: 0.65rem;
   color: inherit;
 }
 
-/* Per-item icons, keyed on the stable id so they survive the active swap.
-   The icon sits before the label; in RTL ::before is at the reading start.
-   The base rule carries a bullet fallback so a future unmapped collection still
-   gets an icon; the id rules below override `content` per item (id > class). */
+/* Icon slot: a masked SVG that takes `currentColor`, so it turns magenta with
+   the row. Keyed on the stable nav id; unmapped items fall back to a dot. */
 .nav .nav__link-label::before {
-  content: '•';
-  margin-inline-end: 0.6rem;
-  font-size: 1.05em;
-  line-height: 1;
+  content: '';
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  background-color: currentColor;
+  -webkit-mask: var(--lf-nav-icon, radial-gradient(circle, #000 28%, transparent 32%)) center / contain
+    no-repeat;
+  mask: var(--lf-nav-icon, radial-gradient(circle, #000 28%, transparent 32%)) center / contain
+    no-repeat;
+  opacity: 0.85;
 }
-#nav-posts .nav__link-label::before {
-  content: '📝';
+
+@function icon($paths) {
+  @return url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>#{$paths}</svg>");
 }
-#nav-magazine-issues .nav__link-label::before {
-  content: '📖';
+
+#nav-posts {
+  --lf-nav-icon: #{icon("<path d='M12 20h9'/><path d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/>")};
 }
-#nav-pages .nav__link-label::before {
-  content: '📄';
+#nav-media {
+  --lf-nav-icon: #{icon("<rect x='3' y='3' width='18' height='18' rx='2'/><circle cx='8.5' cy='8.5' r='1.5'/><path d='m21 15-5-5L5 21'/>")};
 }
-#nav-media .nav__link-label::before {
-  content: '🖼️';
+#nav-magazine-issues {
+  --lf-nav-icon: #{icon("<path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z'/><path d='M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5'/>")};
 }
-#nav-categories .nav__link-label::before {
-  content: '🗂️';
+#nav-pages {
+  --lf-nav-icon: #{icon("<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z'/><path d='M14 2v6h6'/>")};
 }
-#nav-tags .nav__link-label::before {
-  content: '🏷️';
+#nav-categories {
+  --lf-nav-icon: #{icon("<path d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z'/>")};
 }
-#nav-ads .nav__link-label::before {
-  content: '📣';
+#nav-tags {
+  --lf-nav-icon: #{icon("<path d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z'/><circle cx='7.5' cy='7.5' r='1.5'/>")};
 }
-#nav-redirects .nav__link-label::before {
-  content: '↪️';
+#nav-ads {
+  --lf-nav-icon: #{icon("<path d='m3 11 18-5v12L3 13v-2Z'/><path d='M11.6 16.8a3 3 0 1 1-5.8-1.6'/>")};
 }
-#nav-global-homepage .nav__link-label::before {
-  content: '🏠';
+#nav-redirects {
+  --lf-nav-icon: #{icon("<path d='M20 4v7a4 4 0 0 1-4 4H4'/><path d='m9 10-5 5 5 5'/>")};
 }
-#nav-global-main-menu .nav__link-label::before {
-  content: '🧭';
+#nav-global-homepage {
+  --lf-nav-icon: #{icon("<path d='m3 10 9-7 9 7v10a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2Z'/>")};
 }
-#nav-global-site-settings .nav__link-label::before {
-  content: '⚙️';
+#nav-global-main-menu {
+  --lf-nav-icon: #{icon("<path d='M4 6h16M4 12h16M4 18h16'/>")};
 }
-#nav-users .nav__link-label::before {
-  content: '👤';
+#nav-global-site-settings {
+  --lf-nav-icon: #{icon("<path d='M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6'/>")};
 }
+#nav-users {
+  --lf-nav-icon: #{icon("<path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'/>")};
+}
+
 /* Hover on an inactive (anchor) link. */
 .nav a.nav__link:hover,
 .nav a.nav__link:focus-visible {
-  background: var(--lf-sidebar-hover);
-  color: #fff;
+  background: var(--lf-page);
+  color: var(--lf-ink);
   text-decoration: none;
 }
 
-/* Active link — Payload renders it as a `div.nav__link` (no href). Lighter row
-   + a magenta inline-start bar, exactly like WordPress's current menu item. */
+/* Active link — Payload renders it as a `div.nav__link` (no href). */
 .nav div.nav__link {
-  background: var(--lf-sidebar-active);
-  color: #fff;
-  border-inline-start: 3px solid var(--lf-brand);
-  font-weight: 600;
+  background: var(--lf-brand-soft);
+  color: var(--lf-brand);
+  font-weight: 700;
 }
-/* Payload's own active indicator element → the magenta accent, not the default. */
+.nav div.nav__link .nav__link-label::before {
+  opacity: 1;
+}
 .nav .nav__link-indicator {
-  background: var(--lf-brand);
+  display: none;
 }
 
 /* Log-out row at the foot of the menu. */
 .nav .nav__log-out {
-  color: var(--lf-sidebar-text-dim);
+  color: var(--lf-ink-3);
 }
 .nav .nav__log-out:hover {
-  color: #fff;
+  color: var(--lf-brand);
 }
 .nav .nav__log-out svg {
   color: currentColor;
 }
 
-/* The mobile/RTL nav toggle + wrapper keep the dark treatment. */
-.nav-toggler {
-  color: inherit;
+/* ════════════════════════════════════════════════════════════════════════════
+ * 3. CONTROLS — magenta primary, soft secondary, roomy inputs
+ * ════════════════════════════════════════════════════════════════════════════ */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--lf-radius-s);
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * 2. ACCENT — magenta where WordPress is blue
- * ════════════════════════════════════════════════════════════════════════════ */
-/* Primary action buttons (Save, Publish, login, "create new" primaries).
-   Payload's default is elevation-800 (#2f2f2f); brand them magenta. */
-.btn--style-primary .btn__content,
-.btn--style-primary {
+.btn--style-primary,
+.btn--style-primary .btn__content {
   background-color: var(--lf-brand);
   border-color: var(--lf-brand);
   color: #fff;
 }
 .btn--style-primary:not(.btn--disabled):hover,
-.btn--style-primary:not(.btn--disabled):focus-visible {
+.btn--style-primary:not(.btn--disabled):focus-visible,
+.btn--style-primary:not(.btn--disabled):hover .btn__content {
   background-color: var(--lf-brand-hover);
   border-color: var(--lf-brand-hover);
   color: #fff;
 }
-.btn--style-primary:hover .btn__content {
-  background-color: var(--lf-brand-hover);
-}
 
-/* Text/secondary buttons: brand the label + icon on hover. */
+.btn--style-secondary {
+  background: var(--lf-surface);
+  border-color: var(--lf-line-strong);
+  color: var(--lf-ink);
+}
 .btn--style-secondary:not(.btn--disabled):hover {
   color: var(--lf-brand);
   border-color: var(--lf-brand);
 }
 
-/* Focus outlines → brand. */
+.btn--style-pill {
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  color: var(--lf-ink-2);
+}
+.btn--style-pill:not(.btn--disabled):hover {
+  border-color: var(--lf-brand);
+  color: var(--lf-brand);
+  background: var(--lf-surface);
+}
+
 *:focus-visible {
   outline-color: var(--lf-brand);
 }
 
-/* Form controls: brand the focused field border + checkbox/radio. */
+/* Inputs — white, rounded, magenta ring on focus. */
+.field-type input,
+.field-type textarea,
+.react-select .rs__control,
+.date-time-picker__input-wrapper input {
+  background: var(--lf-surface);
+  border-color: var(--lf-line-strong);
+  border-radius: var(--lf-radius-s);
+}
 .field-type input:focus,
 .field-type textarea:focus,
 .react-select .rs__control--is-focused {
   border-color: var(--lf-brand) !important;
-  box-shadow: 0 0 0 1px var(--lf-brand);
+  box-shadow: 0 0 0 3px var(--lf-brand-ring);
+}
+.field-label:not(.unstyled) {
+  color: var(--lf-ink);
+  font-weight: 600;
+}
+.field-description {
+  color: var(--lf-ink-3);
 }
 .checkbox-input__input:checked + .checkbox-input__icon,
 .checkbox-input input:checked ~ .checkbox-input__icon {
@@ -213,64 +366,257 @@
   border-color: var(--lf-brand);
 }
 
-/* Pill / tab active states. */
+/* Pills (filters, columns, tags) */
+.pill {
+  border-radius: 999px;
+}
 .pill--has-action:hover {
   border-color: var(--lf-brand);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
- * 3. LIST TABLES — WordPress list-table polish
+ * 4. LIST VIEW — the table sits in a white card; rows breathe
  * ════════════════════════════════════════════════════════════════════════════ */
+/* Tajawal's ascenders overshoot the line box; without this the white app
+   header (z-indexed above) clips the top of the page title. */
+.list-header {
+  padding-top: 0.75rem;
+}
+.collection-list .list-header h1 {
+  font-weight: 800;
+}
+.list-controls__wrap,
+.list-controls {
+  background: transparent;
+}
+.list-controls .search-filter__input,
+.search-filter input {
+  background: var(--lf-surface);
+  border-radius: var(--lf-radius-s);
+  border: 1px solid var(--lf-line-strong);
+}
+
+.collection-list .table {
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius);
+  box-shadow: var(--lf-shadow);
+  padding: 0.25rem 0.5rem;
+}
 .table table thead {
-  background: var(--theme-elevation-50);
+  background: transparent;
 }
 .table table thead th {
   font-weight: 700;
-  color: var(--theme-elevation-600);
+  color: var(--lf-ink-3);
+  border-bottom: 1px solid var(--lf-line);
 }
 .table table tbody tr {
   transition: background 0.1s ease;
 }
-.table table tbody tr:hover {
-  background: var(--lf-brand-tint);
+.table table tbody tr:nth-child(odd) {
+  background: transparent;
 }
-/* Row title links → brand on hover. */
+.table table tbody tr:hover {
+  background: var(--lf-brand-soft);
+}
+.table table td {
+  padding-block: 0.85rem;
+  border-bottom: 1px solid var(--lf-line);
+  vertical-align: middle;
+}
+.table table tbody tr:last-child td {
+  border-bottom: 0;
+}
+/* Row title: the thing you click. Bold, ink, no underline until hover. */
+.table table tbody td:first-of-type a,
+.table table tbody .cell-title a {
+  font-weight: 700;
+  color: var(--lf-ink);
+  text-decoration: none;
+}
 .table table tbody tr a:hover {
   color: var(--lf-brand);
+  text-decoration: underline;
+}
+
+/* Status cell → coloured pill instead of plain text. Payload renders
+   `<span class="selected--draft|published"><span>…</span></span>`. */
+.cell-_status > span {
+  display: inline-block;
+  padding: 0.1rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--lf-warm-soft);
+  color: var(--lf-warm);
+}
+.cell-_status > .selected--published {
+  background: var(--lf-ok-soft);
+  color: var(--lf-ok);
+}
+
+.paginator .paginator__page--is-current {
+  background: var(--lf-brand);
+  color: #fff;
+  border-color: var(--lf-brand);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
- * 4. DASHBOARD — card polish (the BeforeDashboard React panel handles the
- *    "At a Glance" content; this is just the default group cards below it).
+ * 5. EDIT VIEW — publish bar on white, sidebar fields in a soft card
  * ════════════════════════════════════════════════════════════════════════════ */
-.dashboard__card,
+.doc-controls {
+  background: var(--lf-surface);
+  border-bottom: 1px solid var(--lf-line);
+}
+.doc-controls:before,
+.doc-controls:after {
+  background: var(--lf-surface);
+}
+.doc-controls .status__value {
+  font-weight: 700;
+}
+.doc-header__title,
+.doc-header h1,
+.collection-edit .doc-header__title {
+  font-weight: 800;
+}
+/* Tab strip under the title ("تعديل", "النسخ"): soft magenta for the active tab. */
+.doc-tabs,
+.doc-tabs__tabs-container {
+  background: transparent;
+}
+.doc-tab,
+.doc-tab .btn__content {
+  border-radius: var(--lf-radius-s);
+}
+.doc-tab.doc-tab--active,
+.doc-tab.doc-tab--active .btn__content {
+  background: var(--lf-brand-soft);
+  color: var(--lf-brand);
+  font-weight: 700;
+}
+.doc-tab:not(.doc-tab--active):hover .btn__content {
+  color: var(--lf-brand);
+}
+.doc-header {
+  padding-top: 0.5rem;
+}
+
+.document-fields__sidebar-wrap {
+  background: var(--lf-surface);
+  border-inline-start: 1px solid var(--lf-line);
+}
+[dir='rtl'] .document-fields__sidebar-wrap {
+  border-inline-start: none;
+  border-inline-end: 1px solid var(--lf-line);
+}
+.document-fields__sidebar .field-type {
+  margin-bottom: 1.25rem;
+}
+
+/* Section headings inside the editor (SEO group, recipe group…). */
+.render-fields .group-field__header h3,
+.collapsible__header {
+  color: var(--lf-ink);
+  font-weight: 700;
+}
+.group-field,
+.collapsible {
+  border-color: var(--lf-line);
+  border-radius: var(--lf-radius-s);
+}
+
+/* Lexical toolbar: white, soft, rounded. */
+.fixed-toolbar {
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius-s) var(--lf-radius-s) 0 0;
+}
+.rich-text-lexical .editor-container,
+.rich-text-lexical .ContentEditable__root {
+  background: var(--lf-surface);
+}
+.rich-text-lexical .editor-container {
+  border-color: var(--lf-line-strong);
+  border-radius: 0 0 var(--lf-radius-s) var(--lf-radius-s);
+}
+
+/* Upload dropzone */
+.dropzone {
+  border-radius: var(--lf-radius-s);
+  border-color: var(--lf-line-strong);
+  background: var(--lf-surface);
+}
+.dropzone--is-dragging,
+.dropzone:hover {
+  border-color: var(--lf-brand);
+}
+
+/* Toasts */
+.payload-toast-item {
+  border-radius: var(--lf-radius-s);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 6. DASHBOARD SHELL — widget grid gutters + the "collections" fallback cards
+ * ════════════════════════════════════════════════════════════════════════════ */
+.dashboard {
+  padding-top: 1rem;
+}
+.modular-dashboard {
+  margin-inline: -6px; /* widgets carry 6px padding each; pull the grid flush */
+}
+.collections__label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--lf-ink-2);
+}
 .card {
+  background: var(--lf-surface);
+  border-radius: var(--lf-radius);
+  border-color: var(--lf-line);
+  box-shadow: var(--lf-shadow);
   transition:
     border-color 0.12s ease,
     box-shadow 0.12s ease;
 }
-.dashboard__card:hover,
 .card:hover {
   border-color: var(--lf-brand);
-  box-shadow: 0 2px 10px rgba(188, 1, 104, 0.1);
+  box-shadow: 0 2px 12px rgba(188, 1, 104, 0.1);
 }
-.dashboard__label a:hover,
+.card__title {
+  font-size: 1rem;
+  font-weight: 700;
+}
 .card__title:hover {
   color: var(--lf-brand);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
- * 5. EDIT SCREEN — publish controls read like WordPress's "Publish" box
+ * 7. LOGIN — centred white card on the page ground
  * ════════════════════════════════════════════════════════════════════════════ */
-.doc-controls {
-  border-bottom: 1px solid var(--theme-elevation-100);
+.template-minimal {
+  background: var(--lf-page);
 }
-/* The document status pill (draft/published). */
-.status__value {
-  font-weight: 600;
+.template-minimal__wrap {
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius);
+  box-shadow: var(--lf-shadow);
+  padding: 2.5rem;
 }
-/* Section headings inside the editor (SEO group, recipe group…). */
-.render-fields .group-field__header h3,
-.collapsible__header {
-  color: var(--theme-elevation-800);
+.template-minimal .form-submit .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 8. RESPONSIVE — widgets stack; the grid's inline widths are percentages
+ * ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .modular-dashboard > .draggable,
+  .modular-dashboard > [style*='width'] {
+    width: 100% !important;
+  }
 }
