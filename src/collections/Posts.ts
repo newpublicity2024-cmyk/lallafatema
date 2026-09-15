@@ -21,6 +21,11 @@ export const Posts: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', 'authors', '_status', 'publishedAt'],
     group: 'المحتوى',
+    hideAPIURL: true,
+    components: {
+      // Journalists can't publish — swap the button for a note, see the component.
+      edit: { PublishButton: '/components/admin/PublishButton#default' },
+    },
   },
   access: {
     read: canReadPosts,

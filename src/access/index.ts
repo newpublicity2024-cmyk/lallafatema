@@ -9,6 +9,18 @@ import type { Access, FieldAccess, Where } from 'payload'
 
 export const anyone: Access = () => true
 
+/**
+ * `admin.hidden` predicate: keep a collection/global out of a journalist's nav,
+ * dashboard and admin routes. Their access rules already stop them from
+ * changing anything there; hiding it just keeps their screen to what they use
+ * (articles + images). REST and relationship fields are unaffected.
+ *
+ * `user` is typed loosely on purpose: collections pass a `ClientUser`, globals a
+ * `User | null`, and this one predicate has to satisfy both signatures.
+ */
+export const hiddenFromJournalists = ({ user }: { user?: unknown }): boolean =>
+  (user as { role?: string } | null | undefined)?.role === 'journalist'
+
 export const isAuthenticated: Access = ({ req: { user } }) => Boolean(user)
 
 export const isAdmin: Access = ({ req: { user } }) => user?.role === 'admin'

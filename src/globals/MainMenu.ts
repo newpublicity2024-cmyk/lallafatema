@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { anyone, isAdminOrEditor } from '../access'
+import { anyone, hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { revalidateGlobalAfterChange } from '../hooks/revalidate'
 
 const linkFields = [
@@ -22,7 +22,7 @@ const linkFields = [
 export const MainMenu: GlobalConfig = {
   slug: 'main-menu',
   label: 'القائمة الرئيسية',
-  admin: { group: 'الإعدادات' },
+  admin: { group: 'الإعدادات', hidden: hiddenFromJournalists, hideAPIURL: true },
   access: { read: anyone, update: isAdminOrEditor },
   hooks: { afterChange: [revalidateGlobalAfterChange] },
   fields: [

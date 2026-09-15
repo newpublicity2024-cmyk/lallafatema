@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { anyone, isAdminOrEditor, isAuthenticated } from '../access'
+import { anyone, hiddenFromJournalists, isAdminOrEditor, isAuthenticated } from '../access'
 import { slugField } from '../fields/slug'
 
 export const Tags: CollectionConfig = {
@@ -10,6 +10,8 @@ export const Tags: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug'],
     group: 'التصنيف',
+    hidden: hiddenFromJournalists,
+    hideAPIURL: true,
   },
   access: {
     read: anyone,

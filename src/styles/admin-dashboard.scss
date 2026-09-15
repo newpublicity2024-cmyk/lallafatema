@@ -1,0 +1,444 @@
+/*
+ * Dashboard widgets (src/components/admin/dashboard/*). Pulled into the admin
+ * via `@use` from custom.scss, which also defines the `--lf-*` tokens used
+ * here. Everything is namespaced `lf-` so it can never collide with Payload.
+ */
+
+/* ── Card shell ─────────────────────────────────────────────────────────── */
+.lf-card {
+  height: 100%;
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius);
+  box-shadow: var(--lf-shadow);
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.lf-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.lf-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--lf-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.lf-card__title-icon {
+  display: inline-flex;
+  color: var(--lf-brand);
+}
+
+.lf-link {
+  color: var(--lf-brand);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lf-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.lf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--lf-radius-s);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.08s ease;
+}
+.lf-btn:active {
+  transform: translateY(1px);
+}
+.lf-btn svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+.lf-btn--lg {
+  padding: 0.75rem 1.35rem;
+  font-size: 1.05rem;
+}
+.lf-btn--primary {
+  background: var(--lf-brand);
+  border-color: var(--lf-brand);
+  color: #fff;
+}
+.lf-btn--primary:hover {
+  background: var(--lf-brand-hover);
+  border-color: var(--lf-brand-hover);
+  color: #fff;
+}
+.lf-btn--ghost {
+  background: var(--lf-surface);
+  border-color: var(--lf-line-strong);
+  color: var(--lf-ink);
+}
+.lf-btn--ghost:hover {
+  border-color: var(--lf-brand);
+  color: var(--lf-brand);
+}
+.lf-btn--soft {
+  background: var(--lf-page);
+  border-color: var(--lf-line);
+  color: var(--lf-ink-2);
+  font-size: 0.875rem;
+  padding: 0.4rem 0.8rem;
+}
+.lf-btn--soft:hover {
+  background: var(--lf-brand-soft);
+  border-color: transparent;
+  color: var(--lf-brand);
+}
+
+/* ── Welcome ────────────────────────────────────────────────────────────── */
+.lf-welcome {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 1.6rem 1.75rem;
+  background:
+    radial-gradient(120% 160% at 100% 0%, var(--lf-brand-soft) 0%, transparent 55%),
+    var(--lf-surface);
+}
+.lf-welcome__date {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  color: var(--lf-ink-3);
+}
+.lf-welcome__title {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--lf-ink);
+  line-height: 1.3;
+}
+.lf-welcome__sub {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+  color: var(--lf-ink-2);
+  max-width: 48ch;
+}
+.lf-welcome__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* ── Stats ──────────────────────────────────────────────────────────────── */
+.lf-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+}
+.lf-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius);
+  box-shadow: var(--lf-shadow);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.12s ease,
+    transform 0.08s ease;
+}
+.lf-stat:hover {
+  border-color: var(--lf-brand);
+  transform: translateY(-1px);
+}
+.lf-stat__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: var(--lf-page);
+  color: var(--lf-ink-2);
+}
+.lf-stat--warm .lf-stat__icon {
+  background: var(--lf-warm-soft);
+  color: var(--lf-warm);
+}
+.lf-stat__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lf-stat__value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--lf-ink);
+}
+.lf-stat__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lf-ink-2);
+}
+.lf-stat__hint {
+  font-size: 0.8rem;
+  color: var(--lf-ink-3);
+}
+
+/* ── Lists (drafts / published) ─────────────────────────────────────────── */
+.lf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lf-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--lf-line);
+}
+.lf-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.lf-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-decoration: none;
+  color: inherit;
+}
+.lf-row__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lf-ink);
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.lf-row__main:hover .lf-row__title {
+  color: var(--lf-brand);
+}
+.lf-row__title--muted {
+  color: var(--lf-ink-3);
+  font-weight: 500;
+  font-style: italic;
+}
+.lf-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--lf-ink-3);
+}
+.lf-row__action {
+  flex: none;
+}
+.lf-chip {
+  display: inline-block;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  background: var(--lf-brand-soft);
+  color: var(--lf-brand);
+  font-weight: 600;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+.lf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--lf-line-strong);
+  border-radius: var(--lf-radius-s);
+  background: var(--lf-page);
+}
+.lf-empty__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.lf-empty__title {
+  font-weight: 700;
+  color: var(--lf-ink);
+}
+.lf-empty__hint {
+  margin: 0 0 0.5rem;
+  color: var(--lf-ink-3);
+  font-size: 0.9rem;
+  max-width: 34ch;
+}
+
+/* ── Shortcuts ──────────────────────────────────────────────────────────── */
+.lf-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+.lf-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: var(--lf-surface);
+  border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius);
+  box-shadow: var(--lf-shadow);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.12s ease,
+    transform 0.08s ease;
+}
+.lf-shortcut:hover {
+  border-color: var(--lf-brand);
+  transform: translateY(-1px);
+}
+.lf-shortcut__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--lf-radius-s);
+  background: var(--lf-brand-soft);
+  color: var(--lf-brand);
+}
+.lf-shortcut__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lf-shortcut__label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lf-ink);
+}
+.lf-shortcut__hint {
+  font-size: 0.82rem;
+  color: var(--lf-ink-3);
+  line-height: 1.4;
+}
+
+/* ── Guide steps ────────────────────────────────────────────────────────── */
+.lf-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.lf-step {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+.lf-step__num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  background: var(--lf-brand);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+.lf-step__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.lf-step__title {
+  font-weight: 700;
+  color: var(--lf-ink);
+}
+.lf-step__text {
+  color: var(--lf-ink-2);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* ── Small screens ──────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .lf-card {
+    padding: 1rem;
+  }
+  .lf-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .lf-stat {
+    padding: 0.8rem;
+    gap: 0.6rem;
+  }
+  .lf-stat__hint {
+    display: none;
+  }
+  .lf-welcome {
+    padding: 1.25rem;
+  }
+  .lf-welcome__title {
+    font-size: 1.4rem;
+  }
+  .lf-welcome__actions .lf-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .lf-row {
+    flex-wrap: wrap;
+  }
+  .lf-row__action {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Edit view: the journalist's stand-in for the publish button ────────── */
+.lf-publish-note {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: var(--lf-ok-soft);
+  color: var(--lf-ok);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}

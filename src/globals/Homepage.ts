@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { anyone, isAdminOrEditor } from '../access'
+import { anyone, hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { revalidateGlobalAfterChange } from '../hooks/revalidate'
 
 /**
@@ -11,7 +11,7 @@ import { revalidateGlobalAfterChange } from '../hooks/revalidate'
 export const Homepage: GlobalConfig = {
   slug: 'homepage',
   label: 'الصفحة الرئيسية',
-  admin: { group: 'الإعدادات' },
+  admin: { group: 'الإعدادات', hidden: hiddenFromJournalists, hideAPIURL: true },
   access: { read: anyone, update: isAdminOrEditor },
   hooks: { afterChange: [revalidateGlobalAfterChange] },
   fields: [

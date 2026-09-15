@@ -1,7 +1,7 @@
 # WordPress-style admin for Lalla Fatema
 
 **Date:** 2026-07-21
-**Status:** approved
+**Status:** superseded on 2026-09-15 by `2026-09-15-journalist-dashboard-design.md` (light theme, widget dashboard, journalist-only nav)
 
 ## Problem
 
