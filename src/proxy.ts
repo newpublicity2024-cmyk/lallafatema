@@ -24,10 +24,44 @@ function isIndexableHost(host: string | null): boolean {
 }
 
 /**
+ * Candidate lookup keys for an incoming path, in order of preference.
+ *
+ * The stored `from` values and the incoming pathname are written in different dialects,
+ * so an exact `map[pathname]` lookup misses every legacy WordPress URL:
+ *
+ *  - Encoding. `nextUrl.pathname` keeps whatever percent-encoding the client sent, and
+ *    browsers/crawlers always encode non-ASCII — so an Arabic URL arrives as
+ *    `/%D9%81%D9%88...`. The WordPress import stored `from` decoded (`/فوندان...`), via
+ *    decodeURIComponent on the source URL. Encoded never equals decoded.
+ *  - Trailing slash. WordPress served `/slug/`; this app serves `/slug`. Every imported
+ *    entry carries the slash, and Next answers the slashed form with its own 308 to the
+ *    unslashed one, so whichever form arrives here has to match the same entry.
+ *
+ * Checking all four combinations keeps a hand-entered redirect working too, whichever
+ * way an editor happens to paste the old path.
+ */
+export function lookupKeys(pathname: string): string[] {
+  const keys = new Set<string>()
+  const addBothSlashForms = (p: string) => {
+    if (!p) return
+    keys.add(p)
+    keys.add(p.endsWith('/') ? p.slice(0, -1) : `${p}/`)
+  }
+  addBothSlashForms(pathname)
+  try {
+    addBothSlashForms(decodeURIComponent(pathname))
+  } catch {
+    /* malformed %-sequence — the raw form above is all we can match on */
+  }
+  // '/' degrades to '' when the slash is stripped; never look that up.
+  return [...keys].filter(Boolean)
+}
+
+/**
  * Exact-path 301/302 redirects, sourced from the admin-editable Redirects collection
- * via the cached `/redirects-map.json` route. Kept deliberately small (groundwork);
- * wildcard/regex matching and the bulk WordPress map land in Phase 7. Any failure to
- * load the map falls through to `next()` so a redirect glitch never takes the site down.
+ * via the cached `/redirects-map.json` route. Matching is exact but encoding- and
+ * trailing-slash-insensitive (see lookupKeys). Any failure to load the map falls
+ * through to `next()` so a redirect glitch never takes the site down.
  *
  * Also tags every response served from a non-canonical host with
  * `X-Robots-Tag: noindex, nofollow` so the Vercel staging deployment can't be
@@ -46,9 +80,14 @@ export async function proxy(req: NextRequest) {
     })
     if (res.ok) {
       const map = (await res.json()) as RedirectMap
-      const hit = map[pathname]
+      const hit = lookupKeys(pathname)
+        .map((key) => map[key])
+        .find(Boolean)
       if (hit) {
-        return NextResponse.redirect(new URL(hit.to, req.url), hit.type)
+        // Carry the query string over so campaign/referral params survive the hop.
+        const target = new URL(hit.to, req.url)
+        if (!target.search) target.search = req.nextUrl.search
+        return NextResponse.redirect(target, hit.type)
       }
     }
   } catch {

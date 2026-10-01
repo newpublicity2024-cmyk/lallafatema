@@ -20,7 +20,10 @@ export async function GET() {
       collection: 'posts',
       where: { _status: { equals: 'published' } },
       sort: '-publishedAt',
-      limit: 2000,
+      // Headroom over the current archive (~1.6k) so growth can't silently truncate
+      // the sitemap. A single sitemap is capped at 50,000 URLs by the spec, so if the
+      // archive ever approaches that this has to become a sitemap index of paged files.
+      limit: 20000,
       depth: 1,
     }),
     payload.find({ collection: 'categories', limit: 200, depth: 0 }),
