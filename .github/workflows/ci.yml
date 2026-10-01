@@ -13,6 +13,30 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
+    # The build needs a reachable Postgres: /[category] has a generateStaticParams
+    # that queries categories + pages, so `next build` opens a real connection.
+    # An empty throwaway DB is enough — generateStaticParams just returns no params.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ci -d ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      # No sslmode param: the service container speaks plain TCP, unlike Neon.
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      PAYLOAD_SECRET: ci-dummy-secret
+
     steps:
       - uses: actions/checkout@v4
 
@@ -34,9 +58,11 @@ jobs:
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
+      # push: false in payload.config, so the schema comes from the committed
+      # migrations. This also makes CI fail on a migration that can't apply to a
+      # clean database — something nothing else checked before.
+      - name: Run migrations
+        run: pnpm payload migrate
+
       - name: Build
-        # Dummy values: the build renders only dynamic routes, so no DB connection is made.
-        env:
-          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
-          PAYLOAD_SECRET: ci-dummy-secret
         run: pnpm run build
