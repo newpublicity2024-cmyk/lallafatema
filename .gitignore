@@ -72,3 +72,15 @@ node_modules/
 /ref-*.png
 /_*.ts
 /*.png
+
+# Claude Code local config
+.claude/
+.mcp.json
+
+# unlazy skill (local state)
+.unlazy/
+.unlazy-hook-state.json
+
+# Article scraper + its output batches (WP REST → migrate-wp.ts layout). Local only,
+# same rule as /lallafatema-content: media lives in Vercel Blob, never in the repo.
+/scrape
