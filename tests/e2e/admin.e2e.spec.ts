@@ -19,8 +19,8 @@ test.describe('Admin Panel', () => {
   })
 
   test('can navigate to dashboard', async () => {
-    await page.goto('http://localhost:3000/admin')
-    await expect(page).toHaveURL('http://localhost:3000/admin')
+    await page.goto('/admin')
+    await expect(page).toHaveURL('/admin')
     // Assert on the custom BeforeDashboard's welcome heading ("أهلًا، <name> 👋"),
     // which renders for every role and is stable against dashboard copy changes
     // (the "مقال جديد" pill it used to check was replaced by the WordPress-style
@@ -30,7 +30,7 @@ test.describe('Admin Panel', () => {
   })
 
   test('can navigate to list view', async () => {
-    await page.goto('http://localhost:3000/admin/collections/users')
+    await page.goto('/admin/collections/users')
     // Payload appends its list-view query state (?depth=1&limit=10), so match the
     // pathname rather than the exact URL.
     await expect(page).toHaveURL(/\/admin\/collections\/users(\?|$)/)
@@ -41,7 +41,7 @@ test.describe('Admin Panel', () => {
   })
 
   test('can navigate to edit view', async () => {
-    await page.goto('http://localhost:3000/admin/collections/users/create')
+    await page.goto('/admin/collections/users/create')
     await expect(page).toHaveURL(/\/admin\/collections\/users\/[a-zA-Z0-9-_]+/)
     const editViewArtifact = page.locator('input[name="email"]')
     await expect(editViewArtifact).toBeVisible()

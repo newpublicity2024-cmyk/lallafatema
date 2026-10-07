@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 
-const BASE = 'http://localhost:3000'
+// Resolved from `use.baseURL` in playwright.config.ts. Never hardcode a port here:
+// this machine runs several dev servers, and a stale absolute URL silently pointed
+// the whole suite at a DIFFERENT application. See tests/e2e/global-setup.ts.
+const BASE = ''
 
 test.describe('Videos section + article video hero', () => {
   test('/videos lists video-posts that link to their article', async ({ page }) => {

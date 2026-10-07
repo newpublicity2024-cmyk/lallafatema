@@ -12,11 +12,22 @@ export const deriveFeaturedType = (videoUrl: unknown): 'image' | 'video' =>
   typeof videoUrl === 'string' && videoUrl.trim().length > 0 ? 'video' : 'image'
 
 /**
- * Reads a field the way a derivation must: `data` is the INCOMING PATCH, not the
- * merged document (Payload passes it straight through — see
- * `collections/operations/utilities/update.js`). A partial write that omits a
- * key must fall back to the stored value, or the derivation below would compute
- * from `undefined` and overwrite good data.
+ * Reads a field the way a derivation must: fall back to the stored value when the
+ * incoming `data` does not carry the key, so a partial write cannot compute from
+ * `undefined` and overwrite good data.
+ *
+ * CORRECTED (audit PC05): an earlier version of this comment claimed `data` is "the
+ * INCOMING PATCH, not the merged document". That is not reliably true on UPDATES —
+ * Payload's field-level `beforeValidate` backfills absent fields from the stored
+ * document before any collection `beforeChange` hook runs, so `data` is usually
+ * already merged by the time this executes. The bare `!data.publishedAt` guard below
+ * is correct BECAUSE of that backfill, not in spite of it.
+ *
+ * Keep this read-through anyway. It is what makes the derivations correct on the paths
+ * where the backfill does NOT happen — `restoreVersion` skips it via
+ * `isRestoringVersion`, and direct Local API calls can pass a bare patch. Do not
+ * "simplify" `readField` away on the strength of the old comment: the publish-date and
+ * featuredType derivations depend on it, and the failure is silent.
  */
 const readField = <T,>(
   data: Record<string, unknown>,

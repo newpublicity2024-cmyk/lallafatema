@@ -611,6 +611,18 @@ body {
   justify-content: center;
 }
 
+/* The brand lockup (src/components/admin/Logo.tsx) ships at its intrinsic 560×163
+   so the card doesn't reflow mid-decode; this scales it down to fit the card and
+   keeps it centred. `height: auto` is what preserves the ratio once width is
+   capped — without it the declared height would squash the artwork. */
+.lf-admin-logo {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin: 0 auto 0.5rem;
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
  * 8. RESPONSIVE — widgets stack; the grid's inline widths are percentages
  * ════════════════════════════════════════════════════════════════════════════ */

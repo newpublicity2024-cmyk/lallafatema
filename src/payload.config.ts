@@ -1,21 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import {
-  BlockquoteFeature,
-  BlocksFeature,
-  BoldFeature,
-  FixedToolbarFeature,
-  HeadingFeature,
-  HorizontalRuleFeature,
-  InlineToolbarFeature,
-  ItalicFeature,
-  LinkFeature,
-  OrderedListFeature,
-  ParagraphFeature,
-  UnderlineFeature,
-  UnorderedListFeature,
-  UploadFeature,
-  lexicalEditor,
-} from '@payloadcms/richtext-lexical'
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { ar } from '@payloadcms/translations/languages/ar'
@@ -24,7 +8,6 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { VideoEmbedBlock } from './blocks/VideoEmbed'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Categories } from './collections/Categories'
@@ -38,6 +21,7 @@ import { Redirects } from './collections/Redirects'
 import { Homepage } from './globals/Homepage'
 import { MainMenu } from './globals/MainMenu'
 import { SiteSettings } from './globals/SiteSettings'
+import { articleFeatures } from './lib/editor-config'
 import { allowedOrigins } from './lib/origins'
 
 const filename = fileURLToPath(import.meta.url)
@@ -168,27 +152,14 @@ export default buildConfig({
   },
   collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Ads, Redirects, Media, Users],
   globals: [Homepage, MainMenu, SiteSettings],
-  // Deliberately trimmed to what a non-technical journalist uses. Verified safe
-  // against all 1060 live posts: existing content uses only h2/h3, ul/ol, bold,
-  // italic, links, quotes and uploads — no stored node depends on a removed
-  // feature, so no historical article can lose its formatting.
+  // The whole feature list lives in `lib/editor-config.ts` so it can be inspected
+  // without booting Payload (the back-office audit gates import `articleFeatures()`
+  // directly and read each feature's key). It is additive over what shipped before:
+  // every previously enabled feature is still there — including `UploadFeature`, which
+  // 652 live posts depend on — plus strikethrough, tables, the Galerie block and the
+  // paste/drop shortcuts. No stored node loses its renderer.
   editor: lexicalEditor({
-    features: () => [
-      ParagraphFeature(),
-      HeadingFeature({ enabledHeadingSizes: ['h2', 'h3'] }),
-      BoldFeature(),
-      ItalicFeature(),
-      UnderlineFeature(),
-      LinkFeature(),
-      UnorderedListFeature(),
-      OrderedListFeature(),
-      BlockquoteFeature(),
-      UploadFeature(),
-      HorizontalRuleFeature(),
-      BlocksFeature({ blocks: [VideoEmbedBlock] }),
-      FixedToolbarFeature(),
-      InlineToolbarFeature(),
-    ],
+    features: () => articleFeatures(),
   }),
   // Arabic-first, RTL admin for the editorial team.
   i18n: {

@@ -15,7 +15,14 @@ export async function GET() {
   const { docs } = await payload.find({
     collection: 'posts',
     where: {
-      and: [{ _status: { equals: 'published' } }, { publishedAt: { greater_than_equal: cutoff } }],
+      // The 48h window alone is not enough: a FUTURE publishedAt trivially satisfies
+      // `>= cutoff`, which is how an unreleased story reached Google News. Bound it at
+      // both ends.
+      and: [
+        { _status: { equals: 'published' } },
+        { publishedAt: { greater_than_equal: cutoff } },
+        { publishedAt: { less_than_equal: new Date().toISOString() } },
+      ],
     },
     sort: '-publishedAt',
     limit: 1000,

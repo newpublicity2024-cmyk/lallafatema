@@ -1197,11 +1197,39 @@ export interface CollectionsWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  /**
+   * فسيفساء: صورة كبيرة مع صور أصغر حولها (تظهر أول خمس صور و«+N» على الأخيرة). شبكة: كل الصور بالحجم نفسه. شريط متحرك: تمرير أفقي.
+   */
+  layout: 'mosaic' | 'grid' | 'carousel';
+  /**
+   * اسحب الصور لإعادة ترتيبها. الترتيب هنا هو ترتيب ظهورها في المقال.
+   */
+  images: {
+    image: number | Media;
+    /**
+     * يظهر تحت الصورة وفي العرض الكامل.
+     */
+    caption?: string | null;
+    /**
+     * اتركه فارغًا لاستخدام الوصف المحفوظ مع الصورة في مكتبة الوسائط.
+     */
+    alt?: string | null;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "VideoEmbedBlock".
  */
 export interface VideoEmbedBlock {
   /**
-   * ألصق رابط يوتيوب أو فيميو.
+   * ألصق رابطًا من يوتيوب، فيميو، ديلي موشن، فيسبوك (فيديو/ريل/منشور)، إنستغرام (منشور/ريل) أو تيك توك.
    */
   url: string;
   caption?: string | null;

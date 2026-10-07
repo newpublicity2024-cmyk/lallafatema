@@ -73,6 +73,14 @@ node_modules/
 /_*.ts
 /*.png
 
+# Supplied brand source artwork (full-resolution masters). Same rule as the other
+# source folders above: read at import time by `pnpm seed:logo`, never committed.
+# The derived web assets that the app actually ships live in public/brand/.
+/ressources
+
+# unlazy skill ledger (local state)
+/GATES.md
+
 # Claude Code local config
 .claude/
 .mcp.json

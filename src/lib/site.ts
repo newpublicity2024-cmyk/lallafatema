@@ -25,7 +25,7 @@ export const SOCIAL_LINKS: { key: SocialKey; label: string; href: string }[] = [
 
 /** NewPub network cross-links (footer). */
 export const NEWPUB_LINKS: { label: string; href: string }[] = [
-  { label: 'MFM Radio', href: 'https://www.mfmradio.fm' },
+  { label: 'MFM Radio', href: 'https://mfmradio.ma/' },
   { label: 'VH.ma', href: 'https://vh.ma' },
   { label: 'Challenge.ma', href: 'https://www.challenge.ma' },
   { label: 'Tomobile360', href: 'https://www.tomobile360.ma' },
