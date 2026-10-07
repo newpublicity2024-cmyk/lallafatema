@@ -31,11 +31,24 @@ const ADSENSE_FRAMES = [
   'https://googleads.g.doubleclick.net',
   'https://tpc.googlesyndication.com',
 ]
+// Social/video embed origins the rich-text embed parser can produce. MUST stay identical to
+// EMBED_FRAME_HOSTS in src/lib/embeds.ts — mirrored rather than imported because this module
+// is pulled in by next.config.ts through an extensionless relative import and has to remain
+// dependency-free; tests/int/security-headers.int.spec.ts asserts the two lists match, so the
+// duplication fails loudly instead of rotting into a silently blank iframe in production.
+// (www.youtube-nocookie.com is already covered by YOUTUBE above and is not repeated here.)
+const EMBED_FRAMES = [
+  'https://player.vimeo.com',
+  'https://www.dailymotion.com',
+  'https://www.facebook.com',
+  'https://www.instagram.com',
+  'https://www.tiktok.com',
+]
 
 export function buildCsp(): string {
   const devEval = process.env.NODE_ENV === 'production' ? [] : ["'unsafe-eval'"]
   const scriptSrc = ["'self'", "'unsafe-inline'", ...devEval, ...GOOGLE, ...ONESIGNAL, ...YOUTUBE]
-  const frameSrc = ["'self'", ...YOUTUBE, ...ADSENSE_FRAMES, ...ONESIGNAL]
+  const frameSrc = ["'self'", ...YOUTUBE, ...ADSENSE_FRAMES, ...ONESIGNAL, ...EMBED_FRAMES]
 
   const directives: [string, string[]][] = [
     ['default-src', ["'self'"]],
