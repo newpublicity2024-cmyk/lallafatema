@@ -2,6 +2,7 @@ import { Meilisearch, type Index } from 'meilisearch'
 
 import type { Post } from '@/payload-types'
 import { getPayloadClient } from './payload'
+import { publishedWhere } from './queries'
 
 export const POSTS_INDEX = 'posts'
 
@@ -93,7 +94,9 @@ export async function indexPost(id: number): Promise<void> {
     const payload = await getPayloadClient()
     const { docs } = await payload.find({
       collection: 'posts',
-      where: { and: [{ id: { equals: id } }, { _status: { equals: 'published' } }] },
+      // Mirrors the site's own visibility rule — a scheduled story must not be
+      // searchable before it is readable.
+      where: { and: [{ id: { equals: id } }, publishedWhere()] },
       depth: 1,
       limit: 1,
     })
@@ -138,7 +141,8 @@ export async function reindexAllPosts(): Promise<{ indexed: number }> {
   for (;;) {
     const { docs, hasNextPage } = await payload.find({
       collection: 'posts',
-      where: { _status: { equals: 'published' } },
+      // Same rule as the public listings: do not index what readers cannot see yet.
+      where: publishedWhere(),
       depth: 1,
       limit: 100,
       page,

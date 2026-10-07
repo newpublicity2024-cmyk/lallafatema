@@ -1,6 +1,6 @@
 import { getPayloadClient } from '@/lib/payload'
 import { SITE_URL, absoluteUrl } from '@/lib/seo'
-import { getPublishedPages } from '@/lib/queries'
+import { getPublishedPages, publishedWhere } from '@/lib/queries'
 import { postUrl, categoryUrl, authorUrl, magazineArchiveUrl, magazineIssueUrl, videosListingUrl, pageUrl } from '@/lib/routes'
 
 export const revalidate = 3600
@@ -18,7 +18,9 @@ export async function GET() {
   const [posts, categories, issues, pages] = await Promise.all([
     payload.find({
       collection: 'posts',
-      where: { _status: { equals: 'published' } },
+      // Same predicate the site uses, so a scheduled story is never advertised to
+      // Google before it exists for readers.
+      where: publishedWhere(),
       sort: '-publishedAt',
       // Headroom over the current archive (~1.6k) so growth can't silently truncate
       // the sitemap. A single sitemap is capped at 50,000 URLs by the spec, so if the

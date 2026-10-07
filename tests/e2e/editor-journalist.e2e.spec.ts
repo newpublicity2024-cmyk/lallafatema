@@ -9,7 +9,7 @@ import {
   editorUser,
 } from '../helpers/seedUser'
 
-const CREATE_POST = 'http://localhost:3000/admin/collections/posts/create'
+const CREATE_POST = '/admin/collections/posts/create'
 
 /**
  * Negative assertions use `not.toBeVisible()` rather than `toHaveCount(0)`:

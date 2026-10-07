@@ -423,7 +423,18 @@ test.beforeAll(async ({ browser }) => {
     // are deliberately unreachable in the admin, and are not back-office surfaces —
     // the newsroom's ten collections are what this audit is about.
     const isProjectCollection = (slug: string) => !slug.startsWith('payload-')
-    collectionSlugs = Object.keys(parsed.collections ?? {}).filter(isProjectCollection).sort()
+    // ...and collections deliberately hidden from the admin. `/api/access` reports every
+    // registered collection, including ones whose `admin.hidden` is true — Payload serves
+    // those a 404 in the admin BY DESIGN, so visiting them and calling the 404 a defect
+    // audits our own wrong assumption rather than the back office.
+    //
+    // `videos` is retired: "مجموعة الفيديو المستقلة متقاعدة — الفيديو الآن خاصية للمقال"
+    // (src/collections/Videos.ts). Keep this list in step with `admin.hidden: true`.
+    const HIDDEN_FROM_ADMIN = new Set(['videos'])
+    collectionSlugs = Object.keys(parsed.collections ?? {})
+      .filter(isProjectCollection)
+      .filter((slug) => !HIDDEN_FROM_ADMIN.has(slug))
+      .sort()
     globalSlugs = Object.keys(parsed.globals ?? {}).filter(isProjectCollection).sort()
 
     // Article fixtures, authored by the journalist so the ownership rules in
@@ -899,7 +910,10 @@ test('[BO09] the admin renders RTL with Arabic labels', async () => {
   await expect(page.locator('#action-save')).toContainText('نشر')
 
   // No English fallback may leak into the chrome we localize.
-  const navText = (await page.locator('nav').innerText()).trim()
+  // `nav.nav__wrap` specifically: Payload renders a SECOND <nav> for the step-nav
+  // breadcrumb (`nav.step-nav`), so a bare `locator('nav')` is a strict-mode violation
+  // — which fails the probe without saying anything about the admin's translations.
+  const navText = (await page.locator('nav.nav__wrap').innerText()).trim()
   expect(navText, 'the admin nav leaked an untranslated English label').not.toMatch(
     /\b(Posts|Media|Users|Categories|Tags|Pages|Redirects|Settings|Dashboard)\b/,
   )
@@ -1002,8 +1016,12 @@ test('[BO11] the article edit view loads its editor and sidebar fields', async (
   ]) {
     await expect(sidebar.locator(`#${id}`), `${id} is missing from the edit sidebar`).toBeVisible()
   }
-  // The publish checklist is a sidebar UI field, not a real column.
-  await expect(sidebar.getByText('قبل الإرسال للمراجعة')).toBeVisible()
+  // The publish checklist is a sidebar UI field, not a real column — and it is
+  // JOURNALIST-ONLY: PublishChecklist returns null for admin and editor
+  // (src/components/admin/PublishChecklist.tsx:31), because those roles publish
+  // directly and do not submit for review. This view is the admin's, so its ABSENCE
+  // is the correct assertion; BO07 covers the journalist, who must see it.
+  await expect(sidebar.getByText('قبل الإرسال للمراجعة')).toHaveCount(0)
   // The fixture's category must be resolved to its label, proving the relationship
   // field loaded its option rather than failing silently.
   await expect(sidebar.locator('#field-category')).toContainText(/[؀-ۿ]/)

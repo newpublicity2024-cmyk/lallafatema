@@ -10,8 +10,9 @@ import {
   type SocialKey,
 } from './site'
 import { getPayloadClient } from './payload'
+import { publishedWhere, isScheduledForLater } from './published-where'
 
-const PUBLISHED: Where = { _status: { equals: 'published' } }
+export { publishedWhere, isScheduledForLater }
 
 export async function getHomepage() {
   const payload = await getPayloadClient()
@@ -117,7 +118,7 @@ export async function getNonEmptyCategories(): Promise<Category[]> {
     docs.map((c) =>
       payload.count({
         collection: 'posts',
-        where: { and: [PUBLISHED, { category: { equals: c.id } }] },
+        where: { and: [publishedWhere(), { category: { equals: c.id } }] },
       }),
     ),
   )
@@ -145,7 +146,7 @@ type PostQuery = {
 
 export async function getPosts({ limit = 12, page = 1, categoryId, excludeIds }: PostQuery = {}) {
   const payload = await getPayloadClient()
-  const and: Where[] = [PUBLISHED]
+  const and: Where[] = [publishedWhere()]
   if (categoryId) and.push({ category: { equals: categoryId } })
   if (excludeIds?.length) and.push({ id: { not_in: excludeIds } })
 
@@ -176,7 +177,7 @@ export async function getVideoPosts({ limit = 12, page = 1 }: VideoPostQuery = {
   const payload = await getPayloadClient()
   return payload.find({
     collection: 'posts',
-    where: { and: [PUBLISHED, { featuredType: { equals: 'video' } }] },
+    where: { and: [publishedWhere(), { featuredType: { equals: 'video' } }] },
     sort: ['-publishedAt', '-createdAt'],
     limit,
     page,
@@ -195,6 +196,9 @@ export async function getPostById(id: number, draft = false): Promise<Post | nul
     const post = await payload.findByID({ collection: 'posts', id, depth: 2, draft })
     // Public reads only see published; preview (draft=true) sees the latest draft.
     if (!draft && post._status !== 'published') return null
+    // ...and not before its publish date, or a scheduled story is reachable by direct
+    // URL (and by anything that links it) while the listings correctly hide it.
+    if (!draft && isScheduledForLater(post.publishedAt)) return null
     return post
   } catch {
     return null
@@ -272,7 +276,7 @@ export async function getPostsByAuthor(authorId: number, limit = 12, page = 1) {
   const payload = await getPayloadClient()
   return payload.find({
     collection: 'posts',
-    where: { and: [PUBLISHED, { authors: { in: [authorId] } }] },
+    where: { and: [publishedWhere(), { authors: { in: [authorId] } }] },
     sort: ['-publishedAt', '-createdAt'],
     limit,
     page,
@@ -290,7 +294,7 @@ export async function getPostsByIds(ids: number[]): Promise<Post[]> {
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
     collection: 'posts',
-    where: { and: [PUBLISHED, { id: { in: ids } }] },
+    where: { and: [publishedWhere(), { id: { in: ids } }] },
     depth: 1,
     limit: ids.length,
   })

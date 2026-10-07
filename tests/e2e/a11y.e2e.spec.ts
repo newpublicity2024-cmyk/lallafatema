@@ -1,7 +1,10 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-const BASE = 'http://localhost:3000'
+// Resolved from `use.baseURL` in playwright.config.ts. Never hardcode a port here:
+// this machine runs several dev servers, and a stale absolute URL silently pointed
+// the whole suite at a DIFFERENT application. See tests/e2e/global-setup.ts.
+const BASE = ''
 
 // Accept-all consent cookie so the banner doesn't overlay the base page during
 // static audits. The banner's own a11y is covered by the keyboard spec (Task 3)

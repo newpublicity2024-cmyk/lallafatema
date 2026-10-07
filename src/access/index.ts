@@ -1,5 +1,7 @@
 import type { Access, FieldAccess, Where } from 'payload'
 
+import { publishedWhere } from '../lib/published-where'
+
 /**
  * Role model (least privilege):
  *   admin      — full control over everything.
@@ -49,12 +51,14 @@ export const isAdminOrEditorFieldLevel: FieldAccess = ({ req: { user } }) =>
  */
 export const canReadPosts: Access = ({ req: { user } }) => {
   if (user?.role === 'admin' || user?.role === 'editor') return true
+  // `publishedWhere()` rather than a bare `_status` check: `/api/posts` answers
+  // anonymously, so a story scheduled for next week would otherwise be one public fetch
+  // away even while every rendered listing correctly hides it. A journalist still sees
+  // their OWN work whatever its date — the schedule governs the public, not the author.
   if (user) {
-    return {
-      or: [{ _status: { equals: 'published' } }, { authors: { in: [user.id] } }],
-    } as Where
+    return { or: [publishedWhere(), { authors: { in: [user.id] } }] } as Where
   }
-  return { _status: { equals: 'published' } }
+  return publishedWhere()
 }
 
 /**
