@@ -176,20 +176,30 @@ beforeAll(async () => {
 }, 120000)
 
 afterAll(async () => {
-  // 1. Everything we tracked.
+  // 1. The bulk sweep FIRST, as one query. Scoped to this run's marker, so a pre-existing
+  //    post can never be caught by it.
+  //
+  //    Order matters. This used to delete the ~20 tracked ids one at a time before the
+  //    sweep and before the users, which is ~25 sequential round trips to a shared remote
+  //    database; at 120s the hook timed out partway through and stranded three live user
+  //    accounts in production while reporting every test as passed. Doing the set-based
+  //    delete first means the expensive part is one call, and the accounts — the residue
+  //    that actually matters, since they can sign in — are reached even on a slow run.
+  await payload.delete({ collection: 'posts', where: { title: { like: RUN } } }).catch(() => {})
+
+  // 2. Users next, before the per-id net: a stranded post is clutter, a stranded account
+  //    is access.
+  for (const email of [EDITOR_EMAIL, JOURNALIST_A_EMAIL, JOURNALIST_B_EMAIL]) {
+    await payload.delete({ collection: 'users', where: { email: { equals: email } } }).catch(() => {})
+  }
+
+  // 3. Net: anything tracked that the marker sweep missed (a test that renamed a post).
+  //    Most of these are already gone and resolve immediately.
   for (const id of created) {
     await payload.delete({ collection: 'posts', id }).catch(() => {})
   }
   created.length = 0
-  // 2. Net: anything carrying this run's marker that escaped tracking. Scoped to
-  //    the marker so a pre-existing post can never be caught by it.
-  await payload
-    .delete({ collection: 'posts', where: { title: { like: RUN } } })
-    .catch(() => {})
-  for (const email of [EDITOR_EMAIL, JOURNALIST_A_EMAIL, JOURNALIST_B_EMAIL]) {
-    await payload.delete({ collection: 'users', where: { email: { equals: email } } }).catch(() => {})
-  }
-}, 120000)
+}, 300000)
 
 describe('publishing chain', () => {
   it('[PC01] a journalist creates a draft and it is stored as an unpublished draft', async () => {
@@ -283,95 +293,97 @@ describe('publishing chain', () => {
     )
   }, 60000)
 
-  it('[PC03] refuses a journalist publish with 403', async () => {
+  it('[PC03] a journalist publishes their own article, and only their own', async () => {
+    // The publish gate that reserved publishing to editors was removed deliberately.
+    // What this probe now protects is the line that replaced it: a journalist publishes
+    // their OWN byline and nobody else's. Ownership is enforced by `canModifyOwnPosts`
+    // rather than by a role check inside the hook, so each path a journalist can actually
+    // reach is exercised against both their own article and someone else's.
+
     // (a) Publishing straight from create.
     const createTitle = t('PC03', 'إنشاء')
-    const onCreate = await capture(() =>
-      payload.create({
-        collection: 'posts',
-        data: {
-          title: createTitle,
-          category: newsCategory,
-          content: body('نص.'),
-          _status: 'published',
-        } as never,
-        user: journalistA as never,
-        overrideAccess: false,
-      }),
-    )
-    expect(onCreate).not.toBeNull()
-    expect(onCreate?.status).toBe(403)
-    expect(onCreate?.message).toMatch(/غير مسموح/)
-    // The refusal must also leave nothing behind.
-    const leaked = await payload.find({
+    const created = await payload.create({
       collection: 'posts',
-      where: { title: { equals: createTitle } },
-      limit: 1,
-      depth: 0,
+      data: {
+        title: createTitle,
+        category: newsCategory,
+        content: body('نص.'),
+        _status: 'published',
+      } as never,
+      user: journalistA as never,
+      overrideAccess: false,
     })
-    expect(leaked.totalDocs).toBe(0)
+    // Read back at depth 0: `create` returns populated relationships, so comparing the
+    // returned `authors` against an id array would compare objects to numbers.
+    const storedCreated = await read(created.id)
+    expect(storedCreated._status).toBe('published')
+    expect(storedCreated.authors).toEqual([journalistA.id])
+    // Stamped, not left null — the listings sort on it.
+    expect(typeof storedCreated.publishedAt).toBe('string')
+    expect(await anonymouslyVisible(created.id)).toBe(true)
 
-    // (b) Promoting their OWN draft — the path they can actually reach.
+    // (b) Promoting their OWN draft — the everyday path.
     const own = await createDraft(journalistA, t('PC03', 'ترقية'))
-    const onUpdate = await capture(() =>
-      payload.update({
-        collection: 'posts',
-        id: own.id,
-        data: { _status: 'published' } as never,
-        user: journalistA as never,
-        overrideAccess: false,
-      }),
-    )
-    expect(onUpdate).not.toBeNull()
-    expect(onUpdate?.status).toBe(403)
-    expect(onUpdate?.message).toMatch(/غير مسموح/)
-    // And the document is still a draft and still invisible.
-    const stored = await read(own.id)
-    expect(stored._status).toBe('draft')
     expect(await anonymouslyVisible(own.id)).toBe(false)
-
-    // (c) The back door: version history. A story the editor published and then
-    //     pulled still has a `published` version in its history, and restoring a
-    //     version is an update a journalist has access to. The 403 must hold on
-    //     that path too, or the publish gate is cosmetic.
-    const pulled = await createDraft(journalistA, t('PC03', 'مسترجع'))
     await payload.update({
       collection: 'posts',
-      id: pulled.id,
+      id: own.id,
       data: { _status: 'published' } as never,
-      user: editor as never,
+      user: journalistA as never,
       overrideAccess: false,
     })
+    const promoted = await read(own.id)
+    expect(promoted._status).toBe('published')
+    expect(typeof promoted.publishedAt).toBe('string')
+    expect(await anonymouslyVisible(own.id)).toBe(true)
+
+    // (c) Version history. Restoring a published version is an update, so it follows the
+    //     same ownership rule — on their own article it must now succeed.
     await payload.update({
       collection: 'posts',
-      id: pulled.id,
+      id: own.id,
       data: { _status: 'draft' } as never,
-      user: editor as never,
+      user: journalistA as never,
       overrideAccess: false,
     })
-    expect((await read(pulled.id))._status).toBe('draft')
+    expect((await read(own.id))._status).toBe('draft')
 
     const history = await payload.findVersions({
       collection: 'posts',
-      where: { parent: { equals: pulled.id } },
+      where: { parent: { equals: own.id } },
       limit: 100,
       sort: '-updatedAt',
     })
     const publishedVersion = history.docs.find((v) => v.version._status === 'published')
     expect(publishedVersion).toBeTruthy()
+    await payload.restoreVersion({
+      collection: 'posts',
+      id: String(publishedVersion?.id),
+      user: journalistA as never,
+      overrideAccess: false,
+    })
+    expect((await read(own.id))._status).toBe('published')
 
-    const onRestore = await capture(() =>
-      payload.restoreVersion({
+    // (d) THE BOUNDARY. Another journalist's draft must stay untouchable — publishing is
+    //     now unguarded by role, so this is the only thing standing between a journalist
+    //     and somebody else's unfinished story.
+    const theirs = await createDraft(journalistB, t('PC03', 'لغيري'))
+    const onOther = await capture(() =>
+      payload.update({
         collection: 'posts',
-        id: String(publishedVersion?.id),
+        id: theirs.id,
+        data: { _status: 'published' } as never,
         user: journalistA as never,
         overrideAccess: false,
       }),
     )
-    expect(onRestore).not.toBeNull()
-    expect(onRestore?.status).toBe(403)
-    expect((await read(pulled.id))._status).toBe('draft')
-    expect(await anonymouslyVisible(pulled.id)).toBe(false)
+    expect(onOther).not.toBeNull()
+    // Payload answers an inaccessible document with Forbidden or NotFound depending on
+    // the path; either is a refusal, and neither may leave the document published.
+    expect([403, 404]).toContain(onOther?.status)
+    const untouched = await read(theirs.id)
+    expect(untouched._status).toBe('draft')
+    expect(await anonymouslyVisible(theirs.id)).toBe(false)
   }, 60000)
 
   it('[PC04] an editor publishes a draft and the public can read it', async () => {

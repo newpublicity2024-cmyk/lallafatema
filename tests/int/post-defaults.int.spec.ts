@@ -44,8 +44,13 @@ describe('deriveFeaturedType', () => {
 })
 
 describe('applyPostDefaults', () => {
-  it('blocks a journalist from publishing', () => {
-    expect(() => run({ _status: 'published' }, journalist)).toThrow(/غير مسموح/)
+  // The hook used to reject a journalist's publish with a 403. That gate was removed at
+  // the owner's instruction, so the hook must now treat every role alike — what keeps a
+  // journalist to their own byline is `canModifyOwnPosts`, which is collection access and
+  // therefore out of this unit's reach (publishing-chain [PC03] covers it end to end).
+  it('lets a journalist publish, same as an editor', () => {
+    expect(() => run({ _status: 'published' }, journalist)).not.toThrow()
+    expect(run({ _status: 'published' }, journalist).publishedAt).toEqual(expect.any(String))
   })
 
   it('allows an editor to publish', () => {

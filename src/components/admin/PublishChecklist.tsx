@@ -15,8 +15,10 @@ const Row = ({ done, label }: { done: boolean; label: string }) => (
 )
 
 /**
- * Advisory only — it mirrors what the writer still has to do. Real enforcement
- * lives in field validation and the journalist publish-lock in postDefaults.
+ * Advisory only — it mirrors what the writer still has to do before publishing. Real
+ * enforcement lives in field validation; there is no longer a publish lock to back it up,
+ * since journalists publish their own work, which makes this list the main prompt they get
+ * and a reason to keep it accurate.
  */
 export default function PublishChecklist() {
   const { user } = useAuth()
@@ -34,7 +36,7 @@ export default function PublishChecklist() {
 
   return (
     <div dir="rtl" style={{ marginBottom: '1rem' }}>
-      <strong style={{ display: 'block', marginBottom: '.4rem' }}>قبل الإرسال للمراجعة</strong>
+      <strong style={{ display: 'block', marginBottom: '.4rem' }}>قبل النشر</strong>
       <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         <Row done={Boolean(title)} label="العنوان" />
         <Row done={Boolean(category)} label="القسم" />

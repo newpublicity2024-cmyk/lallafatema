@@ -822,7 +822,7 @@ test('[BO06] journalist nav is scoped to articles and media only', async () => {
   ])
 })
 
-test('[BO07] journalist sees the draft note instead of the publish button', async () => {
+test('[BO07] journalist sees a working publish button on their own draft', async () => {
   test.setTimeout(120_000)
   requireSetup()
   const page = pages.journalist!
@@ -831,16 +831,18 @@ test('[BO07] journalist sees the draft note instead of the publish button', asyn
   await page.goto(adminUrl(`/collections/posts/${draftPostId}`), { waitUntil: 'domcontentloaded' })
   await expect(page.locator('#field-title')).toHaveValue(new RegExp(RUN_ID))
 
-  // The custom PublishButton (src/components/admin/PublishButton.tsx) swaps the
-  // stock control for a reassurance note.
-  const note = page.locator('.lf-publish-note')
-  await expect(note).toBeVisible()
-  await expect(note).toContainText('يُنشره المحرّر بعد المراجعة')
-  await expect(note).toHaveAttribute('dir', 'rtl')
+  // This probe used to assert the opposite: PublishButton.tsx swapped the stock control
+  // for a note, because the beforeChange hook rejected a journalist's publish with a 403.
+  // That restriction was lifted, so the button has to be here — and has to be the real
+  // one, not a disabled lookalike.
+  const publish = page.locator('#action-save')
+  await expect(publish).toBeVisible()
+  await expect(publish).toBeEnabled()
+  await expect(publish).toContainText('نشر')
 
-  // And no publish affordance may remain anywhere in the document controls.
-  await expect(page.locator('#action-save')).toHaveCount(0)
-  await expect(page.locator('.doc-controls button', { hasText: 'نشر' })).toHaveCount(0)
+  // The old reassurance note must be gone, or journalists are told to wait for an editor
+  // who is no longer in the loop.
+  await expect(page.locator('.lf-publish-note')).toHaveCount(0)
 })
 
 test('[BO08] editor sees a working publish button on a draft', async () => {
@@ -1018,10 +1020,10 @@ test('[BO11] the article edit view loads its editor and sidebar fields', async (
   }
   // The publish checklist is a sidebar UI field, not a real column — and it is
   // JOURNALIST-ONLY: PublishChecklist returns null for admin and editor
-  // (src/components/admin/PublishChecklist.tsx:31), because those roles publish
-  // directly and do not submit for review. This view is the admin's, so its ABSENCE
-  // is the correct assertion; BO07 covers the journalist, who must see it.
-  await expect(sidebar.getByText('قبل الإرسال للمراجعة')).toHaveCount(0)
+  // (src/components/admin/PublishChecklist.tsx), who do not need the prompt. This view is
+  // the admin's, so its ABSENCE is the correct assertion. Its heading is "قبل النشر" since
+  // journalists publish their own work rather than submitting it for review.
+  await expect(sidebar.getByText('قبل النشر')).toHaveCount(0)
   // The fixture's category must be resolved to its label, proving the relationship
   // field loaded its option rather than failing silently.
   await expect(sidebar.locator('#field-category')).toContainText(/[؀-ۿ]/)

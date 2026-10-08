@@ -117,19 +117,26 @@ describe('a journalist saving an article', () => {
     expect(read.featuredType).toBe('video')
   }, 30000)
 
-  it('refuses to let a journalist publish', async () => {
-    await expect(
-      payload.create({
-        collection: 'posts',
-        data: {
-          title: 'محاولة نشر',
-          category: await categoryId('news'),
-          content: body('نص.'),
-          _status: 'published',
-        } as never,
-        user: { id: journalistId, role: 'journalist' } as never,
-        overrideAccess: false,
-      }),
-    ).rejects.toThrow(/غير مسموح/)
+  it('lets a journalist publish their own article', async () => {
+    // Publishing used to be refused for this role. It is allowed now, by design; what a
+    // journalist still cannot do is touch someone else's byline, which rbac and
+    // publishing-chain [PC03] cover against two distinct journalists.
+    const post = await payload.create({
+      collection: 'posts',
+      data: {
+        title: 'محاولة نشر',
+        category: await categoryId('news'),
+        content: body('نص.'),
+        _status: 'published',
+      } as never,
+      user: { id: journalistId, role: 'journalist' } as never,
+      overrideAccess: false,
+    })
+    createdPosts.push(post.id as number)
+
+    expect(post._status).toBe('published')
+    // The first-publish timestamp is what the public listings sort on, so a publish that
+    // leaves it unset would be invisible in practice.
+    expect(typeof post.publishedAt).toBe('string')
   }, 30000)
 })

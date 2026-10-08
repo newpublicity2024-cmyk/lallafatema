@@ -1,5 +1,4 @@
 import type { CollectionBeforeChangeHook } from 'payload'
-import { APIError } from 'payload'
 
 import { deriveExcerpt, type LexicalRoot } from '../lib/lexical-text'
 
@@ -48,15 +47,23 @@ export const applyPostDefaults: CollectionBeforeChangeHook = ({
   operation,
   originalDoc,
 }) => {
-  // Journalists may not publish — only admins/editors can.
-  if (
-    data?._status === 'published' &&
-    req.user &&
-    req.user.role !== 'admin' &&
-    req.user.role !== 'editor'
-  ) {
-    throw new APIError('غير مسموح لك بنشر المقالات. يرجى تركها كمسودة لمراجعة المحرّر.', 403)
-  }
+  /*
+   * Journalists publish their own work.
+   *
+   * This hook used to throw a 403 for any role other than admin/editor, which made every
+   * publish go through an editor. That review step was removed deliberately, at the
+   * owner's instruction: a journalist now publishes directly.
+   *
+   * What still constrains them is OWNERSHIP, and it is enforced somewhere better than
+   * here — `canModifyOwnPosts` (src/access/index.ts) resolves a journalist's update and
+   * delete access to `{ authors: { in: [user.id] } }`, so they can only publish a document
+   * they author. That covers the version-history path too: `restoreVersion` is an update,
+   * so restoring a published version of somebody else's article is refused by the same
+   * rule rather than by a check that would have to be repeated here.
+   *
+   * They also cannot hand themselves someone else's byline: the `authors` field is
+   * field-level write-locked to admins and editors (`isAdminOrEditorFieldLevel`).
+   */
 
   // Stamp the first publish date.
   if (data?._status === 'published' && !data.publishedAt) {

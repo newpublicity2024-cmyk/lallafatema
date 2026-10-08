@@ -37,7 +37,7 @@ test.describe('Article editor — journalist view', () => {
   })
 
   test('shows the publish checklist', async () => {
-    await expect(page.getByText('قبل الإرسال للمراجعة')).toBeVisible()
+    await expect(page.getByText('قبل النشر')).toBeVisible()
   })
 
   test('hides the slug field', async () => {

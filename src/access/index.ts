@@ -6,7 +6,11 @@ import { publishedWhere } from '../lib/published-where'
  * Role model (least privilege):
  *   admin      — full control over everything.
  *   editor     — manages and publishes all editorial content + taxonomy + media.
- *   journalist — creates and edits ONLY their own drafts; cannot publish.
+ *   journalist — creates, edits AND publishes ONLY their own articles. The publish
+ *                gate that once reserved publishing to editors was removed at the
+ *                owner's instruction; `canModifyOwnPosts` is what keeps a journalist to
+ *                their own byline, and the `authors` field stays write-locked to
+ *                admins/editors so they cannot reassign one.
  */
 
 export const anyone: Access = () => true

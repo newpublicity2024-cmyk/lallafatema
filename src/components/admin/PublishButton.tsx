@@ -1,23 +1,21 @@
 'use client'
 
-import { PublishButton as DefaultPublishButton, useAuth } from '@payloadcms/ui'
+import { PublishButton as DefaultPublishButton } from '@payloadcms/ui'
 
 /**
- * Journalists cannot publish (the beforeChange hook in hooks/postDefaults.ts
- * rejects it with a 403), so showing them Payload's "نشر التغييرات" button only
- * invites an error toast. They see a quiet reassurance instead; editors and
- * admins get the stock button.
+ * Every role that can reach an article can publish it, so everyone gets Payload's own
+ * button.
+ *
+ * This component used to swap the button for a note ("يُنشره المحرّر بعد المراجعة") for
+ * journalists, because `applyPostDefaults` rejected their publish with a 403 and showing
+ * them the button would only have produced an error toast. That restriction was lifted at
+ * the owner's instruction — journalists publish their own work now — so the note would be
+ * a lie and the button is correct for everyone.
+ *
+ * The override is kept rather than removed so the seam stays in one place: if publishing
+ * ever needs a role rule again, it belongs here for the UI and in `postDefaults` /
+ * `canModifyOwnPosts` for enforcement, not scattered across both.
  */
 export default function PublishButton() {
-  const { user } = useAuth()
-
-  if (user && user.role !== 'admin' && user.role !== 'editor') {
-    return (
-      <span className="lf-publish-note" dir="rtl">
-        يُحفظ تلقائيًا · يُنشره المحرّر بعد المراجعة
-      </span>
-    )
-  }
-
   return <DefaultPublishButton />
 }

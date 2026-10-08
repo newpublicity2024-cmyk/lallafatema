@@ -23,7 +23,8 @@ export const Posts: CollectionConfig = {
     group: 'المحتوى',
     hideAPIURL: true,
     components: {
-      // Journalists can't publish — swap the button for a note, see the component.
+      // Thin wrapper over Payload's own button; kept as the single seam for any future
+      // role rule on publishing. See the component.
       edit: { PublishButton: '/components/admin/PublishButton#default' },
     },
   },
