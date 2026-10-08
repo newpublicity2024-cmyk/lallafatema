@@ -53,6 +53,33 @@ const storagePlugins = blobEnabled
       vercelBlobStorage({
         collections: { media: true },
         token: process.env.BLOB_READ_WRITE_TOKEN as string,
+        /**
+         * Give every stored object a random suffix.
+         *
+         * Without this the blob is written at its bare filename, and collisions are
+         * avoided only by Payload renaming a file whose name already exists in the MEDIA
+         * COLLECTION (`photo.jpg` -> `photo-1.jpg`). That check cannot see the blob store,
+         * and `@vercel/blob@2` refuses to overwrite — it throws "This blob already exists,
+         * use allowOverwrite: true".
+         *
+         * The gap is `clientUploads` below: the browser sends the file to Blob BEFORE the
+         * document exists, so any failure in between — a missing `alt`, a rejected mime
+         * type, a closed tab — leaves a blob with no document. Payload then believes that
+         * filename is free forever, and every retry of that same photo fails. Measured on
+         * 2026-10-08: four such orphans, two of them the newsroom's own WhatsApp photos,
+         * which is exactly how "it worked yesterday" becomes "it never works for this
+         * file". Both upload paths honour this flag and rewrite the document's `filename`
+         * to the suffixed basename (see the adapter's uploadFile.js and
+         * VercelBlobClientUploadHandler.js), so generateURL still resolves.
+         *
+         * Not `allowOverwrite`: this adapter never passes that option to `put()` on either
+         * path, so it is not reachable from here — and overwriting would be the wrong
+         * instinct anyway, since two different photos can legitimately share a name.
+         *
+         * Files already stored keep their existing names and URLs; this affects new
+         * uploads only.
+         */
+        addRandomSuffix: true,
         // Browser uploads straight to Blob (signed, auth-gated route). Without
         // this, the file rides inside the POST to /api/media and Vercel kills
         // any body > 4.5 MB at the edge — a normal phone photo — leaving the
