@@ -90,6 +90,25 @@ const storagePlugins = blobEnabled
 export default buildConfig({
   admin: {
     user: Users.slug,
+    /**
+     * Pin the admin to the light theme.
+     *
+     * `custom.scss` is a LIGHT theme: it pins `--theme-bg`, `--theme-text` and
+     * `--theme-elevation-50…200` on bare `:root` and hardcodes white surfaces on the nav,
+     * header, cards, inputs, doc-controls and the Lexical toolbar. Payload's default here
+     * is `'all'`, which lets the panel render with `data-theme="dark"` — and then the
+     * palette is MIXED, because Payload's dark values survive everywhere custom.scss does
+     * not reach. Measured on production before this change: `--theme-elevation-0: #141414`
+     * (Payload dark) under `--theme-bg: #faf8f9` (ours), with `--theme-elevation-800`
+     * resolving to #ebebeb — so form input text rendered at a contrast ratio of 1.19:1
+     * against a white field, i.e. invisible, and the same collapse hit menus and buttons.
+     *
+     * Pinning light is the honest fix for a stylesheet that only defines one palette: it
+     * also removes the theme selector, so no stored per-user preference can bring the
+     * broken combination back. Supporting dark properly would mean authoring a second
+     * palette for all ~630 lines of custom.scss, which is a separate piece of work.
+     */
+    theme: 'light',
     importMap: {
       baseDir: path.resolve(dirname),
     },

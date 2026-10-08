@@ -43,7 +43,27 @@
 /* ════════════════════════════════════════════════════════════════════════════
  * 0. TOKENS
  * ════════════════════════════════════════════════════════════════════════════ */
-:root {
+/*
+ * The palette is declared for EVERY `data-theme`, not just the implicit one.
+ *
+ * This file defines a single, light palette. Payload's panel can render with
+ * `data-theme="dark"`, and when it did, the result was a MIXED palette rather than a dark
+ * one: the tokens below won, while every Payload token this file does not name kept its
+ * dark value. Measured in production: `--theme-elevation-0` stayed #141414 under a
+ * #faf8f9 page, and `--theme-elevation-800` — which Payload uses for body text and for
+ * menu/button labels — resolved to #ebebeb, putting near-white text on the white surfaces
+ * this file paints. Form input text measured 1.19:1 against its own field.
+ *
+ * `admin.theme: 'light'` in payload.config.ts is the real fix and removes the theme
+ * selector. Listing the dark selector here as well is the safety net: it guarantees the
+ * palette stays internally consistent even if a stored preference, a future config change
+ * or a Payload upgrade puts the attribute back. The full elevation scale is spelled out
+ * for the same reason — a token this file leaves undefined is a token that can fall back
+ * to the other theme.
+ */
+:root,
+[data-theme='light'],
+[data-theme='dark'] {
   /* Brand — mirrors the frontend palette (src/app/(frontend)/styles.css). */
   --lf-brand: #bc0168;
   --lf-brand-hover: #9c0556;
@@ -58,7 +78,13 @@
   --lf-line-strong: #ddd5da;
   --lf-ink: #241a20;
   --lf-ink-2: #5b4f56;
-  --lf-ink-3: #8b7f86;
+  /* The muted ink carries real content — nav group headings, field descriptions, the
+     dashboard stat hints, table column headers — so it has to be readable, not just
+     decorative. The previous #8b7f86 measured 3.83:1 on white and 3.63:1 on the page
+     ground, under the 4.5:1 WCAG AA floor for text this size. #776a71 measures 5.14:1
+     and 4.86:1 while staying clearly lighter than --lf-ink-2 (7.36:1), so the three-step
+     hierarchy still reads. */
+  --lf-ink-3: #776a71;
 
   /* Status */
   --lf-ok: #1f7a4d;
@@ -80,10 +106,23 @@
   --theme-input-bg: var(--lf-surface);
   --theme-text: var(--lf-ink);
   --theme-border-color: var(--lf-line);
+  /* The COMPLETE elevation ramp, light end to dark end. Payload reads the low steps for
+     surfaces and the high steps for text and icons, so a half-defined ramp is what put
+     #ebebeb labels on white cards. Keep it monotonic. */
+  --theme-elevation-0: #ffffff;
   --theme-elevation-50: #f4f1f3;
   --theme-elevation-100: #ece7ea;
   --theme-elevation-150: #ddd5da;
   --theme-elevation-200: #cfc5cb;
+  --theme-elevation-250: #bfb3bb;
+  --theme-elevation-300: #ab9da6;
+  --theme-elevation-400: #776a71; /* kept equal to --lf-ink-3; Payload reads it for muted text */
+  --theme-elevation-500: #6a5f65;
+  --theme-elevation-600: #5b4f56;
+  --theme-elevation-700: #463b42;
+  --theme-elevation-800: #332a30;
+  --theme-elevation-900: #2b2228;
+  --theme-elevation-1000: #241a20;
 }
 
 /* Tajawal sits small on the line; one notch up on the root makes every rem in
