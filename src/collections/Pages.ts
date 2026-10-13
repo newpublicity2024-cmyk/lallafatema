@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { canReadPublished, hiddenFromJournalists, isAdminOrEditor } from '../access'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
+import { stripPastedAlignment } from '../hooks/lexicalAlign'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 
 /**
@@ -41,6 +42,8 @@ export const Pages: CollectionConfig = {
       name: 'content',
       type: 'richText',
       label: 'المحتوى',
+      // Same paste residue as an article body — see hooks/lexicalAlign.ts.
+      hooks: { beforeChange: [stripPastedAlignment] },
     },
     slugField('title', { reserved: true }),
     seoField,

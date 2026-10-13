@@ -1,6 +1,8 @@
 import { RichText, type JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 
 import type { VideoEmbedBlock } from '@/payload-types'
+import { stripSideAlignment } from '@/lib/lexical-align'
+import type { LexicalRoot } from '@/lib/lexical-text'
 import { MediaEmbed } from './embeds/MediaEmbed'
 import { Gallery } from './gallery/Gallery'
 import type { GalleryImage, GalleryLayout } from './gallery/types'
@@ -103,7 +105,17 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
  * Lexical blocks, so a writer can drop a photo gallery or a video between two paragraphs and
  * it renders with the same click-to-load facade, lightbox and RTL behaviour as the rest of
  * the page.
+ *
+ * WHY THE BODY IS NORMALISED HERE and not only on save: a paste out of Word stores a
+ * paragraph alignment the journalist never chose and cannot clear, and Payload's converter
+ * resolves it with left-to-right physics — which on this RTL site renders the whole article
+ * flush to the far left while the editor still shows it correctly. `stripSideAlignment`
+ * explains the mechanism in full. Running it on the READ path is what fixes the articles
+ * already stored (every post written before the save-time hook existed) without a data
+ * migration; the hook on the field keeps new ones clean. It is deliberately cheap and
+ * returns the same object when there is nothing to strip, which is the normal case.
  */
 export function RichTextBody({ data, className }: { data: unknown; className?: string }) {
-  return <RichText data={data as never} className={className} converters={converters} />
+  const body = stripSideAlignment(data as LexicalRoot)
+  return <RichText data={body as never} className={className} converters={converters} />
 }

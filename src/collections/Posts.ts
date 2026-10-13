@@ -10,6 +10,7 @@ import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { editorialOnly } from '../fields/visibility'
 import { validateArticleContent } from '../lib/lexical-text'
+import { stripPastedAlignment } from '../hooks/lexicalAlign'
 import { applyPostDefaults } from '../hooks/postDefaults'
 import { revalidateAfterChange, revalidateAfterDelete } from '../hooks/revalidate'
 import { searchIndexAfterChange, searchIndexAfterDelete } from '../hooks/searchIndex'
@@ -117,6 +118,10 @@ export const Posts: CollectionConfig = {
       type: 'richText',
       label: 'نص المقال',
       validate: validateArticleContent,
+      // Strips the paragraph alignment a Word paste brings with it — the editor has no
+      // alignment control, so it is always residue, and Payload renders it with LTR
+      // physics on an RTL page. See hooks/lexicalAlign.ts.
+      hooks: { beforeChange: [stripPastedAlignment] },
       admin: {
         description:
           'اكتب المقال هنا. استخدم زر الصورة لإضافة صور، وزر الفيديو لإدراج مقطع بالرابط.',
