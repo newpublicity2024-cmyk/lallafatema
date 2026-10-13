@@ -1,8 +1,8 @@
+import { cloneElement, isValidElement, type ReactNode } from 'react'
 import { RichText, type JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 
 import type { VideoEmbedBlock } from '@/payload-types'
-import { stripSideAlignment } from '@/lib/lexical-align'
-import type { LexicalRoot } from '@/lib/lexical-text'
+import { alignmentStyle } from '@/lib/lexical-align'
 import { MediaEmbed } from './embeds/MediaEmbed'
 import { Gallery } from './gallery/Gallery'
 import type { GalleryImage, GalleryLayout } from './gallery/types'
@@ -53,6 +53,54 @@ function galleryImages(fields: StoredGalleryBlock): GalleryImage[] {
 }
 
 /**
+ * Wraps one converter so the node's own alignment lands on the element it produces.
+ *
+ * This is deliberately the LAST thing that touches the element, and it mirrors what
+ * Lexical's reconciler does inside the editor: emit the stored keyword as `text-align`,
+ * unchanged. Payload's equivalent pass is switched off (`disableTextAlign` below) because
+ * it rewrites `start` to a physical `left` and drops `left` entirely — see
+ * `lexical-align.ts`.
+ *
+ * An existing `style` on the converter's own output wins, matching the precedence Payload
+ * uses for its own injection, so a block that has already decided how it lays itself out
+ * is never overridden by a stray alignment.
+ */
+function withAlignment<Args extends { node?: { format?: unknown } }>(
+  convert: (args: Args) => ReactNode,
+): (args: Args) => ReactNode {
+  return (args) => {
+    const element = convert(args)
+    const textAlign = alignmentStyle(args.node?.format)
+    if (!textAlign || !isValidElement(element)) return element
+
+    const props = element.props as { style?: Record<string, unknown> }
+    return cloneElement(element, { style: { textAlign, ...(props.style ?? {}) } } as never)
+  }
+}
+
+/** Applies `withAlignment` across a converter map, including the nested block maps. */
+function alignAll(map: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(map)) {
+    if (typeof value === 'function') {
+      out[key] = withAlignment(value as (args: { node?: { format?: unknown } }) => ReactNode)
+    } else if (value && typeof value === 'object') {
+      // `blocks` / `inlineBlocks` are maps of converters keyed by block type.
+      out[key] = alignAll(value as Record<string, unknown>)
+    } else {
+      out[key] = value
+    }
+  }
+  return out
+}
+
+/**
+ * What the article body renders with: our own block converters, with alignment applied on
+ * top of every one of them.
+ */
+const converters: JSXConvertersFunction = (args) => alignAll(baseConverters(args)) as never
+
+/**
  * Converters for our own Lexical blocks, layered over Payload's defaults.
  *
  * WHAT LEGACY ACTUALLY LOOKS LIKE (measured across all 1,574 live posts): ZERO contain a
@@ -63,7 +111,7 @@ function galleryImages(fields: StoredGalleryBlock): GalleryImage[] {
  * this file starts listing which legacy nodes it supports, it becomes a list that can be
  * incomplete, and 652 articles are downstream of it.
  */
-const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
+const baseConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
   ...defaultConverters,
 
   /**
@@ -106,16 +154,20 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
  * it renders with the same click-to-load facade, lightbox and RTL behaviour as the rest of
  * the page.
  *
- * WHY THE BODY IS NORMALISED HERE and not only on save: a paste out of Word stores a
- * paragraph alignment the journalist never chose and cannot clear, and Payload's converter
- * resolves it with left-to-right physics — which on this RTL site renders the whole article
- * flush to the far left while the editor still shows it correctly. `stripSideAlignment`
- * explains the mechanism in full. Running it on the READ path is what fixes the articles
- * already stored (every post written before the save-time hook existed) without a data
- * migration; the hook on the field keeps new ones clean. It is deliberately cheap and
- * returns the same object when there is nothing to strip, which is the normal case.
+ * WHY `disableTextAlign`: Payload's own text-align pass resolves alignment with hard-coded
+ * left-to-right physics, so on this RTL site it renders a stored `start` as a physical
+ * `left` and drops `left` altogether — the defect behind #6. Switching it off and applying
+ * the keyword ourselves in `withAlignment` makes the page agree with the editor by
+ * construction. Indent is NOT disabled: Payload's `paddingInlineStart` handling is already
+ * direction-correct and is still wanted.
  */
 export function RichTextBody({ data, className }: { data: unknown; className?: string }) {
-  const body = stripSideAlignment(data as LexicalRoot)
-  return <RichText data={body as never} className={className} converters={converters} />
+  return (
+    <RichText
+      data={data as never}
+      className={className}
+      converters={converters}
+      disableTextAlign
+    />
+  )
 }
