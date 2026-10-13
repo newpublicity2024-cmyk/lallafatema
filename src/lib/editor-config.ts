@@ -1,4 +1,5 @@
 import {
+  AlignFeature,
   BlockquoteFeature,
   BlocksFeature,
   BoldFeature,
@@ -41,6 +42,14 @@ import { VideoEmbedBlock } from '../blocks/VideoEmbed'
  *   accessibility and SEO regression that no validation would catch.
  * - `UnderlineFeature` stays even though the request does not name it: it was already
  *   enabled, and removing a format that stored content may use is not a no-op.
+ * - `AlignFeature` is what lets a journalist align a paragraph left, centre or right. It
+ *   takes no options, so `justify` comes with it — which is no loss in Arabic, where
+ *   justified body copy is conventional. Its presence is also what MAKES stored alignment
+ *   meaningful: the feature dispatches only the PHYSICAL keywords, never Lexical's logical
+ *   `start`/`end`, and `src/lib/lexical-align.ts` leans on exactly that split to tell an
+ *   editorial decision apart from residue a Word paste left behind. Removing this feature
+ *   again without revisiting that file would make every alignment on the site unremovable
+ *   by the person looking at it.
  * - Both toolbars are on. The fixed one is what the request asks for ("the toolbar is
  *   always visible"); the inline one is what makes selecting a word and hitting bold feel
  *   normal, and is also the only toolbar on narrow screens where the fixed bar wraps.
@@ -56,6 +65,9 @@ export function articleFeatures() {
     ItalicFeature(),
     UnderlineFeature(),
     StrikethroughFeature(),
+    // Left / centre / right / justify — see the note above on why the physical-only
+    // keywords this dispatches are load-bearing for the paste normalisation.
+    AlignFeature(),
     // Ctrl+K / ⌘K, plus the floating link editor for changing an existing link.
     LinkFeature(),
     UnorderedListFeature(),
