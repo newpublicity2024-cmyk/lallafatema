@@ -157,6 +157,7 @@ export default buildConfig({
         { slug: 'lf-welcome', label: 'الترحيب', Component: '/components/admin/dashboard/Welcome#default', minWidth: 'medium' },
         { slug: 'lf-stats', label: 'الأرقام', Component: '/components/admin/dashboard/Stats#default', minWidth: 'medium' },
         { slug: 'lf-drafts', label: 'المسوّدات', Component: '/components/admin/dashboard/Drafts#default', minWidth: 'small' },
+        { slug: 'lf-scheduled', label: 'مبرمج للنشر', Component: '/components/admin/dashboard/Scheduled#default', minWidth: 'small' },
         { slug: 'lf-published', label: 'نُشر مؤخرًا', Component: '/components/admin/dashboard/RecentlyPublished#default', minWidth: 'small' },
         { slug: 'lf-shortcuts', label: 'اختصارات', Component: '/components/admin/dashboard/Shortcuts#default', minWidth: 'small' },
         { slug: 'lf-guide', label: 'دليل سريع', Component: '/components/admin/dashboard/Guide#default', minWidth: 'small' },
@@ -167,17 +168,22 @@ export default buildConfig({
           ? [
               { widgetSlug: 'lf-welcome', width: 'full' },
               { widgetSlug: 'lf-stats', width: 'full' },
+              // Reading order is the newsroom's own: being written → going out next →
+              // already out. `lf-scheduled` sits between the queue and the archive
+              // because that is where a programmed article is in its life.
               { widgetSlug: 'lf-drafts', width: 'medium' },
+              { widgetSlug: 'lf-scheduled', width: 'medium' },
               { widgetSlug: 'lf-published', width: 'medium' },
-              { widgetSlug: 'lf-shortcuts', width: 'full' },
+              { widgetSlug: 'lf-shortcuts', width: 'medium' },
             ]
           : [
               { widgetSlug: 'lf-welcome', width: 'full' },
               { widgetSlug: 'lf-stats', width: 'full' },
               { widgetSlug: 'lf-drafts', width: 'medium' },
+              { widgetSlug: 'lf-scheduled', width: 'medium' },
               { widgetSlug: 'lf-published', width: 'medium' },
-              { widgetSlug: 'lf-guide', width: 'large' },
-              { widgetSlug: 'lf-shortcuts', width: 'small' },
+              { widgetSlug: 'lf-guide', width: 'medium' },
+              { widgetSlug: 'lf-shortcuts', width: 'full' },
             ]
       },
     },
