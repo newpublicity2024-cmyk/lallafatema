@@ -118,6 +118,7 @@ export interface Config {
     'lf-welcome': LfWelcomeWidget;
     'lf-stats': LfStatsWidget;
     'lf-drafts': LfDraftsWidget;
+    'lf-scheduled': LfScheduledWidget;
     'lf-published': LfPublishedWidget;
     'lf-shortcuts': LfShortcutsWidget;
     'lf-guide': LfGuideWidget;
@@ -213,6 +214,9 @@ export interface Post {
   category: number | Category;
   tags?: (number | Tag)[] | null;
   authors?: (number | User)[] | null;
+  /**
+   * اتركه فارغًا لينشر المقال فور ضغطك على «نشر». أو اختر يومًا وساعة في المستقبل، واضغط «نشر»: سيبقى المقال مخفيًا عن الزوّار ثم يظهر وحده في الموعد المحدّد.
+   */
   publishedAt?: string | null;
   /**
    * يُولّد تلقائيًا من العنوان. الرابط الدائم يعتمد على المعرّف الرقمي، فيمكن تعديله بأمان.
@@ -1150,6 +1154,16 @@ export interface LfStatsWidget {
  * via the `definition` "lf-drafts_widget".
  */
 export interface LfDraftsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'small' | 'medium' | 'large' | 'x-large' | 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lf-scheduled_widget".
+ */
+export interface LfScheduledWidget {
   data?: {
     [k: string]: unknown;
   };
