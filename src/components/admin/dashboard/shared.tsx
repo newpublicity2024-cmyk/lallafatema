@@ -2,6 +2,8 @@ import type { Where } from 'payload'
 
 import type { Category, Post, User } from '@/payload-types'
 
+import { NEWSROOM_TZ, scheduledWhere as scheduledPostsWhere } from '@/lib/schedule'
+
 /**
  * Shared bits for the dashboard widgets (`admin.dashboard.widgets` in
  * payload.config.ts). Every widget is a server component: it receives Payload's
@@ -37,15 +39,54 @@ export function reviewQueueWhere(user: User): Where {
   return { and: [draftWhere(user), { title: { exists: true } }, { title: { not_equals: '' } }] }
 }
 
-export function publishedWhere(user: User, since?: Date): Where {
-  const base: Where[] = [{ _status: { equals: 'published' } }]
+/**
+ * Published AND actually on the site.
+ *
+ * The `publishedAt <= now` clause is not decoration: every tile and list built on this
+ * says "على الموقع الآن" or "نُشر مؤخرًا", and a programmed article is neither. Without it
+ * a story scheduled for next Tuesday counted as published and — because the lists sort
+ * `-publishedAt` — sat at the TOP of "نُشر مؤخرًا" with a «عرض» link that 404s, since the
+ * public article URL refuses it until its moment (src/lib/published-where.ts).
+ *
+ * Deliberately the same shape as the site's own `publishedWhere()`, including treating a
+ * missing date as live, so the dashboard and the reader agree on which posts exist.
+ */
+export function publishedWhere(user: User, since?: Date, now = new Date()): Where {
+  const base: Where[] = [
+    { _status: { equals: 'published' } },
+    {
+      or: [
+        { publishedAt: { less_than_equal: now.toISOString() } },
+        { publishedAt: { exists: false } },
+      ],
+    },
+  ]
   if (!isEditorial(user)) base.push({ authors: { in: [user.id] } })
   if (since) base.push({ publishedAt: { greater_than_equal: since.toISOString() } })
   return { and: base }
 }
 
-/** Casablanca local-time helpers — the newsroom's clock, not the server's (UTC on Vercel). */
-const CASABLANCA = 'Africa/Casablanca'
+/**
+ * Programmed but not yet live — the third state, scoped to whoever is looking.
+ *
+ * Journalists see only their own, exactly as `draftWhere` and `publishedWhere` do here:
+ * the schedule is the newsroom's business, but a writer's dashboard stays theirs.
+ */
+export function scheduledWhere(user: User, now = new Date()): Where {
+  const base: Where[] = [scheduledPostsWhere(now)]
+  if (!isEditorial(user)) base.push({ authors: { in: [user.id] } })
+  return { and: base }
+}
+
+/**
+ * Casablanca local-time helpers — the newsroom's clock, not the server's (UTC on Vercel).
+ *
+ * The zone itself comes from `lib/schedule.ts` rather than being written out again here.
+ * These helpers and the schedule labels must name the SAME newsroom; two copies of the
+ * string would let one be changed without the other, and the dashboard would then date
+ * "نُشر اليوم" by one clock and "مبرمج للنشر" by another.
+ */
+const CASABLANCA = NEWSROOM_TZ
 
 function casablancaOffsetMs(at: Date): number {
   const part = new Intl.DateTimeFormat('en-US', { timeZone: CASABLANCA, timeZoneName: 'longOffset' })
@@ -106,7 +147,7 @@ export const titleOf = (post: Post): string => post.title?.trim() || 'بدون �
 
 export const editHref = (post: Pick<Post, 'id'>): string => `${ADMIN}/collections/posts/${post.id}`
 
-// ── Presentational primitives ────────────────────────────────────────────────
+// ── Presentational primitives ─────────────────────────────────────────────
 
 export function Card({
   title,
@@ -162,7 +203,7 @@ export function EmptyState({
   )
 }
 
-// ── Icons (inline SVG, 24×24 stroke, inherit currentColor) ───────────────────
+// ── Icons (inline SVG, 24×24 stroke, inherit currentColor) ──────────────────────
 
 const svgProps = {
   width: 20,
