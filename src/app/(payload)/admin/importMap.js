@@ -22,6 +22,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { default as default_ba5ff3d977a9fa1ad0fa1587bd352b2e } from '../../../components/admin/PublishChecklist'
+import { default as default_78ac34a66994be9603c2edc44ab36c41 } from '../../../components/admin/SchedulePanel'
 import { default as default_85c066c9e85977a669a8719b5844b2d5 } from '../../../components/admin/PublishButton'
 import { default as default_dfe4008080d895d460898c3a6155e9ba } from '../../../components/admin/Icon'
 import { default as default_91a09b539d3c86b0aebf520e7564ce08 } from '../../../components/admin/Logo'
@@ -29,6 +30,7 @@ import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e
 import { default as default_327c36816b6cbfc7cb65551d409022be } from '../../../components/admin/dashboard/Welcome'
 import { default as default_6548d20e3fec66b91821cb7cc583ed0d } from '../../../components/admin/dashboard/Stats'
 import { default as default_f62fbb750933eb5ed4c2960ba7d6e9c9 } from '../../../components/admin/dashboard/Drafts'
+import { default as default_357e23f822ba056b1bc6e0ded2a894c4 } from '../../../components/admin/dashboard/Scheduled'
 import { default as default_d2aaa70fa0c1fc62b2dfbb579c9d5c3b } from '../../../components/admin/dashboard/RecentlyPublished'
 import { default as default_d3bdd18735dc1f7a7cfec6182c8be8b3 } from '../../../components/admin/dashboard/Shortcuts'
 import { default as default_bbc4203563b638340ec3d78dfb48e8e6 } from '../../../components/admin/dashboard/Guide'
@@ -60,6 +62,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/PublishChecklist#default": default_ba5ff3d977a9fa1ad0fa1587bd352b2e,
+  "/components/admin/SchedulePanel#default": default_78ac34a66994be9603c2edc44ab36c41,
   "/components/admin/PublishButton#default": default_85c066c9e85977a669a8719b5844b2d5,
   "/components/admin/Icon#default": default_dfe4008080d895d460898c3a6155e9ba,
   "/components/admin/Logo#default": default_91a09b539d3c86b0aebf520e7564ce08,
@@ -67,6 +70,7 @@ export const importMap = {
   "/components/admin/dashboard/Welcome#default": default_327c36816b6cbfc7cb65551d409022be,
   "/components/admin/dashboard/Stats#default": default_6548d20e3fec66b91821cb7cc583ed0d,
   "/components/admin/dashboard/Drafts#default": default_f62fbb750933eb5ed4c2960ba7d6e9c9,
+  "/components/admin/dashboard/Scheduled#default": default_357e23f822ba056b1bc6e0ded2a894c4,
   "/components/admin/dashboard/RecentlyPublished#default": default_d2aaa70fa0c1fc62b2dfbb579c9d5c3b,
   "/components/admin/dashboard/Shortcuts#default": default_d3bdd18735dc1f7a7cfec6182c8be8b3,
   "/components/admin/dashboard/Guide#default": default_bbc4203563b638340ec3d78dfb48e8e6,
