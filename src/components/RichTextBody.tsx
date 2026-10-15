@@ -78,13 +78,38 @@ function withAlignment<Args extends { node?: { format?: unknown } }>(
   }
 }
 
-/** Applies `withAlignment` across a converter map, including the nested block maps. */
-function alignAll(map: Record<string, unknown>): Record<string, unknown> {
+/**
+ * Applies `withAlignment` across a converter map, including the nested block maps.
+ *
+ * EXPORTED for one regression test. The defect it guards is invisible to every renderer a
+ * unit test can reach — see `rich-text-body.int.spec.tsx` — so the test asserts this
+ * function's contract directly instead.
+ *
+ * NOT EVERY CONVERTER IS A FUNCTION. Payload ships some as a pre-built React element —
+ * `linebreak` is literally `_jsx("br", {})`, a constant created once at module load. A React
+ * element is also an `object`, so the `typeof value === 'object'` branch used to recurse into
+ * it and rebuild it from `Object.entries`.
+ *
+ * That rebuild is lossy in a way that is invisible until it is not. It keeps `$$typeof`, so
+ * the result still passes `isValidElement` and still renders — but it drops the properties
+ * that are not enumerable: `ref`, `_debugInfo`, `_debugStack`, `_debugTask`. A production
+ * React build never looks at those, which is why the site has been serving these articles
+ * correctly. A DEVELOPMENT build checks them and refuses: "Attempted to render <br key='1'>
+ * without development properties", after which Next fails to serialise its own error and the
+ * request hangs instead of returning.
+ *
+ * Measured: 168 of 1,575 published articles contain a `linebreak` node, so ~11% of the
+ * archive could not be opened on a dev server, and the hung requests saturated it.
+ *
+ * `isValidElement` is the guard. An element is passed through untouched — it has no
+ * alignment to apply and nothing to recurse into.
+ */
+export function alignAll(map: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(map)) {
     if (typeof value === 'function') {
       out[key] = withAlignment(value as (args: { node?: { format?: unknown } }) => ReactNode)
-    } else if (value && typeof value === 'object') {
+    } else if (value && typeof value === 'object' && !isValidElement(value)) {
       // `blocks` / `inlineBlocks` are maps of converters keyed by block type.
       out[key] = alignAll(value as Record<string, unknown>)
     } else {
