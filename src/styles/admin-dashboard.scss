@@ -4,7 +4,7 @@
  * here. Everything is namespaced `lf-` so it can never collide with Payload.
  */
 
-/* ── Card shell ─────────────────────────────────────────────────────────── */
+/* ── Card shell ─────────────────────────────────────────────────── */
 .lf-card {
   height: 100%;
   background: var(--lf-surface);
@@ -46,7 +46,7 @@
   text-decoration: underline;
 }
 
-/* ── Buttons ────────────────────────────────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────────────── */
 .lf-btn {
   display: inline-flex;
   align-items: center;
@@ -108,7 +108,7 @@
   color: var(--lf-brand);
 }
 
-/* ── Welcome ────────────────────────────────────────────────────────────── */
+/* ── Welcome ───────────────────────────────────────────────────── */
 .lf-welcome {
   flex-direction: row;
   align-items: center;
@@ -144,7 +144,7 @@
   gap: 0.6rem;
 }
 
-/* ── Stats ──────────────────────────────────────────────────────────────── */
+/* ── Stats ────────────────────────────────────────────────────── */
 .lf-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -205,7 +205,7 @@
   color: var(--lf-ink-3);
 }
 
-/* ── Lists (drafts / published) ─────────────────────────────────────────── */
+/* ── Lists (drafts / published) ────────────────────────────────────── */
 .lf-list {
   list-style: none;
   margin: 0;
@@ -272,8 +272,17 @@
   font-size: 0.78rem;
   line-height: 1.6;
 }
+/* A scheduled article's moment. A separate tone from the category chip beside it so the
+   two read as different kinds of fact — a section vs. a time — rather than two tags.
+   Reuses the palette's existing warm pair (the same one `.lf-stat--warm` uses for a
+   number that wants attention), because this is pending, not live. */
+.lf-chip--time {
+  background: var(--lf-warm-soft);
+  color: var(--lf-warm);
+  font-variant-numeric: tabular-nums;
+}
 
-/* ── Empty state ────────────────────────────────────────────────────────── */
+/* ── Empty state ─────────────────────────────────────────────── */
 .lf-empty {
   display: flex;
   flex-direction: column;
@@ -301,7 +310,7 @@
   max-width: 34ch;
 }
 
-/* ── Shortcuts ──────────────────────────────────────────────────────────── */
+/* ── Shortcuts ──────────────────────────────────────────────── */
 .lf-shortcuts {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -353,7 +362,7 @@
   line-height: 1.4;
 }
 
-/* ── Guide steps ────────────────────────────────────────────────────────── */
+/* ── Guide steps ────────────────────────────────────────────── */
 .lf-steps {
   list-style: none;
   margin: 0;
@@ -395,7 +404,7 @@
   line-height: 1.6;
 }
 
-/* ── Small screens ──────────────────────────────────────────────────────── */
+/* ── Small screens ──────────────────────────────────────────── */
 @media (max-width: 600px) {
   .lf-card {
     padding: 1rem;
@@ -430,7 +439,7 @@
   }
 }
 
-/* ── Edit view: the journalist's stand-in for the publish button ────────── */
+/* ── Edit view: the journalist's stand-in for the publish button ──────── */
 .lf-publish-note {
   display: inline-flex;
   align-items: center;
