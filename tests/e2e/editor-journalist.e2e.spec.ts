@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test'
+import { BASE_URL } from '../../playwright.config'
 import { login } from '../helpers/login'
 import {
   seedJournalistUser,
@@ -24,7 +25,7 @@ test.describe('Article editor — journalist view', () => {
     await seedJournalistUser()
     const context = await browser.newContext()
     page = await context.newPage()
-    await login({ page, user: journalistUser })
+    await login({ page, serverURL: BASE_URL, user: journalistUser })
     await page.goto(CREATE_POST)
   })
 
@@ -48,10 +49,32 @@ test.describe('Article editor — journalist view', () => {
     await expect(page.getByText('تحسين محركات البحث').first()).not.toBeVisible()
   })
 
-  test('hides tags, authors and the publish date', async () => {
+  test('hides tags and authors', async () => {
     await expect(page.locator('#field-tags')).not.toBeVisible()
     await expect(page.locator('#field-authors')).not.toBeVisible()
-    await expect(page.locator('#field-publishedAt')).not.toBeVisible()
+  })
+
+  /**
+   * SUPERSEDED CONTRACT. This used to assert `#field-publishedAt` was NOT visible, grouped
+   * with tags and authors above.
+   *
+   * That was right while a journalist had no reason to touch a publish date. It is wrong
+   * now: this field IS the scheduling control they were given, and hiding it is what made
+   * "program the posting" impossible for the role that needs it. Nothing is protected by
+   * hiding it — a future date makes the article invisible to the public, so the worst a
+   * mistake costs is a delay to their own story.
+   *
+   * The assertion was replaced rather than deleted, so a future change that quietly
+   * re-hides the field fails here instead of silently removing the feature.
+   */
+  test('shows the publish date, which is the scheduling control', async () => {
+    await expect(page.locator('#field-publishedAt')).toBeVisible()
+  })
+
+  test('explains what the publish date does', async () => {
+    // A bare picker leaves a writer guessing. SchedulePanel states the outcome.
+    await expect(page.getByText('مسوّدة — لم تُنشر بعد')).toBeVisible()
+    await expect(page.getByText(/لبرمجة النشر/)).toBeVisible()
   })
 
   test('hides the derived media-type selector', async () => {
@@ -78,7 +101,7 @@ test.describe('Article editor — editorial view', () => {
     await seedEditorUser()
     const context = await browser.newContext()
     page = await context.newPage()
-    await login({ page, user: editorUser })
+    await login({ page, serverURL: BASE_URL, user: editorUser })
     await page.goto(CREATE_POST)
   })
 
