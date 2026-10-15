@@ -127,7 +127,14 @@ type RoleName = keyof typeof AUDIT_USERS
  * actually gets, which is why BO01 has to look at two roles to cover all six.
  */
 const REGISTERED_WIDGETS = {
-  editorial: ['lf-welcome', 'lf-stats', 'lf-drafts', 'lf-published', 'lf-shortcuts'],
+  editorial: [
+    'lf-welcome',
+    'lf-stats',
+    'lf-drafts',
+    'lf-scheduled',
+    'lf-published',
+    'lf-shortcuts',
+  ],
   journalistOnly: ['lf-guide'],
 } as const
 
@@ -552,12 +559,26 @@ test('[BO01] admin dashboard renders every registered widget without error', asy
   ).toHaveAttribute('href', /\/admin\/collections\/posts\/create$/)
   await expect(page.locator('.lf-welcome__actions a', { hasText: 'كل المقالات' })).toBeVisible()
 
-  // lf-stats — the editorial strip is four tiles, each a real number + Arabic label.
+  /*
+   * lf-stats — the editorial strip, each tile a real number + Arabic label.
+   *
+   * SUPERSEDED CONTRACT: this asserted FOUR tiles. Scheduled publishing added a fifth,
+   * «مبرمج للنشر», because a programmed article is no longer counted by «مقال منشور — على
+   * الموقع الآن» and needed a tile of its own; without one it would be in no number at all.
+   * The count was raised rather than loosened — an exact count still catches a tile that
+   * silently disappears — and the new label is required below like every other.
+   */
   const tiles = page.locator('.lf-stats .lf-stat')
-  await expect(tiles).toHaveCount(4)
+  await expect(tiles).toHaveCount(5)
   const labels = await page.locator('.lf-stat__label').allTextContents()
   expect(labels).toEqual(
-    expect.arrayContaining(['بانتظار المراجعة', 'نُشر اليوم', 'نُشر هذا الأسبوع', 'مقال منشور']),
+    expect.arrayContaining([
+      'بانتظار المراجعة',
+      'مبرمج للنشر',
+      'نُشر اليوم',
+      'نُشر هذا الأسبوع',
+      'مقال منشور',
+    ]),
   )
   for (const value of await page.locator('.lf-stat__value').allTextContents()) {
     expect(value.trim(), 'a dashboard stat tile rendered a non-numeric value').toMatch(/^\d+$/)
