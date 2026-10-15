@@ -10,6 +10,7 @@ import {
   isEditorial,
   publishedWhere,
   reviewQueueWhere,
+  scheduledWhere,
   startOfTodayCasablanca,
 } from './shared'
 
@@ -17,6 +18,11 @@ import {
  * A strip of numbers that answer "where do I stand?" — not "how big is the
  * database". Journalists see only their own work; editors see the newsroom.
  * Each tile links to the matching filtered list.
+ *
+ * The published tiles mean what they say — "على الموقع الآن" counts only articles a reader
+ * can actually open, so a programmed one is counted by the «مبرمج للنشر» tile instead and
+ * by nothing else. The clock icon moved with it: it now marks the scheduled tile, and the
+ * weekly tile takes an eye, so no two tiles in one strip wear the same glyph.
  */
 export default async function Stats({ req }: WidgetServerProps) {
   const { payload } = req
@@ -32,6 +38,26 @@ export default async function Stats({ req }: WidgetServerProps) {
   const posts = `${ADMIN}/collections/posts`
   const mine = editorial ? '' : `&where[authors][in][0]=${user.id}`
 
+  /*
+   * One clock for the whole strip. Each tile's `where` is built from it rather than from
+   * its own `new Date()`, so a run that straddles a scheduled post's moment cannot report
+   * it as both scheduled and live (or as neither).
+   */
+  const now = new Date()
+  const scheduledHref =
+    `${posts}?where[_status][equals]=published` +
+    `&where[publishedAt][greater_than]=${encodeURIComponent(now.toISOString())}` +
+    `&sort=publishedAt${mine}`
+  const scheduledTile = (n: number) => ({
+    key: 'scheduled',
+    icon: <Icons.clock />,
+    value: n,
+    label: 'مبرمج للنشر',
+    hint: 'بانتظار موعده',
+    href: scheduledHref,
+    tone: n > 0 ? 'warm' : 'calm',
+  })
+
   const tiles = editorial
     ? await Promise.all([
         count(reviewQueueWhere(user)).then((n) => ({
@@ -43,7 +69,8 @@ export default async function Stats({ req }: WidgetServerProps) {
           href: `${posts}?where[_status][equals]=draft`,
           tone: n > 0 ? 'warm' : 'calm',
         })),
-        count(publishedWhere(user, startOfTodayCasablanca())).then((n) => ({
+        count(scheduledWhere(user, now)).then(scheduledTile),
+        count(publishedWhere(user, startOfTodayCasablanca(now), now)).then((n) => ({
           key: 'today',
           icon: <Icons.sparkle />,
           value: n,
@@ -52,16 +79,16 @@ export default async function Stats({ req }: WidgetServerProps) {
           href: `${posts}?where[_status][equals]=published&sort=-publishedAt`,
           tone: 'calm',
         })),
-        count(publishedWhere(user, daysAgo(7))).then((n) => ({
+        count(publishedWhere(user, daysAgo(7, now), now)).then((n) => ({
           key: 'week',
-          icon: <Icons.clock />,
+          icon: <Icons.eye />,
           value: n,
           label: 'نُشر هذا الأسبوع',
           hint: 'آخر 7 أيام',
           href: `${posts}?where[_status][equals]=published&sort=-publishedAt`,
           tone: 'calm',
         })),
-        count(publishedWhere(user)).then((n) => ({
+        count(publishedWhere(user, undefined, now)).then((n) => ({
           key: 'all',
           icon: <Icons.check />,
           value: n,
@@ -81,7 +108,8 @@ export default async function Stats({ req }: WidgetServerProps) {
           href: `${posts}?where[_status][equals]=draft${mine}`,
           tone: n > 0 ? 'warm' : 'calm',
         })),
-        count(publishedWhere(user, daysAgo(7))).then((n) => ({
+        count(scheduledWhere(user, now)).then(scheduledTile),
+        count(publishedWhere(user, daysAgo(7, now), now)).then((n) => ({
           key: 'week',
           icon: <Icons.sparkle />,
           value: n,
@@ -90,7 +118,7 @@ export default async function Stats({ req }: WidgetServerProps) {
           href: `${posts}?where[_status][equals]=published${mine}&sort=-publishedAt`,
           tone: 'calm',
         })),
-        count(publishedWhere(user)).then((n) => ({
+        count(publishedWhere(user, undefined, now)).then((n) => ({
           key: 'all',
           icon: <Icons.check />,
           value: n,
