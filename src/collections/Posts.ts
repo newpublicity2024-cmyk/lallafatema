@@ -199,13 +199,43 @@ export const Posts: CollectionConfig = {
       admin: { position: 'sidebar', condition: editorialOnly },
     },
     {
-      name: 'publishedAt',
-      type: 'date',
-      label: 'تاريخ النشر',
+      // Read-out for the date field below: states, in words, whether this article is a
+      // draft, programmed for a future moment, or live — with the moment in newsroom
+      // time. Advisory only (like publishChecklist); it writes nothing.
+      name: 'scheduleState',
+      type: 'ui',
       admin: {
         position: 'sidebar',
-        condition: editorialOnly,
+        components: { Field: '/components/admin/SchedulePanel#default' },
+      },
+    },
+    {
+      name: 'publishedAt',
+      type: 'date',
+      label: 'موعد النشر',
+      admin: {
+        position: 'sidebar',
+        /*
+         * VISIBLE TO EVERY ROLE, journalists included — this field IS the scheduling
+         * control, and it used to carry `condition: editorialOnly`.
+         *
+         * Hiding it was right while scheduling was an editor's job: a journalist had no
+         * reason to set a publish date and the picker was one more thing on their screen.
+         * It is wrong now. A journalist who must put an article out at 14:00 needs this
+         * field, and there is nothing to protect by hiding it — a future date makes the
+         * article INVISIBLE to the public (src/lib/published-where.ts), so the worst a
+         * mistake can do is delay their own story, which they can fix themselves.
+         *
+         * The fields around it keep their `editorialOnly` gate: tags, authors, slug and
+         * SEO are still editorial decisions. `authors` additionally keeps its field-level
+         * write lock — that one is a privilege boundary, not screen tidiness.
+         *
+         * Superseded contract: tests/e2e/editor-journalist.e2e.spec.ts asserted this field
+         * was hidden from journalists. That assertion was replaced, not deleted.
+         */
         date: { pickerAppearance: 'dayAndTime' },
+        description:
+          'اتركه فارغًا لينشر المقال فور ضغطك على «نشر». أو اختر يومًا وساعة في المستقبل، واضغط «نشر»: سيبقى المقال مخفيًا عن الزوّار ثم يظهر وحده في الموعد المحدّد.',
       },
     },
     slugField('title'),
