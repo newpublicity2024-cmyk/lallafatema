@@ -70,6 +70,7 @@ export interface Config {
     posts: Post;
     categories: Category;
     tags: Tag;
+    'youtube-videos': YoutubeVideo;
     videos: Video;
     'magazine-issues': MagazineIssue;
     pages: Page;
@@ -87,6 +88,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
+    'youtube-videos': YoutubeVideosSelect<false> | YoutubeVideosSelect<true>;
     videos: VideosSelect<false> | VideosSelect<true>;
     'magazine-issues': MagazineIssuesSelect<false> | MagazineIssuesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
@@ -342,6 +344,43 @@ export interface User {
   collection: 'users';
 }
 /**
+ * تُجلب تلقائيًا من قناة لالة فاطمة على يوتيوب. الحقول للقراءة فقط — يمكن فقط إخفاء فيديو من الموقع.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "youtube-videos".
+ */
+export interface YoutubeVideo {
+  id: number;
+  /**
+   * المعرّف على يوتيوب. هو مفتاح المزامنة، فلا يُعدَّل.
+   */
+  videoId: string;
+  title: string;
+  description?: string | null;
+  publishedAt: string;
+  /**
+   * تُبنى من معرّف الفيديو، ولا تُؤخذ من محتوى التغذية.
+   */
+  thumbnailUrl: string;
+  /**
+   * الفيديوهات القصيرة عمودية ولا تظهر في شريط الفيديو ولا في صفحة الفيديو.
+   */
+  isShort?: boolean | null;
+  /**
+   * الحقل الوحيد الذي يملكه المحرّر: يُخفي الفيديو من الموقع دون حذفه من يوتيوب، ولا تُلغيه المزامنة التالية.
+   */
+  hidden?: boolean | null;
+  /**
+   * متاحة فقط عند استخدام مفتاح YouTube Data API.
+   */
+  durationSeconds?: number | null;
+  views?: number | null;
+  channelId: string;
+  syncedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * مجموعة الفيديو المستقلة متقاعدة — الفيديو الآن خاصية للمقال.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -553,6 +592,10 @@ export interface PayloadLockedDocument {
         value: number | Tag;
       } | null)
     | ({
+        relationTo: 'youtube-videos';
+        value: number | YoutubeVideo;
+      } | null)
+    | ({
         relationTo: 'videos';
         value: number | Video;
       } | null)
@@ -701,6 +744,25 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface TagsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "youtube-videos_select".
+ */
+export interface YoutubeVideosSelect<T extends boolean = true> {
+  videoId?: T;
+  title?: T;
+  description?: T;
+  publishedAt?: T;
+  thumbnailUrl?: T;
+  isShort?: T;
+  hidden?: T;
+  durationSeconds?: T;
+  views?: T;
+  channelId?: T;
+  syncedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -913,9 +975,9 @@ export interface Homepage {
   videoBand?: {
     enabled?: boolean | null;
     /**
-     * اتركها فارغة لعرض أحدث الفيديوهات تلقائيًا.
+     * ثبّت فيديوهات بعينها في صدارة الشريط. اتركها فارغة لعرض أحدث فيديوهات القناة تلقائيًا.
      */
-    pinnedVideos?: (number | Video)[] | null;
+    pinnedVideos?: (number | YoutubeVideo)[] | null;
   };
   ads?: {
     betweenSections?: boolean | null;

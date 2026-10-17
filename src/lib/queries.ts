@@ -1,6 +1,15 @@
 import type { Where } from 'payload'
 
-import type { Ad, Category, MagazineIssue, Media, Page, Post, User } from '@/payload-types'
+import type {
+  Ad,
+  Category,
+  MagazineIssue,
+  Media,
+  Page,
+  Post,
+  User,
+  YoutubeVideo,
+} from '@/payload-types'
 import {
   FOOTER_PAGES,
   NEWPUB_LINKS,
@@ -172,7 +181,15 @@ export async function getPostsByCategory(categoryId: number, limit = 6): Promise
 
 type VideoPostQuery = { limit?: number; page?: number }
 
-/** Published posts whose featured media is a video, newest first (the /videos listing + homepage band). */
+/**
+ * Published posts whose featured media is a video, newest first.
+ *
+ * No longer feeds any page: the /videos listing and the homepage band both moved to the
+ * YouTube channel (`getChannelVideos` below). Kept because article-videos still exist —
+ * 79 of them — and still play inside their own articles, so this is the query anything
+ * that needs to reason about them should use. `tests/int/video-post.int.spec.ts` is its
+ * current caller.
+ */
 export async function getVideoPosts({ limit = 12, page = 1 }: VideoPostQuery = {}) {
   const payload = await getPayloadClient()
   return payload.find({
@@ -185,8 +202,46 @@ export async function getVideoPosts({ limit = 12, page = 1 }: VideoPostQuery = {
   })
 }
 
-export async function getLatestVideoPosts(limit = 5): Promise<Post[]> {
-  const { docs } = await getVideoPosts({ limit })
+/* -------------------------------------------------------------------------- */
+/* YouTube channel videos                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What the site shows from the channel: not hidden, not a Short, newest first.
+ *
+ * Both exclusions are deliberate and both are owner decisions:
+ *
+ *   - `hidden` is the editor's veto on an individual upload (see the collection).
+ *   - `isShort` keeps vertical 9:16 clips out of a 16:9 band. On this channel Shorts are
+ *     the majority of recent uploads, so without this filter the band would be almost
+ *     entirely letterboxed portrait video.
+ *
+ * Written as `not_equals: true` rather than `equals: false` on purpose: a row written
+ * before a column existed, or by a path that left the flag null, must read as "not hidden"
+ * and "not a Short" rather than silently vanishing from the site.
+ */
+const channelVideoWhere = (): Where => ({
+  and: [{ hidden: { not_equals: true } }, { isShort: { not_equals: true } }],
+})
+
+type ChannelVideoQuery = { limit?: number; page?: number }
+
+/** Synced channel videos, newest first — the /videos listing. */
+export async function getChannelVideos({ limit = 12, page = 1 }: ChannelVideoQuery = {}) {
+  const payload = await getPayloadClient()
+  return payload.find({
+    collection: 'youtube-videos',
+    where: channelVideoWhere(),
+    sort: '-publishedAt',
+    limit,
+    page,
+    depth: 0,
+  })
+}
+
+/** The homepage band: the newest few channel videos. */
+export async function getLatestChannelVideos(limit = 5): Promise<YoutubeVideo[]> {
+  const { docs } = await getChannelVideos({ limit })
   return docs
 }
 
