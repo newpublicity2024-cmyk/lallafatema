@@ -49,12 +49,26 @@ export const Homepage: GlobalConfig = {
           defaultValue: true,
         },
         {
+          /**
+           * Repointed from the retired `videos` collection to the synced channel.
+           *
+           * The field had been dead for some time: it pointed at a collection the band no
+           * longer read, so anything pinned here simply did nothing. Now that the band is
+           * the YouTube channel, leaving a "pinned videos" control next to it that
+           * silently ignores the editor would be worse than not having one — so it points
+           * at the collection the band actually renders, and `page.tsx` honours it.
+           * Repointing cost no data: the relationship had zero rows.
+           */
           name: 'pinnedVideos',
           type: 'relationship',
-          relationTo: 'videos',
+          relationTo: 'youtube-videos',
           hasMany: true,
+          maxRows: 5,
           label: 'فيديوهات مثبّتة (اختياري)',
-          admin: { description: 'اتركها فارغة لعرض أحدث الفيديوهات تلقائيًا.' },
+          admin: {
+            description:
+              'ثبّت فيديوهات بعينها في صدارة الشريط. اتركها فارغة لعرض أحدث فيديوهات القناة تلقائيًا.',
+          },
         },
       ],
     },

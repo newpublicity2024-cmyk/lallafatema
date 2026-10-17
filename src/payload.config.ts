@@ -14,6 +14,7 @@ import { Categories } from './collections/Categories'
 import { Tags } from './collections/Tags'
 import { Posts } from './collections/Posts'
 import { Videos } from './collections/Videos'
+import { YoutubeVideos } from './collections/YoutubeVideos'
 import { MagazineIssues } from './collections/MagazineIssues'
 import { Pages } from './collections/Pages'
 import { Ads } from './collections/Ads'
@@ -202,7 +203,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Posts, Categories, Tags, Videos, MagazineIssues, Pages, Ads, Redirects, Media, Users],
+  collections: [Posts, Categories, Tags, YoutubeVideos, Videos, MagazineIssues, Pages, Ads, Redirects, Media, Users],
   globals: [Homepage, MainMenu, SiteSettings],
   // The whole feature list lives in `lib/editor-config.ts` so it can be inspected
   // without booting Payload (the back-office audit gates import `articleFeatures()`

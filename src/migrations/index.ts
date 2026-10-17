@@ -8,6 +8,8 @@ import * as migration_20260701_120518_add_redirects from './20260701_120518_add_
 import * as migration_20260706_115449_add_consent_settings from './20260706_115449_add_consent_settings';
 import * as migration_20260712_000000_add_legacy_wp_id from './20260712_000000_add_legacy_wp_id';
 import * as migration_20260713_153854_add_post_featured_video from './20260713_153854_add_post_featured_video';
+import * as migration_20261015_153517_add_youtube_videos from './20261015_153517_add_youtube_videos';
+import * as migration_20261015_154500_repoint_homepage_pinned_videos from './20261015_154500_repoint_homepage_pinned_videos';
 
 export const migrations = [
   {
@@ -58,6 +60,16 @@ export const migrations = [
   {
     up: migration_20260713_153854_add_post_featured_video.up,
     down: migration_20260713_153854_add_post_featured_video.down,
-    name: '20260713_153854_add_post_featured_video'
+    name: '20260713_153854_add_post_featured_video',
+  },
+  {
+    up: migration_20261015_153517_add_youtube_videos.up,
+    down: migration_20261015_153517_add_youtube_videos.down,
+    name: '20261015_153517_add_youtube_videos',
+  },
+  {
+    up: migration_20261015_154500_repoint_homepage_pinned_videos.up,
+    down: migration_20261015_154500_repoint_homepage_pinned_videos.down,
+    name: '20261015_154500_repoint_homepage_pinned_videos',
   },
 ];

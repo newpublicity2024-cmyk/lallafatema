@@ -7,14 +7,14 @@ import { LeadListBlock } from '@/components/LeadListBlock'
 import { MagazineSection } from '@/components/MagazineSection'
 import { SectionBlock } from '@/components/SectionBlock'
 import { VideoSection } from '@/components/VideoSection'
-import type { Category, Post } from '@/payload-types'
+import type { Category, Post, YoutubeVideo } from '@/payload-types'
 import { magazineInsertAfterIndex } from '@/lib/homepage'
 import {
   getCategories,
   getHomepage,
   getLatestMagazineIssues,
   getLatestPosts,
-  getLatestVideoPosts,
+  getLatestChannelVideos,
   getPostsByCategory,
   getSiteConfig,
 } from '@/lib/queries'
@@ -69,10 +69,24 @@ export default async function HomePage() {
     )
   }
 
-  // Video band: latest video-posts (video is now an article property). Toggle-gated.
+  // Video band: the latest uploads of the Lalla Fatema YouTube channel, mirrored into the
+  // database by the /sync-youtube cron. Shorts and editor-hidden videos are filtered out
+  // by the query itself. Toggle-gated, as before.
+  //
+  // Pinned videos lead and the latest fill the rest, so a half-filled pin list still
+  // yields a full band — the same "pin, then fall back to latest" rule the hero and the
+  // category sections above already follow.
   const videoBand = homepage.videoBand
   const showVideoBand = videoBand?.enabled ?? true
-  const videos = showVideoBand ? await getLatestVideoPosts(5) : []
+  let videos: YoutubeVideo[] = []
+  if (showVideoBand) {
+    const pinned = (videoBand?.pinnedVideos ?? []).filter(
+      (v): v is YoutubeVideo => typeof v === 'object' && v !== null && v.hidden !== true,
+    )
+    const latest = await getLatestChannelVideos(5)
+    const pinnedIds = new Set(pinned.map((v) => v.id))
+    videos = [...pinned, ...latest.filter((v) => !pinnedIds.has(v.id))].slice(0, 5)
+  }
 
   // The featured (LeadListBlock) section is admin-selectable; default to the first.
   const featuredCategoryId =

@@ -1,8 +1,7 @@
-import { timingSafeEqual } from 'node:crypto'
-
 import { revalidatePath } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { authorizeCron } from '@/lib/cron-auth'
 import { dueSinceWhere, resolveWindowMinutes } from '@/lib/schedule'
 import { getPayloadClient } from '@/lib/payload'
 import { indexPost } from '@/lib/search'
@@ -44,35 +43,14 @@ import { indexPost } from '@/lib/search'
 export const dynamic = 'force-dynamic'
 
 /**
- * Constant-time secret comparison.
- *
- * `timingSafeEqual` rather than `===`, because `===` returns as soon as two bytes differ and
- * this is a secret compared on a public endpoint. The length check is not the guard — it is
- * required, since `timingSafeEqual` throws on mismatched lengths — and the length itself is
- * the one thing this cannot hide.
- *
- * A missing `expected` yields false, so with neither environment variable set the endpoint
- * is inert rather than open.
+ * Authorisation is shared with `/sync-youtube` — see `src/lib/cron-auth.ts`. It used to be
+ * defined here; it moved so the two cron endpoints cannot drift apart on a constant-time
+ * comparison. The accepted credentials are unchanged: the Vercel cron bearer
+ * (`$CRON_SECRET`) or `?secret=$REVALIDATE_SECRET`.
  */
-const secretMatches = (given: string | null, expected: string | undefined): boolean => {
-  if (!expected || typeof given !== 'string') return false
-  const a = Buffer.from(given, 'utf8')
-  const b = Buffer.from(expected, 'utf8')
-  return a.length === b.length && timingSafeEqual(a, b)
-}
-
-function authorize(req: NextRequest): boolean {
-  // Vercel attaches this header to its own cron invocations when CRON_SECRET is set.
-  // Preferred over a query string because it keeps the secret out of vercel.json and out
-  // of request logs.
-  const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? null
-  if (secretMatches(bearer, process.env.CRON_SECRET)) return true
-  // Manual / external trigger, matching the existing /revalidate endpoint's contract.
-  return secretMatches(req.nextUrl.searchParams.get('secret'), process.env.REVALIDATE_SECRET)
-}
 
 export async function GET(req: NextRequest) {
-  if (!authorize(req)) {
+  if (!authorizeCron(req)) {
     return NextResponse.json({ ok: false, message: 'Invalid secret' }, { status: 401 })
   }
 

@@ -4,6 +4,10 @@
     {
       "path": "/publish-due",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/sync-youtube",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
