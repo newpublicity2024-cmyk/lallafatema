@@ -57,11 +57,20 @@ landing during the blip would bake an empty band in for an hour); the RSS feed h
 pagination, so `/videos` could not page without our own store; and editors get a veto on an
 individual upload.
 
-**Revalidate only when something changed.** `syncChannelVideos` reports `changed`, and the
-endpoint calls `revalidatePath('/', 'layout')` only when it is non-zero. At 48 ticks a day
-against a channel that posts a handful of times, revalidating unconditionally would throw
-away the site's whole ISR cache for nothing. This mirrors the care `/publish-due` already
-takes.
+**Revalidate only when something a reader can see changed.** `revalidatePath('/', 'layout')`
+purges the ISR cache for the whole site, not just the band, so the endpoint calls it only
+when `syncChannelVideos` reports `changed > 0`. At 48 ticks a day against a channel that
+posts a handful of times, revalidating unconditionally would throw the cache away for
+nothing. This mirrors the care `/publish-due` already takes.
+
+The "a reader can see" qualifier was added after the first production run and is the
+difference between the design working and merely looking like it works. `views` is stored
+and shown in the admin but rendered nowhere on the site, and it moves constantly — measured
+on the live channel, a video went from 167 to 169 views inside a minute. Counting it as a
+change made the very first production sync report `changed: 4`, which would have meant a
+whole-site cache purge on nearly every half-hourly tick. `RENDERED_FIELDS` in
+`youtube-sync.ts` now drives `changed`; a views-only delta is still written, it just does
+not claim the cache is stale.
 
 **Never delete on absence.** A video missing from a sync payload is left alone. The RSS
 window is 15 items, so "absent" overwhelmingly means "older than the window" — a sync that

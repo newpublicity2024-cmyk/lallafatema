@@ -32,8 +32,14 @@ export type SyncResult = {
   fetched: number
   created: number
   updated: number
+  /** Of `updated`, those that touched a field the site actually renders. */
+  renderedUpdates: number
   unchanged: number
-  /** `created + updated` — the signal the endpoint uses to decide on revalidation. */
+  /**
+   * Rows whose change a READER would see, i.e. `created` plus the updates that touched a
+   * rendered field. The endpoint revalidates on this and not on `updated`, so a tick that
+   * only refreshed view counts leaves the page cache alone.
+   */
   changed: number
   /** Non-fatal note, e.g. the Data API fell back to RSS. */
   warning?: string
@@ -50,6 +56,32 @@ type SyncedFields = {
   durationSeconds: number | null
   channelId: string
 }
+
+/**
+ * The fields whose change the READER can actually see, and therefore the only ones that
+ * justify purging the page cache.
+ *
+ * `views` is deliberately absent, and this is the whole point of the set existing.
+ * Measured on the live channel: a video went from 167 to 169 views inside a minute. Views
+ * are in `SyncedFields` because they are worth storing and the admin shows them — but they
+ * are rendered nowhere on the site, so letting them count as a change meant almost every
+ * half-hourly tick reported `changed > 0` and fired `revalidatePath('/', 'layout')`. That
+ * purges the ISR cache for the ENTIRE site, every article and category included, to
+ * reflect a number no reader is shown. It is exactly the cost this module's conditional
+ * revalidation exists to avoid, so the comparison that drives `changed` ignores them.
+ *
+ * A views-only delta is still WRITTEN — the data stays fresh and the write is cheap. It
+ * just does not count as a reason to throw the cache away.
+ */
+const RENDERED_FIELDS = [
+  'title',
+  'description',
+  'publishedAt',
+  'thumbnailUrl',
+  'isShort',
+  'durationSeconds',
+  'channelId',
+] as const satisfies readonly (keyof SyncedFields)[]
 
 const syncedFieldsOf = (video: ChannelVideo, channelId: string): SyncedFields => ({
   title: video.title,
@@ -79,10 +111,16 @@ const same = (a: unknown, b: unknown): boolean => {
 
 type ExistingRow = Record<string, unknown> & { id: number | string }
 
+/** Any difference at all — i.e. is a write worth making. */
 function needsUpdate(existing: ExistingRow, next: SyncedFields): boolean {
   return (Object.keys(next) as (keyof SyncedFields)[]).some(
     (key) => !same(existing[key], next[key]),
   )
+}
+
+/** A difference a reader would see — i.e. is the page cache now wrong. */
+function affectsRendering(existing: ExistingRow, next: SyncedFields): boolean {
+  return RENDERED_FIELDS.some((key) => !same(existing[key], next[key]))
 }
 
 /**
@@ -111,6 +149,7 @@ export async function syncChannelVideos({
     fetched: videos.length,
     created: 0,
     updated: 0,
+    renderedUpdates: 0,
     unchanged: 0,
     changed: 0,
     ...(warning ? { warning } : {}),
@@ -166,6 +205,9 @@ export async function syncChannelVideos({
       continue
     }
 
+    // Decided BEFORE the write, while `row` still holds the stored values.
+    const visible = affectsRendering(row, next)
+
     try {
       // `hidden` is absent from `next` by construction — that is the editor-owned field.
       await payload.update({
@@ -175,6 +217,7 @@ export async function syncChannelVideos({
         overrideAccess: true,
       })
       result.updated++
+      if (visible) result.renderedUpdates++
     } catch (error) {
       payload.logger?.error?.(
         { err: error, videoId: video.videoId },
@@ -183,7 +226,7 @@ export async function syncChannelVideos({
     }
   }
 
-  result.changed = result.created + result.updated
+  result.changed = result.created + result.renderedUpdates
   return result
 }
 
