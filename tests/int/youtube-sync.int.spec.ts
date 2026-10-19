@@ -163,6 +163,59 @@ describe('syncChannelVideos', () => {
     expect(after?.title).toBe('عنوان آخر')
   })
 
+  it('refreshes a view count without claiming the page cache is stale', async () => {
+    // MEASURED ON THE LIVE CHANNEL: a video went 167 -> 169 views inside a minute. Views
+    // are stored and shown in the admin but rendered nowhere on the site, so if they
+    // counted as a change then almost every half-hourly cron tick would fire
+    // revalidatePath('/', 'layout') and purge the ISR cache for the ENTIRE site to
+    // reflect a number no reader sees. The row must still be written; it just must not
+    // be reported as a reason to throw the cache away.
+    // Built from what is CURRENTLY stored, not from the pristine BATCH: earlier tests in
+    // this file retitled rows, so replaying BATCH would also revert a title and that is a
+    // rendered change. The only delta here must be the view count.
+    const current = await Promise.all(
+      BATCH.map(async (v) => {
+        const row = await findRow(v.videoId)
+        return { ...v, title: row!.title, views: (row!.views ?? 0) + 500 }
+      }),
+    )
+    const result = await syncChannelVideos({
+      payload,
+      channelId: CHANNEL,
+      videos: current,
+      source: 'rss',
+    })
+
+    expect(result.updated).toBe(3)
+    expect(result.renderedUpdates).toBe(0)
+    expect(result.changed).toBe(0)
+
+    // ...and the new count really did land.
+    const after = await findRow(LANDSCAPE_B.videoId)
+    expect(after?.views).toBe(current.find((v) => v.videoId === LANDSCAPE_B.videoId)!.views)
+  })
+
+  it('still reports a change when something the reader sees moves', async () => {
+    // The negative control for the test above: if `changed` could never rise from an
+    // update, the previous assertion would be satisfied by a permanently-zero counter.
+    const retitled = await Promise.all(
+      BATCH.map(async (v) => {
+        const row = await findRow(v.videoId)
+        const base = { ...v, title: row!.title as string, views: (row!.views ?? 0) + 500 }
+        return v.videoId === LANDSCAPE_B.videoId ? { ...base, title: 'عنوان يراه القارئ' } : base
+      }),
+    )
+    const result = await syncChannelVideos({
+      payload,
+      channelId: CHANNEL,
+      videos: retitled,
+      source: 'rss',
+    })
+
+    expect(result.renderedUpdates).toBe(1)
+    expect(result.changed).toBe(1)
+  })
+
   it('writes nothing when the source returned no videos', async () => {
     const result = await syncChannelVideos({
       payload,

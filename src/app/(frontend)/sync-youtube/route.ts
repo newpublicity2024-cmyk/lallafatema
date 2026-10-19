@@ -15,10 +15,17 @@ import { runChannelSync } from '@/lib/youtube-sync'
  * actually changed — purges the ISR cache so the new video is visible in seconds rather
  * than at the next natural expiry (3600s on the homepage, 300s on /videos).
  *
- * THE CONDITIONAL REVALIDATION IS THE WHOLE DESIGN. Revalidating on every tick would
- * throw away the site's page cache 48 times a day for a channel that posts a handful of
- * times — the same cost `/publish-due` is careful to avoid. `syncChannelVideos` therefore
- * reports `changed`, counting only rows that genuinely differ.
+ * THE CONDITIONAL REVALIDATION IS THE WHOLE DESIGN. `revalidatePath('/', 'layout')`
+ * purges the ISR cache for the ENTIRE site — every article and category, not just the
+ * band — so firing it on every tick would throw the site's cache away 48 times a day for
+ * a channel that posts a handful of times. That is the same cost `/publish-due` is
+ * careful to avoid.
+ *
+ * `syncChannelVideos` therefore reports `changed` as "rows whose change a READER would
+ * see". The distinction is load-bearing rather than pedantic: view counts move constantly
+ * (measured live, a video went 167 -> 169 inside a minute) and are rendered nowhere, so
+ * counting them would have made almost every tick purge the whole site to reflect a
+ * number nobody is shown.
  *
  * Deliberately tolerant of a dead upstream: `fetchChannelVideos` resolves to an empty list
  * rather than throwing, and a sync of zero videos writes nothing. A YouTube outage leaves
