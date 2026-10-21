@@ -9,6 +9,7 @@ import { ConsentMode } from '@/components/ConsentMode'
 import { OneSignalInit } from '@/components/OneSignalInit'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
+import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import { JsonLd } from '@/components/JsonLd'
 import { SiteScripts } from '@/components/SiteScripts'
 import { getSiteConfig } from '@/lib/queries'
@@ -62,6 +63,8 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
           تخطَّ إلى المحتوى
         </a>
         {cfg.consentEnabled && <ConsentMode />}
+        {/* GA4 — after the consent stub so Consent Mode v2 defaults are set first. */}
+        <GoogleAnalytics id={cfg.analyticsId} />
         <OneSignalInit />
         <JsonLd data={organizationJsonLd(cfg)} />
         <JsonLd data={webSiteJsonLd(cfg)} />
