@@ -62,6 +62,27 @@ export function buildCsp(): string {
     ['font-src', ["'self'", 'data:']],
     ['connect-src', ["'self'", 'https:']],
     ['frame-src', frameSrc],
+    /**
+     * Audio/video sources for `<video>` and `<audio>`.
+     *
+     * WITHOUT THIS DIRECTIVE THE SELF-HOSTED VIDEO BLOCK IS DEAD IN PRODUCTION. `media-src`
+     * has no default of its own — it falls back to `default-src`, which is `'self'` — so a
+     * `<video>` whose file lives on the Vercel Blob host is refused by the browser before a
+     * byte is requested. Nothing in the markup looks wrong, no server log records it, and
+     * every unit test that renders the element still passes: the only symptom is a player
+     * that will not play, in production, for readers.
+     *
+     * `https:` rather than the storage hostname for the same reason `img-src` is already
+     * `https:`: the host is environment-derived (the Blob store id, or `R2_PUBLIC_URL`, or a
+     * Cloudflare zone) and a literal here would be a static header that silently stops
+     * matching the day storage moves. What may be STORED is controlled where it belongs —
+     * `lib/upload-guard.ts` decides which types and sizes can ever become a media document,
+     * and `safeMediaSrc` in the renderer refuses anything that is not a plain https URL or a
+     * site-relative path.
+     *
+     * `blob:` covers a preview the admin builds from a local file before upload.
+     */
+    ['media-src', ["'self'", 'blob:', 'data:', 'https:']],
   ]
 
   return directives.map(([name, values]) => `${name} ${values.join(' ')}`).join('; ')

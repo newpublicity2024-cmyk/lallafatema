@@ -47,6 +47,57 @@ describe('buildCsp', () => {
   it('never uses a nonce (would break ISR)', () => {
     expect(csp).not.toContain('nonce-')
   })
+
+  /**
+   * `media-src` for the self-hosted `videoFile` block.
+   *
+   * This directive has NO default of its own — it falls back to `default-src`, which is
+   * `'self'` — so before it existed a `<video>` whose file lives on the Vercel Blob host was
+   * refused by the browser before a byte was requested. Nothing in the markup looked wrong,
+   * nothing was logged server-side, and every renderer test still passed. The only symptom
+   * was a player that would not play, in production, for readers. That is the exact shape of
+   * defect a header suite is for.
+   */
+  it('names media-src explicitly rather than inheriting default-src', () => {
+    const media = directive(csp, 'media-src')
+    expect(media.length).toBeGreaterThan(0)
+    expect(media).toContain("'self'")
+  })
+
+  it('permits the object-storage origin a stored video is actually served from', () => {
+    const media = directive(csp, 'media-src')
+    // The real shapes `media.url` takes in this project: Vercel Blob, an R2 public bucket,
+    // and the local-disk path used in development.
+    const storedUrls = [
+      'https://abc123store.public.blob.vercel-storage.com/clip-x9.mp4',
+      'https://media.lallafatema.ma/clip-x9.mp4',
+    ]
+    for (const url of storedUrls) {
+      const origin = new URL(url).origin
+      const allowed = media.some((entry) => entry === 'https:' || covers(entry, origin))
+      expect(allowed).toBe(true)
+    }
+  })
+
+  /**
+   * NEGATIVE CONTROL for the two assertions above. Both would pass against a matcher that
+   * said yes to everything, so this runs the same logic over a CSP that has no `media-src`
+   * — the state this file was in before the video block — and requires it to fail.
+   */
+  it('would have caught the missing directive (control)', () => {
+    const withoutMedia = csp
+      .split('; ')
+      .filter((part) => !part.startsWith('media-src '))
+      .join('; ')
+    expect(directive(withoutMedia, 'media-src')).toEqual([])
+
+    // And the coverage test is not vacuous either: a media-src of 'self' alone does NOT
+    // cover the Blob host.
+    const selfOnly = 'media-src \'self\''
+    const entries = directive(selfOnly, 'media-src')
+    const origin = new URL('https://abc123store.public.blob.vercel-storage.com/clip.mp4').origin
+    expect(entries.some((entry) => entry === 'https:' || covers(entry, origin))).toBe(false)
+  })
 })
 
 describe('buildCsp unsafe-eval branch (NODE_ENV-dependent)', () => {

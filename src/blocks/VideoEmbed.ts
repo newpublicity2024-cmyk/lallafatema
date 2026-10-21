@@ -22,7 +22,12 @@ export const VideoEmbedBlock: Block = {
   // converter can use the generated type instead of a hand-kept mirror.
   // Type-generation only — no schema impact.
   interfaceName: 'VideoEmbedBlock',
-  labels: { singular: 'فيديو', plural: 'فيديوهات' },
+  /**
+   * Relabelled from the bare "فيديو" when `videoFile` joined the block menu: two entries
+   * both reading "video" is a menu that makes the journalist guess. The label is NOT part
+   * of the stored contract (the slug is), so this is free to say which video it means.
+   */
+  labels: { singular: 'فيديو برابط', plural: 'فيديوهات بروابط' },
   fields: [
     {
       name: 'url',

@@ -113,3 +113,191 @@ describe('RichTextBody', () => {
     expect(container.textContent).toBe('')
   })
 })
+
+/**
+ * The self-hosted `videoFile` block.
+ *
+ * What makes this worth testing separately from `videoEmbed` is that nothing here is an
+ * iframe: the article ships a real `<video>` served from our own object storage, and the two
+ * things that can go wrong are invisible in a screenshot. One is `preload` — get it wrong
+ * and every reader who opens the article pays for a 72 MB download they never asked for. The
+ * other is the `src` itself, which is the only attribute on this page built from a database
+ * string rather than from a hard-coded origin.
+ */
+const videoFileNode = (fields: Record<string, unknown>) => ({
+  root: {
+    type: 'root',
+    children: [
+      { type: 'paragraph', children: [{ type: 'text', text: 'قبل الفيديو' }] },
+      { type: 'block', fields: { blockType: 'videoFile', ...fields } },
+    ],
+  },
+})
+
+const STORED_VIDEO = {
+  url: 'https://store.public.blob.vercel-storage.com/clip-abc123.mp4',
+  mimeType: 'video/mp4',
+  filename: 'clip-abc123.mp4',
+}
+
+const STORED_POSTER = {
+  url: 'https://store.public.blob.vercel-storage.com/poster-abc123.jpg',
+  mimeType: 'image/jpeg',
+  filename: 'poster-abc123.jpg',
+  width: 848,
+  height: 480,
+}
+
+describe('RichTextBody — videoFile block', () => {
+  it('renders a real video element carrying the stored file and its type', () => {
+    const { container } = render(
+      <RichTextBody data={videoFileNode({ video: STORED_VIDEO, caption: 'المقطع كاملًا' })} />,
+    )
+
+    const video = container.querySelector('video')
+    expect(video).not.toBeNull()
+    // Native controls, not a bespoke player: this is what makes it keyboard-operable.
+    expect(video?.hasAttribute('controls')).toBe(true)
+
+    const source = container.querySelector('video source')
+    expect(source?.getAttribute('src')).toBe(STORED_VIDEO.url)
+    expect(source?.getAttribute('type')).toBe('video/mp4')
+
+    // The paragraph beside it still renders — the block is additive, not a takeover.
+    expect(within(container).getByText('قبل الفيديو')).toBeDefined()
+    expect(within(container).getByText('المقطع كاملًا')).toBeDefined()
+  })
+
+  it('ships zero video bytes when the block carries a poster', () => {
+    const { container } = render(
+      <RichTextBody data={videoFileNode({ video: STORED_VIDEO, poster: STORED_POSTER })} />,
+    )
+    const video = container.querySelector('video')
+    expect(video?.getAttribute('poster')).toBe(STORED_POSTER.url)
+    expect(video?.getAttribute('preload')).toBe('none')
+  })
+
+  /**
+   * Without a poster there is no frame to draw, so metadata-only is the lesser evil. Pinned
+   * because the tempting "simplification" is to hard-code `preload="none"` everywhere, which
+   * leaves a black rectangle where the video should be in every browser that honours it.
+   */
+  it('falls back to metadata-only preload when no poster was supplied', () => {
+    const { container } = render(<RichTextBody data={videoFileNode({ video: STORED_VIDEO })} />)
+    expect(container.querySelector('video')?.getAttribute('preload')).toBe('metadata')
+    expect(container.querySelector('video')?.hasAttribute('poster')).toBe(false)
+  })
+
+  /**
+   * The poster is an IMAGE, so Payload records its dimensions, and a poster is a frame of
+   * the video — so its shape IS the video's shape. Reserving the box from it is what keeps a
+   * portrait clip from being letterboxed into a 16:9 strip, and what keeps the page from
+   * reflowing when the video's own metadata finally arrives.
+   */
+  it('reserves the box from the poster\'s real dimensions', () => {
+    const { container } = render(
+      <RichTextBody data={videoFileNode({ video: STORED_VIDEO, poster: STORED_POSTER })} />,
+    )
+    const box = container.querySelector('video')?.parentElement
+    expect(box?.style.aspectRatio).toBe('848 / 480')
+    // The fixed-ratio utility must be gone, or it would fight the inline style.
+    expect(box?.className).not.toContain('aspect-video')
+  })
+
+  it('reserves a TALL box for a portrait clip rather than letterboxing it', () => {
+    const portrait = { ...STORED_POSTER, width: 1080, height: 1920 }
+    const { container } = render(
+      <RichTextBody data={videoFileNode({ video: STORED_VIDEO, poster: portrait })} />,
+    )
+    const box = container.querySelector('video')?.parentElement
+    expect(box?.style.aspectRatio).toBe('1080 / 1920')
+    // ...but bounded, so a 9:16 clip cannot reserve more than a screen of height.
+    expect(box?.style.maxHeight).toBe('80vh')
+  })
+
+  /**
+   * Half a measurement is not a measurement. A wrong reserved box cannot be corrected
+   * without the very reflow this is preventing, so anything unmeasurable falls back to 16:9.
+   */
+  it.each([
+    ['no dimensions at all', {}],
+    ['width only', { width: 1080 }],
+    ['a zero dimension', { width: 1080, height: 0 }],
+    ['a negative dimension', { width: -1080, height: 1920 }],
+    ['a non-numeric dimension', { width: '1080', height: 1920 }],
+  ])('falls back to a 16:9 box when the poster has %s', (_label, dims) => {
+    const { container } = render(
+      <RichTextBody
+        data={videoFileNode({ video: STORED_VIDEO, poster: { ...STORED_POSTER, width: undefined, height: undefined, ...dims } })}
+      />,
+    )
+    const box = container.querySelector('video')?.parentElement
+    expect(box?.className).toContain('aspect-video')
+    expect(box?.style.aspectRatio).toBe('')
+  })
+
+  it('falls back to a 16:9 box when there is no poster at all', () => {
+    const { container } = render(<RichTextBody data={videoFileNode({ video: STORED_VIDEO })} />)
+    const box = container.querySelector('video')?.parentElement
+    expect(box?.className).toContain('aspect-video')
+  })
+
+  it('renders nothing when the media relationship was not populated', () => {
+    // depth: 0 — the field is a bare id, so there is no URL to play. An empty 16:9 box with
+    // a caption under it reads to a reader as a broken page.
+    const { container } = render(
+      <RichTextBody data={videoFileNode({ video: 4242, caption: 'لن يظهر' })} />,
+    )
+    expect(container.querySelector('video')).toBeNull()
+    expect(container.textContent).toBe('قبل الفيديو')
+  })
+
+  /**
+   * NEGATIVE CONTROL for `safeMediaSrc`. The two assertions above would both pass against a
+   * renderer that interpolated `media.url` straight into the attribute, so this is the one
+   * that proves the guard exists: a media row whose url is not an https URL or a
+   * site-relative path must never reach a `src`.
+   */
+  it('refuses a media url that is not https or site-relative', () => {
+    for (const url of ['javascript:alert(1)', 'data:text/html,<script>x</script>', '//evil.test/x.mp4']) {
+      const { container } = render(
+        <RichTextBody data={videoFileNode({ video: { ...STORED_VIDEO, url } })} />,
+      )
+      expect(container.querySelector('video')).toBeNull()
+      expect(container.querySelector('source')).toBeNull()
+    }
+
+    // ...and the same renderer DOES emit a site-relative url, so the check above is a
+    // rejection of these three inputs rather than of every input.
+    const { container } = render(
+      <RichTextBody data={videoFileNode({ video: { ...STORED_VIDEO, url: '/media/clip.mp4' } })} />,
+    )
+    expect(container.querySelector('video source')?.getAttribute('src')).toBe('/media/clip.mp4')
+  })
+
+  /**
+   * The rollout guard documented in `RichTextBody`: during a deploy an editor can save a
+   * block type the live frontend does not know yet. It must render as nothing, never as
+   * Payload's literal "unknown node" text in the middle of an article.
+   */
+  it('renders nothing for a block type this build does not know', () => {
+    // Positive control first: the same harness DOES produce an element for a block type
+    // this build knows, so "renders nothing" below is a statement about the block type and
+    // not about the fixture.
+    const { container } = render(<RichTextBody data={videoFileNode({ video: STORED_VIDEO })} />)
+    expect(container.querySelector('video')).not.toBeNull()
+
+    const future = render(
+      <RichTextBody
+        data={{
+          root: {
+            type: 'root',
+            children: [{ type: 'block', fields: { blockType: 'podcastFromTheFuture', url: 'x' } }],
+          },
+        }}
+      />,
+    )
+    expect(future.container.textContent).toBe('')
+    expect(future.container.textContent).not.toContain('unknown')
+  })
+})

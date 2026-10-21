@@ -171,7 +171,7 @@ export interface Post {
    */
   featuredVideoUrl?: string | null;
   /**
-   * اكتب المقال هنا. استخدم زر الصورة لإضافة صور، وزر الفيديو لإدراج مقطع بالرابط.
+   * اكتب المقال هنا. استخدم زر الصورة لإضافة صور، و«فيديو برابط» لإدراج مقطع من يوتيوب أو فيسبوك أو إنستغرام، و«فيديو من ملف» لرفع مقطع فيديو من جهازك (MP4 بحد أقصى ٢٠٠ ميغابايت).
    */
   content?: {
     root: {
@@ -1312,6 +1312,27 @@ export interface VideoEmbedBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'videoEmbed';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "VideoFileBlock".
+ */
+export interface VideoFileBlock {
+  /**
+   * ارفع ملف الفيديو (MP4 أو WebM، بحد أقصى ٢٠٠ ميغابايت) أو اختر واحدًا من مكتبة الوسائط.
+   */
+  video: number | Media;
+  /**
+   * صورة تظهر مكان الفيديو قبل تشغيله. أضِفها دائمًا إن أمكن: بدونها يبدأ المتصفح بتحميل الفيديو حتى لو لم يشغّله القارئ.
+   */
+  poster?: (number | null) | Media;
+  /**
+   * يظهر تحت الفيديو.
+   */
+  caption?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'videoFile';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
