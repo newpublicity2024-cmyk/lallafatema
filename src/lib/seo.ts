@@ -203,8 +203,37 @@ export function recipeJsonLd(post: Post) {
   }
 }
 
+/**
+ * The first self-hosted `videoFile` block in an article body, resolved to the media
+ * documents it points at.
+ *
+ * Walks only the root's own children: the block is inserted at the top level of the article
+ * flow (a journalist drops it between paragraphs), and a recursive crawl of every list item
+ * and table cell in a 1,500-article archive would be cost without a caller.
+ *
+ * Returns null unless the relationship was POPULATED — `getPostById` asks for `depth: 2`, so
+ * the article page has real documents here, but a caller that fetched at depth 0 holds bare
+ * ids and there is no URL to publish. Emitting a VideoObject with a missing `contentUrl`
+ * would be worse than emitting none: it is a structured-data error Google reports against
+ * the whole page.
+ */
+function firstUploadedVideo(post: Post): { video: Media; poster: Media | null } | null {
+  const children = (post.content as { root?: { children?: unknown[] } } | null)?.root?.children
+  if (!Array.isArray(children)) return null
+
+  for (const child of children) {
+    const fields = (child as { fields?: { blockType?: string; video?: unknown; poster?: unknown } })
+      ?.fields
+    if (fields?.blockType !== 'videoFile') continue
+    const video = asMedia(fields.video as Media | number | null | undefined)
+    if (!video?.url) continue
+    return { video, poster: asMedia(fields.poster as Media | number | null | undefined) }
+  }
+  return null
+}
+
 export function videoObjectJsonLdForPost(post: Post) {
-  if (post.featuredType !== 'video' || !post.featuredVideoUrl) return null
+  if (post.featuredType !== 'video' || !post.featuredVideoUrl) return uploadedVideoObjectJsonLd(post)
   const thumb = asMedia(post.featuredImage)
   // Thumbnail is required for Google video rich results; fall back to the YouTube
   // poster (same source the hero uses) when no image was uploaded.
@@ -219,6 +248,38 @@ export function videoObjectJsonLdForPost(post: Post) {
     contentUrl: post.featuredVideoUrl,
     // Prefer the canonical embed URL (youtube.com/embed/ID) when derivable.
     embedUrl: embedUrl(post.featuredVideoUrl) ?? post.featuredVideoUrl,
+    inLanguage: 'ar',
+  }
+}
+
+/**
+ * VideoObject for an article whose video is a FILE we host, not a platform link.
+ *
+ * Deliberately reached only when there is no header video: one page should describe one
+ * primary video, and the header is the primary one whenever it exists. An article with both
+ * still gets the header's VideoObject, which is the video a reader sees first.
+ *
+ * No `embedUrl`: there is no third-party player page to point at, and schema.org asks for
+ * `contentUrl` OR `embedUrl` rather than both. No `duration` either — the media document
+ * does not record one, and inventing an ISO-8601 duration we have not measured would be a
+ * structured-data lie about our own content.
+ */
+function uploadedVideoObjectJsonLd(post: Post) {
+  const found = firstUploadedVideo(post)
+  if (!found) return null
+
+  // Thumbnail is required for Google video rich results. The block's own poster is the
+  // frame the reader actually sees, so it wins over the article's cover image.
+  const thumb = found.poster ?? asMedia(post.featuredImage)
+
+  return {
+    '@context': CONTEXT,
+    '@type': 'VideoObject',
+    name: post.title,
+    description: post.excerpt ?? post.title,
+    thumbnailUrl: thumb?.url ? [absoluteUrl(thumb.url)] : undefined,
+    uploadDate: post.publishedAt ?? post.createdAt,
+    contentUrl: absoluteUrl(found.video.url as string),
     inLanguage: 'ar',
   }
 }

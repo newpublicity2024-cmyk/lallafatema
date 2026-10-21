@@ -124,7 +124,7 @@ export const Posts: CollectionConfig = {
       hooks: { beforeChange: [stripPastedAlignment] },
       admin: {
         description:
-          'اكتب المقال هنا. استخدم زر الصورة لإضافة صور، وزر الفيديو لإدراج مقطع بالرابط.',
+          'اكتب المقال هنا. استخدم زر الصورة لإضافة صور، و«فيديو برابط» لإدراج مقطع من يوتيوب أو فيسبوك أو إنستغرام، و«فيديو من ملف» لرفع مقطع فيديو من جهازك (MP4 بحد أقصى ٢٠٠ ميغابايت).',
       },
     },
     // ── Recipe support (kitchen articles → Recipe structured data in Phase 4) ──

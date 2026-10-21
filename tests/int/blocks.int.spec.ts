@@ -3,12 +3,14 @@ import type { ArrayField, Block, Field, SelectField, TextField, UploadField } fr
 
 import { GALLERY_LAYOUTS, GalleryBlock } from '@/blocks/Gallery'
 import { VideoEmbedBlock } from '@/blocks/VideoEmbed'
+import { VideoFileBlock } from '@/blocks/VideoFile'
 import { articleFeatures } from '@/lib/editor-config'
+import { ALLOWED_IMAGE_MIME_TYPES, ALLOWED_VIDEO_MIME_TYPES } from '@/lib/upload-guard'
 import { isEmbeddable, parseEmbed } from '@/lib/embeds'
 import { altFromFileName, pickImageFiles } from '@/components/admin/editor/mediaUpload'
 
 /**
- * The two in-body blocks and the editor feature list.
+ * The three in-body blocks and the editor feature list.
  *
  * These specs are written as a CONTRACT suite, not a smoke suite. Both blocks are stored
  * inside the `content` JSONB column of 1,574 live posts and are read back by a public
@@ -51,6 +53,7 @@ const layoutField = galleryFields.layout as SelectField
 const imagesField = galleryFields.images as ArrayField
 const imageRowFields = fieldsByName({ fields: imagesField.fields, slug: 'row' })
 const urlField = videoFields.url as TextField
+const videoFileFields = fieldsByName(VideoFileBlock)
 
 const validateUrl = (value: unknown): string | true =>
   (urlField.validate as unknown as FieldValidator)(value, {
@@ -392,13 +395,16 @@ describe('articleFeatures()', () => {
     expect(sizes).not.toContain('h1')
   })
 
-  it('registers both in-body blocks, by the slug stored content uses', () => {
+  it('registers all three in-body blocks, by the slug stored content uses', () => {
     const blocks = features.find((feature) => feature.key === 'blocks')
     const registered = (blocks?.serverFeatureProps as { blocks?: { slug: string }[] } | undefined)
       ?.blocks
     const slugs = (registered ?? []).map((block) => block.slug)
     expect(slugs).toContain('gallery')
     expect(slugs).toContain('videoEmbed')
+    // Without this the block exists in the repository and nowhere in the editor — the
+    // failure mode where every unit test passes and no journalist can insert a video.
+    expect(slugs).toContain('videoFile')
   })
 
   it('keeps both toolbars — the fixed bar is the request, the inline bar is the habit', () => {
@@ -433,6 +439,80 @@ describe('articleFeatures()', () => {
     const again = articleFeatures()
     expect(again).not.toBe(features)
     expect(again.map((feature) => feature.key)).toEqual(keys)
+  })
+})
+
+/* ------------------------------------------------------------------------- */
+/* VideoFile block — the self-hosted video                                   */
+/* ------------------------------------------------------------------------- */
+
+describe('VideoFileBlock — identity and stored shape', () => {
+  it('keeps the slug and interfaceName the renderer and payload-types depend on', () => {
+    expect(VideoFileBlock.slug).toBe('videoFile')
+    expect(VideoFileBlock.interfaceName).toBe('VideoFileBlock')
+  })
+
+  it('is a DIFFERENT block from videoEmbed, not a mode of it', () => {
+    // The two are deliberately separate: `videoEmbed.url` is `required: true` across
+    // 1,500+ posts' worth of version history, so making it conditional to fold both into
+    // one block would make an old row unsaveable on its next edit.
+    expect(VideoFileBlock.slug).not.toBe(VideoEmbedBlock.slug)
+    expect(Object.keys(videoFileFields)).not.toContain('url')
+  })
+
+  it('exposes exactly the three contracted fields', () => {
+    expect(Object.keys(videoFileFields).sort()).toEqual(['caption', 'poster', 'video'])
+  })
+
+  it('requires the video and points it at the media collection', () => {
+    const video = videoFileFields.video as UploadField
+    expect(video.type).toBe('upload')
+    expect(video.relationTo).toBe('media')
+    // A videoFile block with no file is a hole in the article; the renderer drops it.
+    expect(video.required).toBe(true)
+  })
+
+  it('leaves the poster and the caption optional', () => {
+    const poster = videoFileFields.poster as UploadField
+    expect(poster.type).toBe('upload')
+    expect(poster.relationTo).toBe('media')
+    expect(poster.required).not.toBe(true)
+    const caption = videoFileFields.caption as TextField
+    expect(caption.type).toBe('text')
+    expect(caption.required).not.toBe(true)
+  })
+
+  it('offers the journalist only files the upload guard would accept', () => {
+    // The picker and the guard are built from the same two lists. If they drift, the admin
+    // offers a file that the server then refuses — which the journalist experiences as the
+    // editor being broken, not as a rejected file.
+    const video = videoFileFields.video as UploadField
+    expect(video.filterOptions).toEqual({ mimeType: { in: [...ALLOWED_VIDEO_MIME_TYPES] } })
+    const poster = videoFileFields.poster as UploadField
+    expect(poster.filterOptions).toEqual({ mimeType: { in: [...ALLOWED_IMAGE_MIME_TYPES] } })
+  })
+
+  it('labels the block and every field in Arabic, with no Latin script', () => {
+    const labels = [
+      VideoFileBlock.labels?.singular,
+      VideoFileBlock.labels?.plural,
+      ...Object.values(videoFileFields).map((field) => field.label),
+    ]
+    for (const label of labels) {
+      expect(typeof label).toBe('string')
+      expect(String(label)).toMatch(ARABIC)
+      expect(String(label)).not.toMatch(/[A-Za-z]/)
+    }
+  })
+
+  it('tells the journalist what to upload and why the poster matters', () => {
+    expect(String((videoFileFields.video as UploadField).admin?.description)).toMatch(ARABIC)
+    expect(String((videoFileFields.poster as UploadField).admin?.description)).toMatch(ARABIC)
+  })
+
+  it('does not reuse the bare label videoEmbed used to carry', () => {
+    // Two menu entries both reading "فيديو" is a menu that makes the journalist guess.
+    expect(VideoFileBlock.labels?.singular).not.toBe(VideoEmbedBlock.labels?.singular)
   })
 })
 

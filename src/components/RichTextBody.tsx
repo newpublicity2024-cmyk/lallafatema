@@ -4,6 +4,7 @@ import { RichText, type JSXConvertersFunction } from '@payloadcms/richtext-lexic
 import type { VideoEmbedBlock } from '@/payload-types'
 import { alignmentStyle } from '@/lib/lexical-align'
 import { MediaEmbed } from './embeds/MediaEmbed'
+import { VideoFile } from './embeds/VideoFile'
 import { Gallery } from './gallery/Gallery'
 import type { GalleryImage, GalleryLayout } from './gallery/types'
 
@@ -26,6 +27,20 @@ type StoredGalleryBlock = {
         alt?: string | null
       }[]
     | null
+}
+
+/**
+ * The `videoFile` block's stored fields, read defensively — same rule as the gallery above.
+ *
+ * `video` and `poster` are `unknown` rather than `number | Media` on purpose: Payload hands
+ * back a populated document at `depth >= 1` and a bare id otherwise, and the renderer is the
+ * wrong place to assume which one a given call site asked for.
+ */
+type StoredVideoFileBlock = {
+  blockType?: string
+  video?: unknown
+  poster?: unknown
+  caption?: string | null
 }
 
 const GALLERY_LAYOUTS: readonly GalleryLayout[] = ['mosaic', 'grid', 'carousel']
@@ -161,6 +176,22 @@ const baseConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
      */
     videoEmbed: ({ node }: { node: { fields: VideoEmbedBlock } }) => (
       <MediaEmbed url={node.fields?.url ?? ''} caption={node.fields?.caption ?? null} />
+    ),
+
+    /**
+     * `videoFile` — a video the newsroom uploaded, played from our own object storage.
+     *
+     * The fields are read off the node rather than destructured through the generated
+     * `VideoFileBlock` type for the same reason the gallery is: `video` and `poster` arrive
+     * as a populated media object at `depth >= 1` (which is what `getPostById` asks for) and
+     * as a bare id otherwise, and the renderer has to survive both. It narrows them itself.
+     */
+    videoFile: ({ node }: { node: { fields?: StoredVideoFileBlock } }) => (
+      <VideoFile
+        video={node.fields?.video}
+        poster={node.fields?.poster}
+        caption={node.fields?.caption ?? null}
+      />
     ),
 
     /** `gallery` — multi-photo block with three layouts and a lightbox. */

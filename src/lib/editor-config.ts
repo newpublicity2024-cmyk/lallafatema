@@ -21,6 +21,7 @@ import {
 
 import { GalleryBlock } from '../blocks/Gallery'
 import { VideoEmbedBlock } from '../blocks/VideoEmbed'
+import { VideoFileBlock } from '../blocks/VideoFile'
 
 /**
  * The article editor's Lexical feature list, in one importable place.
@@ -79,7 +80,11 @@ export function articleFeatures() {
     // journalists pasting a screenshot of a table — is strictly worse for readers.
     EXPERIMENTAL_TableFeature(),
     UploadFeature(),
-    BlocksFeature({ blocks: [GalleryBlock, VideoEmbedBlock] }),
+    // Three in-body blocks: a photo gallery, a video by LINK (YouTube and friends, framed
+    // through a facade) and a video FILE the newsroom uploaded and we serve ourselves. The
+    // last one is the only way to publish footage that is not on a platform — a press
+    // handout, a WhatsApp clip from a correspondent, a cut the artist has not posted yet.
+    BlocksFeature({ blocks: [GalleryBlock, VideoEmbedBlock, VideoFileBlock] }),
     SmartPasteFeature(),
     FixedToolbarFeature(),
     InlineToolbarFeature(),

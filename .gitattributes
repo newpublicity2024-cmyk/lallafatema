@@ -6,4 +6,9 @@
 *.webp binary
 *.ico binary
 *.pdf binary
+# This repository's first video file arrives with the editor's upload block
+# (tests/e2e/fixtures/tiny-video.mp4). `text=auto` above would otherwise have to
+# guess, and a guessed-wrong eol rewrite corrupts an MP4 silently.
+*.mp4 binary
+*.webm binary
 pnpm-lock.yaml -diff

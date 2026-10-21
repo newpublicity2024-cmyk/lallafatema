@@ -24,6 +24,7 @@ import { MainMenu } from './globals/MainMenu'
 import { SiteSettings } from './globals/SiteSettings'
 import { articleFeatures } from './lib/editor-config'
 import { allowedOrigins } from './lib/origins'
+import { MAX_VIDEO_BYTES } from './lib/upload-guard'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -226,10 +227,24 @@ export default buildConfig({
   cors: allowedOrigins(),
   // Namespace auth cookies.
   cookiePrefix: 'lf',
-  // Global hard cap for all upload collections (busboy). Per-type caps live in the Media
-  // guard; this is the outer backstop against oversized/DoS uploads.
+  /**
+   * Global hard cap for all upload collections (busboy). Per-type caps live in the Media
+   * guard; this is the outer backstop against oversized/DoS uploads.
+   *
+   * It tracks the LARGEST per-type cap rather than naming its own number, because the two
+   * ceilings have to be read together and a literal here drifts silently: this was 40 MB
+   * while the video cap was 200 MB, and the only symptom would have been a 200 MB-legal
+   * video dying inside busboy with no message the journalist could act on. Importing the
+   * constant makes the outer limit impossible to leave behind the inner one.
+   *
+   * Reachable only on the SERVER multipart path — a local dev upload, or the smart-paste
+   * helper. In production the browser sends the file straight to Blob (`clientUploads`
+   * above) and never passes through busboy at all, which is also the only reason a 72 MB
+   * video can be uploaded from the admin: Vercel kills any request body over 4.5 MB at the
+   * edge, so the direct-to-storage path is not an optimisation here, it is the only path.
+   */
   upload: {
-    limits: { fileSize: 41_943_040 }, // 40 MB
+    limits: { fileSize: MAX_VIDEO_BYTES },
     abortOnLimit: true,
   },
   typescript: {
