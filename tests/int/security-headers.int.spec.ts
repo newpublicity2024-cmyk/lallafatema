@@ -198,6 +198,10 @@ describe('buildCsp frame-src — social/video embed providers', () => {
       'https://s.ytimg.com',
       'https://googleads.g.doubleclick.net',
       'https://tpc.googlesyndication.com',
+      'https://*.safeframe.googlesyndication.com',
+      'https://*.doubleclick.net',
+      'https://*.adtrafficquality.google',
+      'https://www.google.com',
       'https://cdn.onesignal.com',
       'https://*.onesignal.com',
     ])
@@ -235,5 +239,46 @@ describe('buildCsp — directives unaffected by the embed widening', () => {
 
   it('keeps frame-ancestors locked to self (we are not embeddable ourselves)', () => {
     expect(directive(csp, 'frame-ancestors')).toEqual(["'self'"])
+  })
+})
+
+/**
+ * Google Ad Manager (components/GamSlot.tsx). Every origin below was refused by the
+ * enforced policy in a real browser before it was allowed. The costly one is SafeFrame:
+ * blocked, the slot still reports "filled" and simply stays blank — Ad Manager counts the
+ * request, the reader sees nothing, and no log anywhere records why.
+ */
+describe('buildCsp — Google Ad Manager', () => {
+  const csp = buildCsp()
+  const scriptSrc = directive(csp, 'script-src')
+  const frameSrc = directive(csp, 'frame-src')
+  const allows = (list: string[], url: string) =>
+    list.some((entry) => covers(entry, new URL(url).origin))
+
+  it('lets GPT and its ad-quality script load', () => {
+    for (const url of [
+      'https://securepubads.g.doubleclick.net/tag/js/gpt.js',
+      'https://ep2.adtrafficquality.google/sodar/sodar2.js',
+      'https://tpc.googlesyndication.com/pagead/js/r20261021/r20110914/abg_lite_fy2021.js',
+      'https://pagead2.googlesyndication.com/pagead/managed/js/activeview/current/ufs_web_display.js',
+    ]) {
+      expect(allows(scriptSrc, url), url).toBe(true)
+    }
+  })
+
+  it('lets every frame GPT opens load', () => {
+    for (const url of [
+      'https://0c1ead0a4fbb45272bbb536641b203d4.safeframe.googlesyndication.com/safeframe/1-0-45/html/container.html',
+      'https://cm.g.doubleclick.net/partnerpixels',
+      'https://ep2.adtrafficquality.google/sodar/sodar2/255/runner.html',
+      'https://www.google.com/recaptcha/api2/aframe',
+    ]) {
+      expect(allows(frameSrc, url), url).toBe(true)
+    }
+  })
+
+  it('would have caught the blank SafeFrame (control)', () => {
+    const before = frameSrc.filter((e) => e !== 'https://*.safeframe.googlesyndication.com')
+    expect(allows(before, 'https://0c1ead0a.safeframe.googlesyndication.com/safeframe/x.html')).toBe(false)
   })
 })
