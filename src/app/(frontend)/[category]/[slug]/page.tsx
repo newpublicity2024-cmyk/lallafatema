@@ -71,7 +71,7 @@ export default async function ArticlePage({ params }: Props) {
       {recipe && <JsonLd data={recipe} />}
       {videoLd && <JsonLd data={videoLd} />}
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
-      <ArticleView post={post} related={related} />
+      <ArticleView post={post} related={related} ads={cfg.adsEnabled} />
     </>
   )
 }

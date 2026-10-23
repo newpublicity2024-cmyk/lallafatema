@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Fragment } from 'react'
 
+import { GamSlot } from '@/components/GamSlot'
 import { JsonLd } from '@/components/JsonLd'
 import { PageView } from '@/components/PageView'
 import { Pagination } from '@/components/Pagination'
@@ -90,8 +92,17 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           <p className="py-16 text-center text-zinc-700">لا توجد مقالات في هذا القسم بعد.</p>
         ) : (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {docs.map((post) => (
-              <PostCard key={post.id} post={post} />
+            {docs.map((post, i) => (
+              <Fragment key={post.id}>
+                <PostCard post={post} />
+                {/* Ad Manager break halfway down a full page of posts. */}
+                {i === 7 && docs.length > 8 && (
+                  <>
+                    <GamSlot unit="Billboard_RG_PB" className="col-span-full" />
+                    <GamSlot unit="Halfpage_1" className="col-span-full" only={['phone']} />
+                  </>
+                )}
+              </Fragment>
             ))}
           </div>
         )}

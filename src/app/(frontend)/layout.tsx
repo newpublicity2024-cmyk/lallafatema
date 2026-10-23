@@ -9,6 +9,8 @@ import { ConsentMode } from '@/components/ConsentMode'
 import { OneSignalInit } from '@/components/OneSignalInit'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
+import { GamProvider } from '@/components/GamSlot'
+import { GamBottom, GamSkin, GamTop } from '@/components/GamSiteSlots'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import { JsonLd } from '@/components/JsonLd'
 import { SiteScripts } from '@/components/SiteScripts'
@@ -70,13 +72,19 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <JsonLd data={webSiteJsonLd(cfg)} />
         {/* Admin-managed site-wide loaders (ad networks, GTM, verification). */}
         <SiteScripts headHtml={cfg.headScripts} bodyHtml={cfg.bodyScripts} />
-        <Header />
-        {/* Leaderboard ad below the sticky header — renders nothing when unscheduled. */}
-        <AdSlot placement="header" className="mt-4 px-4" />
-        <main id="main" tabIndex={-1} className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        {/* Google Ad Manager — off with the same Site Settings switch as every other ad. */}
+        <GamProvider enabled={cfg.adsEnabled}>
+          <GamSkin />
+          <Header />
+          <GamTop />
+          {/* Leaderboard ad below the sticky header — renders nothing when unscheduled. */}
+          <AdSlot placement="header" className="mt-4 px-4" />
+          <main id="main" tabIndex={-1} className="flex-1">
+            {children}
+          </main>
+          <GamBottom />
+          <Footer />
+        </GamProvider>
         {cfg.consentEnabled && <ConsentBanner policyUrl={cfg.privacyPolicyUrl} />}
       </body>
     </html>

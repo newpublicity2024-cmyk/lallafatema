@@ -20,6 +20,8 @@ const GOOGLE = [
   'https://www.gstatic.com',
   'https://*.googleadservices.com',
   'https://*.doubleclick.net',
+  // Google's ad-traffic-quality script (sodar), loaded by GPT alongside every ad request.
+  'https://*.adtrafficquality.google',
 ]
 const ONESIGNAL = ['https://cdn.onesignal.com', 'https://*.onesignal.com']
 const YOUTUBE = [
@@ -30,6 +32,23 @@ const YOUTUBE = [
 const ADSENSE_FRAMES = [
   'https://googleads.g.doubleclick.net',
   'https://tpc.googlesyndication.com',
+]
+/**
+ * Frames Google Ad Manager (GPT, components/GamSlot.tsx) opens. Each was observed blocked
+ * in a real browser before it was added — none is a guess:
+ *   - SafeFrame: Ad Manager serves third-party and programmatic creatives inside a
+ *     cross-origin frame on a random `<hash>.safeframe.googlesyndication.com` host.
+ *     Without it the slot reports "filled" and stays blank, which no log records.
+ *   - `*.doubleclick.net`: cookie matching (`cm.g.doubleclick.net`) and GPT's own frames.
+ *   - `*.adtrafficquality.google`: the runner frame the sodar script above opens.
+ *   - `www.google.com`: the invisible reCAPTCHA frame (`/recaptcha/api2/aframe`) that the
+ *     same invalid-traffic check loads.
+ */
+const GAM_FRAMES = [
+  'https://*.safeframe.googlesyndication.com',
+  'https://*.doubleclick.net',
+  'https://*.adtrafficquality.google',
+  'https://www.google.com',
 ]
 // Social/video embed origins the rich-text embed parser can produce. MUST stay identical to
 // EMBED_FRAME_HOSTS in src/lib/embeds.ts — mirrored rather than imported because this module
@@ -48,7 +67,7 @@ const EMBED_FRAMES = [
 export function buildCsp(): string {
   const devEval = process.env.NODE_ENV === 'production' ? [] : ["'unsafe-eval'"]
   const scriptSrc = ["'self'", "'unsafe-inline'", ...devEval, ...GOOGLE, ...ONESIGNAL, ...YOUTUBE]
-  const frameSrc = ["'self'", ...YOUTUBE, ...ADSENSE_FRAMES, ...ONESIGNAL, ...EMBED_FRAMES]
+  const frameSrc = ["'self'", ...YOUTUBE, ...ADSENSE_FRAMES, ...GAM_FRAMES, ...ONESIGNAL, ...EMBED_FRAMES]
 
   const directives: [string, string[]][] = [
     ['default-src', ["'self'"]],

@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import { Fragment } from 'react'
 
 import { AdSlot } from '@/components/AdSlot'
+import { GamSlot } from '@/components/GamSlot'
 import { HeroFeature } from '@/components/HeroFeature'
 import { LeadListBlock } from '@/components/LeadListBlock'
 import { MagazineSection } from '@/components/MagazineSection'
 import { SectionBlock } from '@/components/SectionBlock'
 import { VideoSection } from '@/components/VideoSection'
 import type { Category, Post, YoutubeVideo } from '@/payload-types'
+import type { GamUnit } from '@/lib/gam'
 import { magazineInsertAfterIndex } from '@/lib/homepage'
 import {
   getCategories,
@@ -33,6 +35,29 @@ export async function generateMetadata(): Promise<Metadata> {
     image: ogImageUrl(cfg.defaultOgImage),
     type: 'website',
   })
+}
+
+/**
+ * An Ad Manager break between two homepage bands: a leaderboard/billboard on tablet and
+ * desktop, a phone unit on phones. Either side may be omitted.
+ */
+function AdBreak({ wide, phone }: { wide?: GamUnit; phone?: GamUnit }) {
+  return (
+    <>
+      {wide && <GamSlot unit={wide} only={['tablet', 'desktop']} className="my-8 px-4" />}
+      {phone && <GamSlot unit={phone} only={['phone']} className="my-6 px-4" />}
+    </>
+  )
+}
+
+/**
+ * Breaks after the standard sections (by index): every other band. A homepage with fewer
+ * sections simply carries fewer breaks.
+ */
+const SECTION_BREAKS: Record<number, { wide: GamUnit; phone: GamUnit }> = {
+  1: { wide: 'Header_PB', phone: 'Halfpage_3' },
+  3: { wide: 'Billboard_HP_PB_2', phone: 'Halfpage_4' },
+  5: { wide: 'Header_PB_2', phone: 'Halfpage_1_PB' },
 }
 
 const onlyPublished = (items: (number | Post)[] | null | undefined): Post[] =>
@@ -108,6 +133,8 @@ export default async function HomePage() {
     <div>
       <HeroFeature posts={heroPosts} />
 
+      <AdBreak wide="Header" phone="M_320x50_MITOP_AS" />
+
       {featured && featured.posts.length > 0 && (
         <LeadListBlock
           category={featured.category}
@@ -118,8 +145,12 @@ export default async function HomePage() {
         />
       )}
 
+      <AdBreak phone="Halfpage_1" />
+
       {/* Video band placed directly after the مشاهير (celebrities) feature. */}
       {showVideoBand && videos.length > 0 && <VideoSection videos={videos} />}
+
+      <AdBreak wide="Billboard_HP_PB" phone="Halfpage_2" />
 
       {/* Between-bands ad — renders nothing (no gap) when none is scheduled. */}
       {showBetweenAd && <AdSlot placement="between-sections" className="my-8 px-4" />}
@@ -129,6 +160,8 @@ export default async function HomePage() {
           {i === 0 && magazineAfter < 0 && <MagazineSection issues={magazineIssues} />}
           <SectionBlock category={category} posts={posts} title={title} band={i % 2 === 1} />
           {i === magazineAfter && <MagazineSection issues={magazineIssues} />}
+          {/* Never after the last band: the layout's bottom banner sits there. */}
+          {SECTION_BREAKS[i] && i < standard.length - 1 && <AdBreak {...SECTION_BREAKS[i]} />}
         </Fragment>
       ))}
     </div>
