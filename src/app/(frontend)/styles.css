@@ -133,3 +133,39 @@
 .prose-ar img {
   border-radius: 0.75rem;
 }
+
+/* Google Ad Manager slots (components/GamSlot.tsx). Unlayered on purpose: these rules
+ * must beat the Tailwind display utilities that show a slot per viewport.
+ *
+ * The slot reserves its height per viewport from the custom properties the component
+ * sets, so the box is already the right size in the server HTML. */
+.lf-ad {
+  min-height: var(--lf-ad-phone, 0px);
+}
+@media (min-width: 48rem) {
+  .lf-ad {
+    min-height: var(--lf-ad-tablet, 0px);
+  }
+}
+@media (min-width: 64rem) {
+  .lf-ad {
+    min-height: var(--lf-ad-desktop, 0px);
+  }
+}
+/* Unsold: collapse the reserved space (and its margins) rather than leave a hole. */
+.lf-ad[data-ad-state='empty'] {
+  display: none;
+}
+
+/* Site skin (Habillage). While a skin creative is on the page it paints the <body>
+ * background; the page itself narrows to the content width so the skin shows down both
+ * sides, and keeps an opaque surface so text never sits on the artwork. */
+html.lf-skinned body > header,
+html.lf-skinned body > main,
+html.lf-skinned body > footer,
+html.lf-skinned body > .lf-ad {
+  width: 100%;
+  max-width: 1296px;
+  margin-inline: auto;
+  background-color: var(--color-surface);
+}

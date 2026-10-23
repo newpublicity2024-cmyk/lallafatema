@@ -1,21 +1,40 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
+import { BASE_URL } from '../../playwright.config'
+
 // Resolved from `use.baseURL` in playwright.config.ts. Never hardcode a port here:
 // this machine runs several dev servers, and a stale absolute URL silently pointed
 // the whole suite at a DIFFERENT application. See tests/e2e/global-setup.ts.
 const BASE = ''
 
+// Cookies and `new URL()` need an absolute origin; '' made every addCookies throw
+// ("Cookie should have a url or a domain/path pair"), failing the whole spec in
+// beforeEach before any page loaded. Same single source as `use.baseURL`.
+const ORIGIN = BASE_URL
+
+/**
+ * Ad Manager slots (components/GamSlot.tsx) are left out of every audit. What renders
+ * inside them is the advertiser's creative, served from Google's ad server — e.g. an
+ * image ad's `<a id="aw0">` with no alt text — so a violation there is not a defect the
+ * site can fix, and which creative serves changes per request. The slot containers
+ * themselves carry no content of their own.
+ */
+const AD_SLOTS = '[data-ad-unit]'
+
 // Accept-all consent cookie so the banner doesn't overlay the base page during
 // static audits. The banner's own a11y is covered by the keyboard spec (Task 3)
 // and consent.e2e.spec.ts.
 test.beforeEach(async ({ context }) => {
-  await context.addCookies([{ name: 'lf-consent', value: '1:a=1,ads=1', url: BASE }])
+  await context.addCookies([{ name: 'lf-consent', value: '1:a=1,ads=1', url: ORIGIN }])
 })
 
 async function contrastViolations(page: Page, url: string) {
   await page.goto(url, { waitUntil: 'load' })
-  const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze()
+  const results = await new AxeBuilder({ page })
+    .withRules(['color-contrast'])
+    .exclude(AD_SLOTS)
+    .analyze()
   return results.violations
 }
 
@@ -31,7 +50,7 @@ async function firstMatchingHref(page: Page, re: RegExp) {
     .evaluateAll((els) => els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
   const match = hrefs.find((h) => re.test(h))
   expect(match, `expected a link matching ${re}`).toBeTruthy()
-  return new URL(match!, BASE).toString()
+  return new URL(match!, ORIGIN).toString()
 }
 
 /**
@@ -172,7 +191,7 @@ test.describe('consent dialog focus', () => {
 
   test('returns focus to the footer trigger after reopen + choose', async ({ page, context }) => {
     // Establish a prior choice so the banner does not auto-open.
-    await context.addCookies([{ name: 'lf-consent', value: '1:a=1,ads=1', url: BASE }])
+    await context.addCookies([{ name: 'lf-consent', value: '1:a=1,ads=1', url: ORIGIN }])
     await page.goto(BASE, { waitUntil: 'load' })
     const trigger = page.getByRole('button', { name: 'إعدادات ملفات تعريف الارتباط' })
     await trigger.focus()
@@ -190,7 +209,7 @@ test.describe('axe gate — WCAG A/AA, 7 routes', () => {
 
   async function audit(page: Page, url: string) {
     await page.goto(url, { waitUntil: 'load' })
-    const results = await new AxeBuilder({ page }).withTags(TAGS).analyze()
+    const results = await new AxeBuilder({ page }).withTags(TAGS).exclude(AD_SLOTS).analyze()
     const summary = results.violations
       .map((v) => `${v.id} (${v.nodes.length} node(s)) — ${v.help}\n  ${v.helpUrl}`)
       .join('\n')
