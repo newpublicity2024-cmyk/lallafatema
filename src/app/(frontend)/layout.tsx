@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import { Tajawal } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './styles.css'
 
 import { AdSlot } from '@/components/AdSlot'
@@ -67,6 +68,8 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         {cfg.consentEnabled && <ConsentMode />}
         {/* GA4 — after the consent stub so Consent Mode v2 defaults are set first. */}
         <GoogleAnalytics id={cfg.analyticsId} />
+        {/* Vercel Web Analytics — cookieless, so no consent gate; kept out of the admin like GA4. */}
+        <Analytics />
         <OneSignalInit />
         <JsonLd data={organizationJsonLd(cfg)} />
         <JsonLd data={webSiteJsonLd(cfg)} />
