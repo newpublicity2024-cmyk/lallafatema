@@ -18,7 +18,7 @@
  */
 
 /** Built-in property, used when Site Settings › معرّف التحليلات is empty. */
-export const GA_MEASUREMENT_ID = 'G-VTX278FNG3'
+export const GA_MEASUREMENT_ID = 'G-T3E0PT6FWR'
 
 const GA_ID_RE = /^G-[A-Z0-9]{4,20}$/i
 
