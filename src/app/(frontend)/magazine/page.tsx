@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
-import { IssueCard } from '@/components/IssueCard'
+import { MagazineArchive } from '@/components/MagazineArchive'
 import { SectionHeading } from '@/components/SectionHeading'
-import { getMagazineIssues, getSiteConfig } from '@/lib/queries'
+import { getMagazineIssueBatch, getSiteConfig } from '@/lib/queries'
 import { magazineArchiveUrl } from '@/lib/routes'
 import { buildMetadata, ogImageUrl } from '@/lib/seo'
 
@@ -12,29 +12,26 @@ export async function generateMetadata(): Promise<Metadata> {
   const cfg = await getSiteConfig()
   return buildMetadata({
     title: 'أرشيف المجلة',
-    description: 'تصفّحي أعداد مجلة لالة فاطمة الرقمية، واقرئي أو حمّلي كل عدد بصيغة PDF.',
+    description: 'تصفّحي أعداد مجلة لالة فاطمة، واقرئي أو حمّلي الأعداد المتوفرة بصيغة PDF.',
     path: magazineArchiveUrl(),
     image: ogImageUrl(cfg.defaultOgImage),
   })
 }
 
 export default async function MagazinePage() {
-  const issues = await getMagazineIssues()
+  // The newest batch only; older issues arrive through the archive's "load more".
+  const first = await getMagazineIssueBatch()
 
   return (
     <div className="lf-container py-8">
       <SectionHeading title="أعداد المجلة" />
       <p className="mb-8 max-w-2xl text-zinc-600">
-        تصفّحي كل أعداد مجلة لالة فاطمة الرقمية، واقرئي أو حمّلي كل عدد بصيغة PDF.
+        تصفّحي أعداد مجلة لالة فاطمة، واقرئي أو حمّلي الأعداد المتوفرة بصيغة PDF.
       </p>
-      {issues.length === 0 ? (
+      {first.issues.length === 0 ? (
         <p className="py-16 text-center text-zinc-700">لا توجد أعداد بعد.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {issues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} />
-          ))}
-        </div>
+        <MagazineArchive initial={first} />
       )}
     </div>
   )

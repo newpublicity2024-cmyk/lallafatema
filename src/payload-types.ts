@@ -420,7 +420,7 @@ export interface Video {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * الأعداد الرقمية المرقّمة من مجلة لالة فاطمة (غلاف + PDF).
+ * الأعداد المرقّمة من مجلة لالة فاطمة: غلاف + PDF، أو غلاف فقط للأعداد القديمة المؤرشفة.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "magazine-issues".
@@ -435,9 +435,9 @@ export interface MagazineIssue {
   publishDate?: string | null;
   cover: number | Media;
   /**
-   * يُعرض داخل الصفحة مع زر للتحميل (يُخزَّن في R2).
+   * اختياري. يُعرض داخل الصفحة مع زر للتحميل. بدونه يظهر العدد في الأرشيف بغلافه فقط.
    */
-  pdf: number | Media;
+  pdf?: (number | null) | Media;
   description?: string | null;
   updatedAt: string;
   createdAt: string;
