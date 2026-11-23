@@ -31,7 +31,9 @@ export async function GET() {
     payload.find({ collection: 'categories', limit: 200, depth: 0 }),
     payload.find({
       collection: 'magazine-issues',
-      where: { _status: { equals: 'published' } },
+      // Issues with a PDF only: a cover-only archive issue is a lone image (noindex, see
+      // magazine/[issueNumber]/page.tsx) and is not linked from the archive grid either.
+      where: { and: [{ _status: { equals: 'published' } }, { pdf: { exists: true } }] },
       sort: '-issueNumber',
       limit: 500,
       depth: 0,

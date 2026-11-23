@@ -29,7 +29,10 @@ beforeAll(() => {
 afterEach(() => cleanup())
 
 // Minimal issue mocks; cover is omitted (undefined) — PostImage renders its placeholder.
-const issue = (id: number, issueNumber: number) => ({ id, issueNumber }) as unknown as MagazineIssue
+// Each carries a PDF id, like every issue the homepage shows: a card without one is a
+// cover-only archive issue and deliberately renders no link (see magazine-archive spec).
+const issue = (id: number, issueNumber: number) =>
+  ({ id, issueNumber, pdf: 1000 + id }) as unknown as MagazineIssue
 
 describe('MagazineSection', () => {
   it('renders the heading, an archive link, one link per issue, and the dark band', () => {

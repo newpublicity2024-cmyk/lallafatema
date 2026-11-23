@@ -2,7 +2,9 @@ import Image from 'next/image'
 
 import type { Media } from '@/payload-types'
 
-type ImageRef = number | Media | null | undefined
+// Structural, so a trimmed `{ url, alt }` (the magazine archive's JSON batches) renders
+// exactly like a full Media doc.
+type ImageRef = number | Pick<Media, 'url' | 'alt'> | null | undefined
 
 /**
  * Renders a media image with `fill` (parent must reserve the aspect ratio →

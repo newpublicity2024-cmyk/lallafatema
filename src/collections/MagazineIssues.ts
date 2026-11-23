@@ -10,7 +10,8 @@ export const MagazineIssues: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['issueNumber', 'title', 'publishDate', '_status'],
     group: 'المحتوى',
-    description: 'الأعداد الرقمية المرقّمة من مجلة لالة فاطمة (غلاف + PDF).',
+    description:
+      'الأعداد المرقّمة من مجلة لالة فاطمة: غلاف + PDF، أو غلاف فقط للأعداد القديمة المؤرشفة.',
     hidden: hiddenFromJournalists,
     hideAPIURL: true,
   },
@@ -59,8 +60,13 @@ export const MagazineIssues: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       label: 'ملف PDF',
-      required: true,
-      admin: { description: 'يُعرض داخل الصفحة مع زر للتحميل (يُخزَّن في R2).' },
+      // Optional: the archived back-issues (1–147) exist only as cover images. An issue
+      // without a PDF is shown in the archive as a cover that opens nothing. The column has
+      // always been nullable (the collection has drafts), so this needs no migration.
+      admin: {
+        description:
+          'اختياري. يُعرض داخل الصفحة مع زر للتحميل. بدونه يظهر العدد في الأرشيف بغلافه فقط.',
+      },
     },
     {
       name: 'description',

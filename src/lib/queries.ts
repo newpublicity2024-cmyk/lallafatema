@@ -18,6 +18,7 @@ import {
   SOCIAL_LINKS,
   type SocialKey,
 } from './site'
+import { MAGAZINE_PAGE_SIZE, toIssueCardData, type IssueBatch } from './magazine'
 import { getPayloadClient } from './payload'
 import { publishedWhere, isScheduledForLater } from './published-where'
 
@@ -357,17 +358,28 @@ export async function getPostsByIds(ids: number[]): Promise<Post[]> {
   return [...docs].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
 }
 
-/** All published magazine issues, newest first. `depth:1` populates covers. */
-export async function getMagazineIssues(): Promise<MagazineIssue[]> {
+/**
+ * One batch of the magazine archive, newest first: the `limit` published issues
+ * numbered below `before` (or the newest ones when `before` is omitted). `depth:1`
+ * populates covers. `hasMore` comes from the same query's page count, so it is
+ * exact: no extra round-trip and no off-by-one at the archive's end.
+ */
+export async function getMagazineIssueBatch({
+  before,
+  limit = MAGAZINE_PAGE_SIZE,
+}: { before?: number | null; limit?: number } = {}): Promise<IssueBatch> {
   const payload = await getPayloadClient()
-  const { docs } = await payload.find({
+  const where: Where = before
+    ? { and: [{ _status: { equals: 'published' } }, { issueNumber: { less_than: before } }] }
+    : { _status: { equals: 'published' } }
+  const { docs, hasNextPage } = await payload.find({
     collection: 'magazine-issues',
-    where: { _status: { equals: 'published' } },
+    where,
     sort: '-issueNumber',
     depth: 1,
-    limit: 200,
+    limit,
   })
-  return docs
+  return { issues: docs.map(toIssueCardData), hasMore: hasNextPage }
 }
 
 /** Newest N published magazine issues (homepage band). `depth:1` populates covers. */
